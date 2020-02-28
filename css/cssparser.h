@@ -17,6 +17,8 @@ public:
 
     CssMap getParsedResult(){return m_parseMethod.getParsedResult();}
 
+    ErrorMsg getParsedErrorMsg(){return m_parseMethod.getParsedErrorMsg();}
+
 private:
     CssParseMethod m_parseMethod;
 };

@@ -77,11 +77,14 @@ void Widget::chooseAxtureProject()
             //[2]
             CSS::CssParser cssParser;
             CSS::CssMap globalCssMap;
+            CSS::ErrorMsg errorMsg;
             if(cssParser.parseFile(project.baseCssFilePath)){
                 emit updateProgress(QString(QStringLiteral("解析通用样式成功.")));
                 globalCssMap = cssParser.getParsedResult();
             }else{
                 emit updateProgress(QString(QStringLiteral("解析通用样式失败,流程终止!")));
+                errorMsg = cssParser.getParsedErrorMsg();
+                emit updateProgress(errorMsg.getErrorMsg);
                 return;
             }
 
