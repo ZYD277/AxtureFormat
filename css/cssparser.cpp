@@ -1,4 +1,5 @@
 ﻿#include "cssparser.h"
+#include <QDebug>
 
 namespace CSS{
 

@@ -40,6 +40,14 @@ struct CssSegment{
     bool isElement(){return type == Element;}
 };
 
+/*!
+ *@brief 解析异常信息提示
+ */
+struct ErrorMsg{
+    bool parse;                 /*!< 解析是否成功*/
+    QString getErrorMsg;        /*!< 解析故障信息提示*/
+};
+
 typedef QMap<QString,CssSegment> CssMap;
 
 }  //namespace CSS
