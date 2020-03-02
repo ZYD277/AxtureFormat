@@ -47,7 +47,8 @@ enum NodeType{
     RTABLE,                 /*!< 表格 */
     RTABLE_CELL,            /*!< 表格单元格 */
     RIMAGE,
-    RLABEL
+    RLABEL,
+    RTREE                   /*!< 树形控件*/
 };
 
 /*!

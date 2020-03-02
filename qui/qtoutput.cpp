@@ -59,7 +59,7 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
 
             //[3]
             QSSOutput qss;
-            qss.setStyle(globalCss,pageCss);
+            qss.setCommonStyle(globalCss,pageCss);
 
             QFileInfo uiPath(fullPath);
             QString qssPath = uiPath.path() + QDir::separator() + "qss";
