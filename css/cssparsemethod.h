@@ -31,7 +31,7 @@ public:
 
 private:
     QString specialDis(const QString &character, int startPosition, int endPosition);    /*!< 处理数据中的符号*/
-    bool dataKey(const QString &keyData);      /*!< key的特殊处理*/
+    bool traitsKey(QString &keyData);
     bool removeComments(QString &originData);
 
     bool parseFile(RTextFile * file);

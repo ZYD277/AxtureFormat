@@ -73,11 +73,39 @@ bool CssParseMethod::parseFile(RTextFile *file)
     int t_semicoLab = 0;          /*!< 分号标签*/
     int t_sizeLab = 0;            /*!< 当前数据执行位置标签*/
 
+    MultiComment comment;         /*!< 多行注释信息标记 */
+    bool t_bCommentStart = false;
+
     for(int i = 0; i < cssDataStr.size(); i++)
     {
         const QChar curChar = cssDataStr.at(i);
-        if(curChar == "{")
-        {
+        if(curChar == "*"){
+            if(i < cssDataStr.size() - 1){
+                const QChar nextChar = cssDataStr.at(i + 1);
+                if(nextChar == "/" && (i+1) - comment.startPos > 2){
+                    if(t_bCommentStart){
+                        t_bCommentStart = false;
+                        comment.endPos = i + 1;
+                        ++i;
+                    }
+                }
+            }
+        }else if(curChar == "/"){
+            if(i < cssDataStr.size() - 1){
+                const QChar nextChar = cssDataStr.at(i + 1);
+                if(nextChar == "*"){
+                    if(!t_bCommentStart){
+                        t_bCommentStart = true;
+                        comment.startPos = i;
+                        ++i;
+                    }
+                }else if(nextChar == "/"){
+
+                }
+            }
+        }else if(curChar == "{"){
+            if(t_bCommentStart) continue;
+
             t_leftBraLab++;
             t_leftBraPos = i;
             QString chooser = specialDis(cssDataStr,t_rightBraPos,t_leftBraPos);
@@ -114,8 +142,6 @@ bool CssParseMethod::parseFile(RTextFile *file)
                 {
                     //FIXED 修复在选择器中包含:分号，示例#u409_input:disabled
                     if(chooser.contains(":") && t_colonLab > 0){
-                        --t_colonLab;
-
                         static QRegExp exp(":(\\w+)$");
                         int matchPos = 0;
                         int indexPos = exp.indexIn(chooser,matchPos);        //提取交互式类型disabled
@@ -139,6 +165,11 @@ bool CssParseMethod::parseFile(RTextFile *file)
         }
         else if(curChar == ":")
         {
+            if(t_bCommentStart) continue;
+
+            //匹配#u409_input:disabled,在左右括号匹配时，忽略当前:待遇到{再处理
+            if(t_leftBraLab == t_rightBraLab) continue;
+
             t_colonPos = i;
 
             /*!< 第一个选择器没有*/
@@ -153,8 +184,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
                 key = cssDataStr.mid(t_semicoPos + 1,t_colonPos - t_semicoPos -1);
             }
 
-            /*!< 当前选择器的Key含有问题*/
-            if(!dataKey(key)){
+            if(!traitsKey(key)){
                 m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("选择器的Key含有问题");
                 break;
             }
@@ -173,6 +203,8 @@ bool CssParseMethod::parseFile(RTextFile *file)
         }
         else if(curChar == ";")
         {
+            if(t_bCommentStart) continue;
+
             t_semicoLab++;
             if(t_semicoLab == t_colonLab)
             {
@@ -204,6 +236,8 @@ bool CssParseMethod::parseFile(RTextFile *file)
         }
         else if(curChar == "}")
         {
+            if(t_bCommentStart) continue;
+
             t_rightBraLab++;
             if(t_rightBraLab == t_leftBraLab)
             {
@@ -247,7 +281,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
         }
         t_sizeLab = i;
     }
-
+qDebug()<<"m_errorMsg:"<<m_errorMsg.getErrorMsg;
     /*!< 数据出现异常情况未解析完成*/
     if(t_sizeLab < cssDataStr.size() - 1)
         m_errorMsg.parse = false;
@@ -284,50 +318,40 @@ QString CssParseMethod::specialDis(const QString &character, int startPosition, 
     return charaData;
 }
 
-/**
- * @brief 针对map中的key的特殊处理
- * @param keyData 所处理的数据
- * @return
+/*!
+ * @brief 萃取属性名
+ * @attention 去除注释、换行、空格后，验证属性名是否正确
+ * @param[in] 待处理的属性名
+ * @return true:萃取成功；false:萃取失败
  */
-bool CssParseMethod::dataKey(const QString &keyData)
+bool CssParseMethod::traitsKey(QString &keyData)
 {
-    if(keyData.contains("/*")&&keyData.contains("*/"))
-        return true;
-    if(keyData.contains("\r\n"))
-    {
-        QStringList keyDataList = keyData.split("\r\n");
-        int keyDataLab = 0;
-
-        /*!< 异常删除了key出现不正常的key的情况*/
-        if(!keyData.contains(":")&&!keyData.contains(";")&&!keyData.contains("#")&&!keyData.contains("{"))
-        {
-            for(int i = 0 ; i < keyDataList.size() ; i++)
-            {
-                QString keyDataStr = keyDataList[i];
-                keyDataStr.remove(" ");
-
-                if(keyDataStr != ""&&keyDataStr != "\t")
-                {
-                    if(keyDataList.size()-i > 1)
-                    {
-                        keyDataLab++;
-                        break;
-                    }
+    if(removeComments(keyData)){
+        if(keyData.contains("\r\n")){
+            QStringList keyDataList = keyData.split("\r\n");
+            if(keyDataList.size() >= 2){
+                QString tmpKey = keyDataList.last().trimmed();
+                if(tmpKey.size() > 0){
+                    keyData = tmpKey;
+                    return true;
+                }else{
+                    return false;
                 }
             }
         }
 
-        if(keyDataLab > 0)
-            return false;
+        //css的属性名格式为-ms-overflow-x 字符与-相间隔分割，
+        if(keyData.contains(QRegExp("^(\\-?[a-zA-z]+\\-?)+$")))
+            return true;
     }
-    return true;
+    return false;
 }
 
 /*!
  * @brief 移除多行注释
  * @attention CSS中只支持多行注释，不支持单行注释;
  *            一行语句中可能包含多个注释，需全部移除
- * @param[in] originData 待处理数据
+ * @param[in|out] originData 待处理数据
  * @return true:处理成功;false:处理失败
  */
 bool CssParseMethod::removeComments(QString & originData)
