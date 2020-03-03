@@ -7,25 +7,29 @@
 #include <QObject>
 #include <QItemDelegate>
 #include <QProcess>
+#include <QList>
 
 class ViewDelegate : public QItemDelegate
 {
     Q_OBJECT
 public:
-    ViewDelegate(QObject *parent = 0);
+    ViewDelegate();
     ~ViewDelegate();
 
     QWidget *createEditor(QWidget * parent, const QStyleOptionViewItem & option, const QModelIndex & index) const;
-    void setEditorData(QWidget * editor, const QModelIndex & index) const;
-    void setModelData(QWidget * editor, QAbstractItemModel * model, const QModelIndex & index) const;
+//    void setEditorData(QWidget * editor, const QModelIndex & index) const;
+//    void setModelData(QWidget * editor, QAbstractItemModel * model, const QModelIndex & index) const;
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
     void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index)const;
     void updateList(QString filename);
+    bool getFileSwitchState(QString filename)const;
 signals:
     void deleteFileLine(QString filename);
+public slots:
+    void getProcessData(QList<Global::Stru_ProcessData> *processList);
 private:
-    QProcess *g_process;
+     QList<Global::Stru_ProcessData> *m_processlList;
 };
 
 #endif // VIEWDELEGATE_H

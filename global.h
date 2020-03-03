@@ -13,7 +13,6 @@ enum RowName{
     COLUMN_OPEN = 3,
     COLUMN_DELETE = 4,
     COLUMN_SWITCH = 5,
-    SWITCH_RESULT = 6
 };
 /**
  * @brief 文件夹信息结构体
@@ -32,7 +31,6 @@ struct FileInfo
     QString m_fileName;
     QString m_filesuffix;
     QString m_fileBaseName;
-    bool m_resultSignal;
 };
 /**
  * @brief 转换所需版本信息
@@ -43,6 +41,16 @@ struct Stru_SwitchNeedMsg
     QString m_QtVersion;
     QString m_rootDirectory;
     QString m_newDirectory;
+};
+
+/**
+ * @brief 获取进度条信息
+ */
+struct Stru_ProcessData
+{
+    QString m_process;
+    QString m_fileName;
+    bool m_succed;
 };
 //extern QList<FileInfo> m_suitableFileList;
 }

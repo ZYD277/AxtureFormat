@@ -400,16 +400,27 @@ void ClientOperate::updateListInformation()
     //        connect(t_switchFile,SIGNAL(clicked(bool)),this,SLOT(switchLineHtmlFile()));
     //    }
     //    m_suitableFileList.clear();
-    ui->tableView->verticalHeader()->hide();
     //    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);//按行选择
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);//不能编辑
     ui->tableView->setFocusPolicy(Qt::NoFocus);//小部件不接受聚焦
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
     m_model->setModalList(&m_suitableFileList);
     ui->tableView->setModel(m_model);
     ui->tableView->setItemDelegate(m_viewDelegate);
+
+     ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+     ui->tableView->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
+     ui->tableView->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Fixed);
+     ui->tableView->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Fixed);
+
+     ui->tableView->setColumnWidth(0,50);
+     ui->tableView->setColumnWidth(3,100);
+     ui->tableView->setColumnWidth(4,100);
+     ui->tableView->setColumnWidth(5,100);
+//    ui->tableView->setColumnWidth(3,100);
+//    ui->tableView->setColumnWidth(4,100);
+//    ui->tableView->setColumnWidth(5,100);
 
     m_model->refrushModel();
 
