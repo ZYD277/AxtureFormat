@@ -48,7 +48,7 @@ struct Stru_SwitchNeedMsg
  */
 struct Stru_ProcessData
 {
-    QString m_process;
+    int m_processValue;
     QString m_fileName;
     bool m_succed;
 };

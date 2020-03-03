@@ -90,28 +90,28 @@ Qt::ItemFlags ViewMoudel::flags(const QModelIndex &index) const
 
 bool ViewMoudel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-//    if (!index.isValid())
-//        return false;
-//    int nRow = index.row();
-//    Global::FileInfo t_fileinfo = m_moudelList->at(nRow);
-//    switch(role)
-//    {
-//    case Qt::UserRole + Global::COLUMN_DELETE:
-//        t_fileinfo.m_fileName = value.toString();
-//        emit dataChanged(index,index);
-//        break;
-//    case Qt::UserRole + Global::COLUMN_FILENAME:
-//        t_fileinfo.m_fileName =value.toString();
-//        emit dataChanged(index,index);
-//        break;
-//    case Qt::UserRole + Global::COLUMN_NUMBER:
-//        emit dataChanged(index,index);
-//        break;
-//    case Qt::UserRole + Global::COLUMN_OPEN:
-//        t_fileinfo.m_fielPath = value.toString();
-//        emit dataChanged(index,index);
-//        break;
-//    }
+    if (!index.isValid())
+        return false;
+    int nRow = index.row();
+    Global::FileInfo t_fileinfo = m_moudelList->at(nRow);
+    switch(role)
+    {
+    case Qt::UserRole + Global::COLUMN_DELETE:
+        t_fileinfo.m_fileName = value.toString();
+        emit dataChanged(index,index);
+        break;
+    case Qt::UserRole + Global::COLUMN_FILENAME:
+        t_fileinfo.m_fileName =value.toString();
+        emit dataChanged(index,index);
+        break;
+    case Qt::UserRole + Global::COLUMN_NUMBER:
+        emit dataChanged(index,index);
+        break;
+    case Qt::UserRole + Global::COLUMN_OPEN:
+        t_fileinfo.m_fielPath = value.toString();
+        emit dataChanged(index,index);
+        break;
+    }
     return true;
 }
 
