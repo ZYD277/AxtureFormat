@@ -600,15 +600,7 @@ void ClientOperate::deletFileData(QString filename)
  */
 void ClientOperate::appendErrorRecord(QString record)
 {
-    ui->plainTextEdit->appendPlainText(RUtil::getTimeStamp()+":"+record);
-    QTextCursor t_cursor = ui->plainTextEdit->textCursor();
-    t_cursor.select(QTextCursor::LineUnderCursor);
-    QTextCharFormat t_fmt;
-    t_fmt.setForeground(QColor(Qt::red));
-    t_cursor.mergeCharFormat(t_fmt);
-    t_cursor.clearSelection(); //撤销选中
-    t_cursor.movePosition(QTextCursor::EndOfLine);
-     t_fmt.setForeground(QColor(144,96,0,255));
+    ui->textBrowser->append("<font color=\"#FF0000\">" +RUtil::getTimeStamp()+":"+record + "</font>");
 }
 
 /**
@@ -617,14 +609,7 @@ void ClientOperate::appendErrorRecord(QString record)
  */
 void ClientOperate::appendWarningRecord(QString record)
 {
-    ui->plainTextEdit->appendPlainText(RUtil::getTimeStamp()+":"+record);
-    QTextCursor t_cursor = ui->plainTextEdit->textCursor();
-    t_cursor.select(QTextCursor::LineUnderCursor);
-    QTextCharFormat t_fmt;
-    t_fmt.setForeground(QColor(144,96,0,255));
-    t_cursor.mergeCharFormat(t_fmt);
-    t_cursor.clearSelection(); //撤销选中
-    t_cursor.movePosition(QTextCursor::EndOfLine);
+    ui->textBrowser->append("<font color=\"#A2AA00\">" +RUtil::getTimeStamp()+":"+record + "</font>");
 
 }
 
@@ -634,19 +619,9 @@ void ClientOperate::appendWarningRecord(QString record)
  */
 void ClientOperate::appendRecord(QString record)
 {
-    ui->plainTextEdit->appendPlainText(RUtil::getTimeStamp()+":"+record);
-    QTextCursor t_cursor = ui->plainTextEdit->textCursor();
-    t_cursor.select(QTextCursor::LineUnderCursor);
-    QTextCharFormat t_fmt;
-    t_fmt.setForeground(QColor(Qt::green));
-    t_cursor.mergeCharFormat(t_fmt);
-    t_cursor.clearSelection(); //撤销选中
-    t_cursor.movePosition(QTextCursor::EndOfLine);
+    ui->textBrowser->append("<font color=\"#00FF00\">" +RUtil::getTimeStamp()+":"+record + "</font>");
 }
 void ClientOperate::getNewProjectPath(QString)
 {
     g_switchNeedMsg.m_newDirectory = ui->createOutDirLedit->text();
-    qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-           <<"***"
-           <<"\n";
 }

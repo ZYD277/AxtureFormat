@@ -79,7 +79,8 @@
           <item row="0" column="3">
            <widget class="QPushButton" name="deletListBtn">
             <property name="styleSheet">
-             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;
+</string>
             </property>
             <property name="text">
              <string>清空列表</string>
@@ -269,7 +270,7 @@
         <number>7</number>
        </property>
        <item row="0" column="0">
-        <widget class="QPlainTextEdit" name="plainTextEdit"/>
+        <widget class="QTextBrowser" name="textBrowser"/>
        </item>
       </layout>
      </widget>
