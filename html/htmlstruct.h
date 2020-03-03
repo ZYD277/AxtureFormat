@@ -100,6 +100,17 @@ struct TableData : public BaseData{
 };
 
 /*!
+ * @brief tree控件数据
+ */
+struct TreeData : public BaseData{
+    ~TreeData(){}
+
+    QStringList m_dataCoIt;
+    QStringList m_colums;
+    QStringList m_items;
+};
+
+/*!
  * @brief 分组数据
  */
 struct GroupData : public BaseData{

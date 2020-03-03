@@ -72,10 +72,12 @@ private:
     void parseNodeData(QDomElement & element, NodeType type, DomNode *node);
     void parseButtonNodeData(QDomElement &element, DomNode *node);
     void parseRadioButtonNodeData(QDomElement &element, DomNode *node);
+    void parserdynamicPanelNodeData(QDomElement &element, DomNode *parentNode);
     void parseLabelNodeData(QDomElement &element, DomNode *node);
     void parseTextFieldNodeData(QDomElement &element, DomNode *node);
     void parseImageNodeData(QDomElement &element, DomNode *node);
     void parseTableNodeData(QDomElement &element, DomNode *node);
+    void parseTreeNodeData(QDomElement &element, DomNode *node);
     void parseTableCellNodeData(QDomElement &element, DomNode *parentNode);
 
     void parseGroupNodeData(QDomElement &element, DomNode *node);
@@ -83,6 +85,7 @@ private:
 private:
     NodeHtml m_nodeType;
     DomHtmlPtr m_result;
+    int m_rdynamic;
 };
 
 } //namespace Html

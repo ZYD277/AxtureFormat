@@ -17,6 +17,7 @@ QtParseMethod::QtParseMethod()
     m_htmlMapToQtWidget.insert(Html::RTABLE,"QTableWidget");
     m_htmlMapToQtWidget.insert(Html::RIMAGE,"QLabel");
     m_htmlMapToQtWidget.insert(Html::RLABEL,"QLabel");
+    m_htmlMapToQtWidget.insert(Html::RTREE,"QTreeWidget");
 }
 
 /*!
@@ -216,13 +217,16 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             generateRect(doc,child,rect);
 
-            parent.appendChild(child);
-
             if(node->m_childs.size() > 0){
                 for(int i = 0;i < node->m_childs.size();i++){
-                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
+
+                    QDomElement widget = doc.createElement("widget");
+                    widget.setAttribute("class",m_htmlMapToQtWidget.value(node->m_childs.at(i)->m_type));
+                    widget.setAttribute("name",node->m_childs.at(i)->m_id);
+                    child.appendChild(widget);
                 }
             }
+            parent.appendChild(child);
             break;
 
         }
@@ -288,6 +292,32 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             break;
         }
+        case Html::RTREE:{
+            QDomElement child = doc.createElement("widget");
+            child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
+            child.setAttribute("name",node->m_id);
+            generateRect(doc,child,rect);
+
+            Html::TreeData * tdata = dynamic_cast<Html::TreeData *>(node->m_data);
+
+            for(int i = 1; i < tdata->m_colums.size(); i++){
+                QDomElement column = doc.createElement("column");
+
+                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("Item%1").arg(tdata->m_colums.at(i))));
+
+                child.appendChild(column);
+            }
+            for(int i = 1; i < tdata->m_items.size(); i++){
+                QDomElement column = doc.createElement("item");
+
+                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("Item%1").arg(tdata->m_items.at(i))));
+
+                child.appendChild(column);
+            }
+
+            parent.appendChild(child);
+            break;
+    }
         default:break;
     }
 }
