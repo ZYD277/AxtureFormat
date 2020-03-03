@@ -1,4 +1,13 @@
-﻿#ifndef QSSPARSEMETHOD_H
+﻿/*!
+ *  @brief     qss文件格式输出
+ *  @details
+ *  @author    wey
+ *  @version   1.0
+ *  @date      2020.02.10
+ *  @warning
+ *  @copyright NanJing RenGu.
+ */
+#ifndef QSSPARSEMETHOD_H
 #define QSSPARSEMETHOD_H
 
 #include <QStringList>
@@ -13,7 +22,7 @@ class QSSParseMethod : public RTextParseMethod
 public:
     QSSParseMethod();
 
-    void setStyle(CSS::CssMap globalCss,CSS::CssMap pageCss);
+    void setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss);
 
     bool  startSave(RTextFile * file) override;
 

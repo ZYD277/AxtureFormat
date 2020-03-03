@@ -10,7 +10,13 @@ QSSParseMethod::QSSParseMethod()
 
 }
 
-void QSSParseMethod::setStyle(CSS::CssMap globalCss, CSS::CssMap pageCss)
+/*!
+ * @brief 添加普通的样式
+ * @attention
+ * @param[in]
+ * @return
+ */
+void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss)
 {
     m_globalCss = globalCss;
     m_pageCss = pageCss;
@@ -45,8 +51,8 @@ bool QSSParseMethod::startSave(RTextFile *file)
     };
 
     generateCss(m_globalCss);
-    generateCss(m_pageCss);
 
+    generateCss(m_pageCss);
 
     return true;
 }

@@ -1,4 +1,13 @@
-﻿#ifndef QRCPARSEMETHOD_H
+﻿/*!
+ *  @brief     qrc格式导出至文件
+ *  @details
+ *  @author    wey
+ *  @version   1.0
+ *  @date      2020.03.02
+ *  @warning
+ *  @copyright NanJing RenGu.
+ */
+#ifndef QRCPARSEMETHOD_H
 #define QRCPARSEMETHOD_H
 
 #include <QStringList>
