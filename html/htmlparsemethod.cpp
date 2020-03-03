@@ -92,7 +92,7 @@ void HtmlParseMethod::parseDiv(const QDomElement &divElement, DomNode *parentNod
 
                 establishRelation(parentNode,node);
 
-                if(ttype == RGROUP){
+                if(ttype == RGROUP || ttype == RDYNAMIC_PANEL){
                     parseDiv(childEle,node);
                 }
             }else{
@@ -144,8 +144,10 @@ NodeType HtmlParseMethod::getNodeType(const QDomElement &element,QDomElement par
                 return RLABEL;
             else if(classInfo.contains("button") || classInfo.contains("primary_button"))
                 return RBUTTON;
-            else if(classInfo.contains("panel_state"))
+            else if(classInfo.contains("panel_state")&&!classInfo.contains("panel_state_content"))
                 return RDYNAMIC_PANEL;
+            else if(classInfo.contains("panel_state_content"))
+                return RCONTAINER;
             else if(classInfo.contains("table_cell"))
                 return RTABLE;
             else{

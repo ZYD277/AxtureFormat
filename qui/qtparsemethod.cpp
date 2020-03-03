@@ -50,6 +50,7 @@ bool QtParseMethod::startSave(QDomDocument &doc)
 
         Html::DomNode * bodyNode = m_dataSrc->body;
         bodyNode->m_class = "body";
+
         generateNodeToUI(doc,docWrapper.data(),bodyNode,QRect(QPoint(0,0),RUtil::screenSize()));
 
         generateResources(doc,docWrapper.data());
@@ -136,6 +137,7 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             parent.appendChild(child);
 
+
             if(node->m_childs.size() > 0){
                 for(int i = 0;i < node->m_childs.size();i++){
                     generateNodeToUI(doc,child,node->m_childs.at(i),rect);
@@ -207,6 +209,23 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             }
             break;
         }
+        case Html::RDYNAMIC_PANEL:{
+            QDomElement child = doc.createElement("widget");
+            child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
+            child.setAttribute("name",node->m_id);
+
+            generateRect(doc,child,rect);
+
+            parent.appendChild(child);
+
+            if(node->m_childs.size() > 0){
+                for(int i = 0;i < node->m_childs.size();i++){
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
+                }
+            }
+            break;
+
+        }
         case Html::RTEXT_FIELD:
         case Html::RRADIO_BUTTON:
         case Html::RLABEL:
@@ -216,6 +235,11 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             child.setAttribute("name",node->m_id);
 
             generateRect(doc,child,rect);
+
+            Html::PanelData * data = dynamic_cast<Html::PanelData *>(node->m_data);
+            if(data){
+                QString panellabel = data->m_data_label;
+            }
 
             child.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_data->m_text));
 
