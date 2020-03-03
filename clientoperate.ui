@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ClientOperate</class>
+ <widget class="QWidget" name="ClientOperate">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1162</width>
+    <height>763</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ClientOperate</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_6">
+   <item row="0" column="0">
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <property name="leftMargin">
+        <number>7</number>
+       </property>
+       <property name="rightMargin">
+        <number>7</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QWidget" name="widget" native="true">
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="AxureVerisionLab">
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Axure版本:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="AxureVerisionCbox">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>Axure8</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Axure9</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="openAxPrjBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>打开axure工程</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QPushButton" name="deletListBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>清空列表</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QTableView" name="tableView"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QWidget" name="widget_3" native="true">
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>259</width>
+              <height>18</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="2">
+           <widget class="QRadioButton" name="Qt4RadioBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Qt4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="qtLab">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>转换qt版本</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QRadioButton" name="Qt5RadioBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Qt5</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QWidget" name="widget_5" native="true">
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="putoutDirLab">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>输出目录</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QRadioButton" name="soureseDirRadioBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>源文件目录</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QRadioButton" name="createOutDirRadioBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>自定义</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLineEdit" name="createOutDirLedit">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="selectDirBtn">
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>浏览</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>94</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="6">
+           <widget class="QPushButton" name="startChangeBtn">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+            </property>
+            <property name="text">
+             <string>开始转换</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="styleSheet">
+       <string notr="true">font: 75 12pt &quot;Agency FB&quot;;</string>
+      </property>
+      <property name="title">
+       <string>日志记录</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <property name="leftMargin">
+        <number>7</number>
+       </property>
+       <property name="rightMargin">
+        <number>7</number>
+       </property>
+       <property name="horizontalSpacing">
+        <number>7</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QPlainTextEdit" name="plainTextEdit"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,4 +1,6 @@
-#include "widget.h"
+﻿#include "widget.h"
+#include "clientoperate.h"
+
 #include <QApplication>
 #include <QTextCodec>
 
@@ -15,8 +17,10 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForLocale(codec);
 #endif
 
-    Widget w;
+    ClientOperate w;
     w.show();
+//    Widget w;
+//    w.show();
 
     return a.exec();
 }

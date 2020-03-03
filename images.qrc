@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>image/delete.jfif</file>
+        <file>image/new_delete.gif</file>
+        <file>image/new_open.gif</file>
+        <file>image/new_switch.png</file>
+        <file>image/open.jpg</file>
+        <file>image/switch.jfif</file>
+        <file>image/switch_title.png</file>
+    </qresource>
+</RCC>
