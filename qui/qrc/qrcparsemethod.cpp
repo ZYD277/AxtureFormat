@@ -19,8 +19,8 @@ bool QrcParseMethod::startSave(QDomDocument &doc)
     QDomElement rcc = doc.createElement("RCC");
 
     auto iter = m_resMap.begin();
-    while(iter != m_resMap.end()){
 
+    while(iter != m_resMap.end()){
         QDomElement qres = doc.createElement("qresource");
         qres.setAttribute("prefix",iter.key());
 

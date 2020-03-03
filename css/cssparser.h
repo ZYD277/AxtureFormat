@@ -1,4 +1,13 @@
-﻿#ifndef CSSPARSER_H
+﻿/*!
+ *  @brief     CSS解析器
+ *  @details   解析指定的css文件，返回样式列表
+ *  @author    wey
+ *  @version   1.0
+ *  @date      2020.02.26
+ *  @warning
+ *  @copyright NanJing RenGu.
+ */
+#ifndef CSSPARSER_H
 #define CSSPARSER_H
 
 #include <QObject>
