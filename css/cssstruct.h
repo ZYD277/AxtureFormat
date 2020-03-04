@@ -62,7 +62,7 @@ struct CssSegment{
  */
 struct ErrorMsg{
     bool parse;                 /*!< 解析是否成功*/
-    QString getErrorMsg;        /*!< 解析故障信息提示*/
+    QString errorMsg;        /*!< 解析故障信息提示*/
 };
 
 typedef QMap<QString,CssSegment> CssMap;        /*!< key:选择器名称，value:对应属性规则 */

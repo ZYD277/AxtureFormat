@@ -37,6 +37,8 @@ private:
     bool parseFile(RTextFile * file);
 
     DynamicPropType getDynamicType(QString dyname);
+    inline void createErrorMsg(QString msg);
+    inline void createWarnMsg(QString msg);
 
 private:
     /*!

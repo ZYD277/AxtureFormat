@@ -84,7 +84,7 @@ void Widget::chooseAxtureProject()
             }else{
                 emit updateProgress(QString(QStringLiteral("解析通用样式失败,流程终止!")));
                 errorMsg = cssParser.getParsedErrorMsg();
-                emit updateProgress(errorMsg.getErrorMsg);
+                emit updateProgress(errorMsg.errorMsg);
                 return;
             }
 
