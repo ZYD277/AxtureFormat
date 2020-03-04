@@ -23,13 +23,9 @@ public:
     bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
     void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index)const;
     void updateList(QString filename);
-    bool getFileSwitchState(QString filename)const;
 signals:
     void deleteFileLine(QString filename);
-public slots:
-    void getProcessData(QList<Global::Stru_ProcessData> *processList);
 private:
-     QList<Global::Stru_ProcessData> *m_processlList;
 };
 
 #endif // VIEWDELEGATE_H

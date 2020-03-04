@@ -40,6 +40,7 @@ private slots:
     void appendWarningRecord(QString record);
     void appendRecord(QString record);
     void getNewProjectPath(QString);
+    void updateProcess(QList<Global::FileInfo> *recvList);
 
 private:
     void innitSwitchNeedMsgStru();

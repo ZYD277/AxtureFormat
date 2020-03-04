@@ -255,6 +255,9 @@ void ClientOperate::getSuitableHtmlFile()
             }
             if(m_css&&m_image)
             {
+                t_file.m_currentProcessTime = 0;
+                t_file.m_fishProcessTime = 1;
+                t_file.m_succeedSign = true;
                 m_suitableFileList.append(t_file);
             }
             else
@@ -632,7 +635,23 @@ void ClientOperate::appendRecord(QString record)
 {
     ui->textBrowser->append("<font color=\"#00FF00\">" +RUtil::getTimeStamp()+":"+record + "</font>");
 }
+
+/**
+ * @brief 实时获取自定义路径
+ */
 void ClientOperate::getNewProjectPath(QString)
 {
     g_switchNeedMsg.m_newDirectory = ui->createOutDirLedit->text();
+}
+
+/**
+ * @brief 更新进度条
+ */
+void ClientOperate::updateProcess(QList<Global::FileInfo> *recvList)
+{
+//    m_suitableFileList = recvList;
+    QList<Global::FileInfo> *t_updataList = recvList;
+    m_model->setModalList(t_updataList);
+    m_model->refrushModel();
+    t_updataList = NULL;
 }

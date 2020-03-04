@@ -12,7 +12,7 @@ public:
     ViewMoudel();
     ~ViewMoudel();
     //QAbstractTableModel 中3个必须重新实现的虚函数
-    void setModalList(QList<Global::FileInfo> *recvList);
+
     int	rowCount(const QModelIndex & = QModelIndex()) const;
     int	columnCount(const QModelIndex & = QModelIndex()) const;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
@@ -20,6 +20,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex & index) const;
     bool setData(const QModelIndex & index, const QVariant & value, int role);
     void refrushModel();
+    void setModalList(QList<Global::FileInfo> *recvList);//获取数据
 private:
     QList<Global::FileInfo> *m_moudelList;
 };

@@ -9,13 +9,13 @@
 #include <QString>
 #include <QPair>
 
-ViewDelegate::ViewDelegate():m_processlList(NULL)
+ViewDelegate::ViewDelegate()
 {
 
 }
 ViewDelegate::~ViewDelegate()
 {
-    m_processlList = NULL;
+
 }
 
 QWidget *ViewDelegate::createEditor(QWidget * parent, const QStyleOptionViewItem & option, const QModelIndex & index) const
@@ -38,47 +38,47 @@ void ViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     if(index.column() == Global::COLUMN_OPEN)
     {
         QPixmap pixmap(QStringLiteral(":/icon/image/new_open.gif"));
-
-        int height = (option.rect.height() - 22) / 2;
-        QRect decorationRect = QRect(option.rect.left()+20 + option.rect.width()-90, option.rect.top() + height, 36, 22);
+        int height = (option.rect.height()-35)/ 2;
+        QRect decorationRect = QRect(option.rect.left()+20 + option.rect.width()-80, option.rect.top() + height, 36, 36);
         painter->drawPixmap(decorationRect, pixmap);
-
     }
     else if(index.column() == Global::COLUMN_DELETE)
     {
         QPixmap pixmap(QStringLiteral(":/icon/image/new_delete.gif"));
-        int height = (option.rect.height() - 22) / 2;
-        QRect decorationRect = QRect(option.rect.left()+20 + option.rect.width()-90, option.rect.top() + height, 36, 22);
+        int height = (option.rect.height() - 35) / 2;
+        QRect decorationRect = QRect(option.rect.left()+20 + option.rect.width()-90, option.rect.top() + height, 36, 36);
         painter->drawPixmap(decorationRect, pixmap);
     }
     else if(index.column() == Global::COLUMN_SWITCH)
     {
 
         QPixmap pixmap(QStringLiteral(":/icon/image/new_switch.png"));
-        int height = (option.rect.height()-22) / 2;
-        QRect decorationRect = QRect(option.rect.left()+20 + option.rect.width()-90, option.rect.top() + height, 36, 22);
+        int height = (option.rect.height()-30) / 2;
+        QRect decorationRect = QRect(option.rect.left()+20 + option.rect.width()-90, option.rect.top() + height, 40, 40);
         painter->drawPixmap(decorationRect, pixmap);
     }
     else if(index.column() == Global::COLUMN_STATE)
     {
-        QString t_fileName = index.data(Qt::UserRole + Global::COLUMN_STATE).toString();
+        int t_currentValue = index.data(Qt::DisplayRole).toInt();
+        bool  t_sign = index.data(Qt::UserRole + Global::COLUMN_STATE).toInt();
+        int t_finishValue = index.data(Qt::UserRole + Global::COLUMN_STATEFINISH).toInt();
         QStyleOptionProgressBar bar;
-        bar.rect = option.rect;
-        bar.state = QStyle::State_Enabled;
-        bar.progress = index.data(Qt::DisplayRole).toInt(); //设置对应model列的值，需要自定义model
-        bar.maximum =100;
-        bar.minimum = 0;
-        bar.textVisible = true;
-        bool sig = getFileSwitchState(t_fileName);
-        if(!sig)
+        double t_data = t_currentValue/t_finishValue;
+        if(!t_sign)
         {
             painter->setBrush(QBrush(QColor(0xff,0,0)));
             QColor t_red(0xff,0,0);
             QPen t_pen(t_red);
             painter->setPen(t_pen);
-            bar.text = QString(QStringLiteral("转换失败:%1%")).arg(bar.progress);
+            bar.text = QString(QStringLiteral("转换失败:%1")).arg(QString::number(t_data));
         }
-        bar.text = QString(QStringLiteral("当前进度:%1%")).arg(bar.progress);
+        bar.maximum = t_finishValue;
+        bar.minimum = 0;
+        bar.progress = t_currentValue;
+        bar.rect = option.rect;
+        bar.state = QStyle::State_Enabled;
+        bar.textVisible = true;
+        bar.text = QString(QStringLiteral("当前进度:%1%")).arg(QString::number(t_data));
         bar.textAlignment = Qt::AlignCenter;
         QProgressBar pbar;
         QApplication::style()->drawControl(QStyle::CE_ProgressBar,&bar,painter,&pbar);
@@ -125,38 +125,4 @@ void ViewDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewI
 void ViewDelegate::updateList(QString filename)
 {
     emit deleteFileLine(filename);
-}
-
-/**
- * @brief 获取进度条数据
- * @param processList数据列表
- */
-void ViewDelegate::getProcessData(QList<Global::Stru_ProcessData> *processList)
-{
-    m_processlList = processList;
-}
-
-/**
- * @brief 获取文件转换状态(失败还是成功)
- * @param filename文件名
- * @return 返回true转换成功，失败返回false
- */
-bool ViewDelegate::getFileSwitchState(QString filename) const
-{
-    //    for(int i = 0;i<m_processlList->size();i++)
-    //    {
-    //        Global::Stru_ProcessData t_process = m_processlList->at(i);
-    //      if(filename == t_process.m_fileName)
-    //      {
-    //          if(t_process.m_succed)
-    //          {
-    //              return true;
-    //          }
-    //          else
-    //          {
-    //              return false;
-    //          }
-    //      }
-    //    }
-    return true;
 }
