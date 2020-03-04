@@ -120,7 +120,7 @@ GumboNodeWrapper::AttributeList GumboNodeWrapper::attributes()
         if(!isValidElement()) break;
 
         GumboVector attrVector = m_node->v.element.attributes;
-        for(int i = 0; i < attrVector.length; i++){
+        for(uint i = 0; i < attrVector.length; i++){
             GumboAttribute* attr = static_cast<GumboAttribute*>(attrVector.data[i]);
             attrs.push_back(qMakePair(attr->name,attr->value));
         }
@@ -139,7 +139,7 @@ QString GumboNodeWrapper::attribute(QString attrName)
         attrName = attrName.toLower();
 
         GumboVector attrVector = m_node->v.element.attributes;
-        for(int i = 0; i < attrVector.length; i++){
+        for(uint i = 0; i < attrVector.length; i++){
             GumboAttribute* attr = static_cast<GumboAttribute*>(attrVector.data[i]);
             if(strcmp(attr->name,attrName.toLocal8Bit().data()) == 0)
                 return QString(attr->value);
@@ -154,7 +154,7 @@ bool GumboNodeWrapper::hasAttribute(QString attrName)
     Check_Return(!isValidElement() || attrName.trimmed().size() == 0,false);
 
     GumboVector attrVector = m_node->v.element.attributes;
-    for(int i = 0; i < attrVector.length; i++){
+    for(uint i = 0; i < attrVector.length; i++){
         GumboAttribute* attr = static_cast<GumboAttribute*>(attrVector.data[i]);
         if(strcmp(attr->name,attrName.toLocal8Bit().data()) == 0)
             return true;
