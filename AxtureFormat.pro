@@ -31,7 +31,9 @@ SOURCES += main.cpp\
     qui/qrc/qrcoutput.cpp \
     qui/qrc/qrcparsemethod.cpp \
     qui/qss/qssoutput.cpp \
-    qui/qss/qssparsemethod.cpp
+    qui/qss/qssparsemethod.cpp \
+    html/gumboparsemethod.cpp \
+    html/gumbonodewrapper.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -50,6 +52,11 @@ HEADERS  += widget.h \
     qui/qrc/qrcoutput.h \
     qui/qrc/qrcparsemethod.h \
     qui/qss/qssoutput.h \
-    qui/qss/qssparsemethod.h
+    qui/qss/qssparsemethod.h \
+    html/gumboparsemethod.h \
+    html/gumbonodewrapper.h
 
 FORMS    += widget.ui
+
+INCLUDEPATH+="E:/3rdPartyLib/gumbo/include"
+LIBS+="E:/3rdPartyLib/gumbo/shared/debug/gumbo.lib"

@@ -31,6 +31,10 @@ struct NodeHtml{
     const QString SRC = "src";
     const QString HREF = "href";
     const QString VALUE = "value";
+    const QString CHECKED = "checked";
+    const QString DISABLED = "disabled";
+    const QString READONLY = "readonly";
+    const QString MAX_LEN = "maxlength";
 };
 
 /*!
@@ -64,10 +68,15 @@ struct DomHead{
  * @brief 控件基础通用属性
  */
 struct BaseData{
-    BaseData(){}
+    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false){}
     virtual ~BaseData(){}
 
     QString m_text;         /*!< 控件显示内容 */
+    QString m_toolTip;      /*!< 工具提示信息，鼠标移入显示 */
+    QString m_inlineStyle;  /*!< 内嵌的样式信息 */
+    bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
+    bool m_bDisabled;
+    bool m_bReadOnly;       /*!< 只读 */
 };
 
 /*!
@@ -121,6 +130,26 @@ struct GroupData : public BaseData{
     int m_top;
     int m_width;
     int m_height;
+};
+
+/*!
+ * @brief 单行文本编辑框
+ */
+struct TextFieldData : public BaseData{
+    TextFieldData():m_maxLength(65535){}
+
+    QString m_type;         /*!< 文本类型：password、text等 */
+    QString m_placeHolders; /*!< 文本占位符，生成在js中，无法提取 */
+    int m_maxLength;        /*!< 文本最大长度 */
+};
+
+/*!
+ * @brief 单列表或下拉框列表
+ */
+struct ListData : public BaseData{
+    ListData(){}
+
+    QStringList m_itemList;     /*!< 选项集合 */
 };
 
 /*!

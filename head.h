@@ -4,6 +4,9 @@
 #include <QString>
 #include <QList>
 
+#define Check_Return(condition,returnVal) {if(condition) return returnVal;}
+#define Check_Return_Cb(condition,returnVal,callback){if(condition){ callback(); return returnVal;}}
+
 /*!
  * @brief Axuture工程中单个页面文件信息
  */
