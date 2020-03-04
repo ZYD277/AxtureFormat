@@ -40,8 +40,10 @@ public:
     /*!< 属性操作 */
     AttributeList attributes();
     QString attribute(QString attrName);
+    bool hasAttribute(QString attrName);
     QString id();
     QString clazz();
+    QString style();
 
     bool valid() const{return m_bValid;}
 
@@ -72,6 +74,7 @@ private:
 
 private:
     GumboNode * m_node;
+    NodeHtml m_nodeHtml;
     bool m_bValid;
 };
 

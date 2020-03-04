@@ -13,6 +13,7 @@
 #include <QSharedPointer>
 #include <gumbo.h>
 #include "../util/fileutils.h"
+#include "../head.h"
 #include "htmlstruct.h"
 #include "gumbonodewrapper.h"
 
@@ -26,13 +27,34 @@ public:
 
     bool startParse(RTextFile * file) override;
 
-    DomHtmlPtr getParsedResult(){return m_result;}
+    DomHtmlPtr getParsedResult(){return m_htmlResultPtr;}
 
 private:
+    void skipBomHead(RTextFile * file);
     bool parseFile(RTextFile * file);
 
+    void parseBody(GumboNodeWrapper &bodyNode);
+    void parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode);
+
+    NodeType getNodeType(GumboNodeWrapper &element, GumboNodeWrapper parentElement);
+
+    void printBody(DomNode *node);
+    inline void establishRelation(DomNode *parentNode,DomNode *childNode);
+
+    //解析特定控件
+    void parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node);
+    void parseButtonNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseTextFieldNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseImageNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseTableNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseTableCellNodeData(GumboNodeWrapper &element, DomNode *parentNode);
+
+    void parseGroupNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseLabelNodeData(GumboNodeWrapper &element, DomNode *node);
+
 private:
-    DomHtmlPtr m_result;
+    DomHtmlPtr m_htmlResultPtr;
 
     QString m_errorMsg;
     GumboOutput * m_gumboParser;

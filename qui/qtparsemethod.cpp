@@ -101,6 +101,7 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
         tGeometryExisted = true;
     }
 
+
     //转换成父窗口的相对坐标
     rect.moveLeft(rect.x() - parentGlobalRect.x());
     rect.moveTop(rect.y() - parentGlobalRect.y());
