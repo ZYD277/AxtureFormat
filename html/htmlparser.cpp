@@ -1,7 +1,7 @@
 ﻿#include "htmlparser.h"
 
 #include "util/fileutils.h"
-#include "htmlparsemethod.h"
+#include "gumboparsemethod.h"
 
 namespace Html{
 
@@ -19,12 +19,12 @@ HtmlParser::~HtmlParser()
 bool HtmlParser::parseHtmlFile(QString fullPath)
 {
     if(m_parseMethod == nullptr){
-        m_parseMethod = new HtmlParseMethod();
+        m_parseMethod = new GumboParseMethod();
     }
 
-    RXmlFile xmlFile(fullPath);
-    xmlFile.setParseMethod(m_parseMethod,false);
-    if(xmlFile.startParse()){
+    RTextFile textFile(fullPath);
+    textFile.setParseMethod(m_parseMethod,false);
+    if(textFile.startParse()){
         m_parseResult = m_parseMethod->getParsedResult();
         return true;
     }

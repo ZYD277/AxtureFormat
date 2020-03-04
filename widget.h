@@ -24,7 +24,7 @@ signals:
     void updateProgress(QString record);
 
 private slots:
-    void chooseAxtureProject(QString projectPath,QString storagePath);
+    void chooseAxtureProject();
     void appendRecord(QString record);
 
 private:

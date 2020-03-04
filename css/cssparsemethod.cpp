@@ -1,10 +1,7 @@
 ﻿#include "cssparsemethod.h"
 
 #include <QDebug>
-#include <QTextStream>
 #include <QRegExp>
-#include <QList>
-#include <QTextCodec>
 #include <QStack>
 
 namespace CSS{
@@ -27,7 +24,7 @@ bool CssParseMethod::startParse(RTextFile *file)
 {
     m_cssMap.clear();
     m_errorMsg.parse = false;
-    m_errorMsg.getErrorMsg.clear();
+    m_errorMsg.errorMsg.clear();
 
     if(!parseFile(file))
         return false;
@@ -53,7 +50,8 @@ bool CssParseMethod::startParse(RTextFile *file)
 /*!
  * @brief 提取文件中所有css样式
  * @attention 按照规则执行初步提取，可对选择器类型、样式规则进行判定，封装成独立的单元。
- * @param[in] file css文件
+ *            【若解析过程中发生错误，会自动终止解析流程，并未像chrome那样可以自动跳过错误的数据块】
+ * @param[in] file 已打开的css文件
  * @return true:提取成功；false:提取中出错
  */
 bool CssParseMethod::parseFile(RTextFile *file)
@@ -174,7 +172,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
 
             /*!< 第一个选择器没有*/
             if(t_leftBraPos == 0){
-                m_errorMsg.getErrorMsg = "error:"+QStringLiteral("第一个选择器没有'{'");
+                createErrorMsg("error:" + QStringLiteral("第一个选择器没有'{'"));
                 break;
             }
 
@@ -185,7 +183,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
             }
 
             if(!traitsKey(key)){
-                m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("选择器的Key含有问题");
+                createErrorMsg(segment.selectorName + QStringLiteral("选择器的Key含有问题"));
                 break;
             }
 
@@ -196,7 +194,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
 
             /*!< 当前选择器没有‘}’，下一个选择器没有‘{’*/
             if(key.startsWith("#")&&!key.contains("{")){
-                m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("选择器没有‘}’，下一个选择器没有‘{’");
+                createErrorMsg(segment.selectorName + QStringLiteral("选择器没有‘}’，下一个选择器没有‘{’"));
                 break;
             }
             t_colonLab++;
@@ -224,13 +222,13 @@ bool CssParseMethod::parseFile(RTextFile *file)
             /*!< 当前选择器中确少‘:’*/
             else if(t_semicoLab > t_colonLab)
             {
-                m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("选择器中确少‘:’");
+                createErrorMsg(segment.selectorName + QStringLiteral("选择器中确少‘:’"));
                 break;
             }
             /*!< 当前选择器中确少‘;’*/
             else if(t_semicoLab < t_colonLab)
             {
-                m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("选择器中确少‘;’");
+                createErrorMsg(segment.selectorName + QStringLiteral("选择器中确少‘;’"));
                 break;
             }
         }
@@ -248,12 +246,9 @@ bool CssParseMethod::parseFile(RTextFile *file)
                     QString dataExc = specialDis(cssDataStr,t_semicoPos,t_rightBraPos);
 
                     /*!< 提示：当前选择器的‘}’之前数据异常*/
-                    if(!dataExc.isEmpty()&&t_semicoLab!=0)
+                    if(!dataExc.isEmpty() && t_semicoLab!=0)
                     {
-                        if(!m_errorMsg.getErrorMsg.isEmpty())
-                            m_errorMsg.getErrorMsg = m_errorMsg.getErrorMsg+"///" + "warning: " +segment.selectorName+QStringLiteral("选择器的‘}’之前数据异常");
-                        else
-                            m_errorMsg.getErrorMsg = "warning: " +segment.selectorName+QStringLiteral("选择器的‘}’之前数据异常");
+                        createWarnMsg(segment.selectorName + QStringLiteral("选择器的‘}’之前数据异常"));
                     }
                     t_colonLab = 0;
                     t_semicoLab = 0;
@@ -261,27 +256,26 @@ bool CssParseMethod::parseFile(RTextFile *file)
                 /*!< 当前选择器缺少最后一个‘;’*/
                 else
                 {
-                    m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("选择器缺少最后一个‘;’");
+                    createErrorMsg(segment.selectorName + QStringLiteral("选择器缺少最后一个‘;’"));
                     break;
                 }
             }
             /*!< 当前选择器缺少‘}’*/
             else if(t_rightBraLab < t_leftBraLab)
             {
-                QStringList listSele = segment.selectorName.split("{");
-                m_errorMsg.getErrorMsg = "error: "+listSele[0]+QStringLiteral("选择器缺少‘}’");
+                createErrorMsg(segment.selectorName.split("{").at(0) + QStringLiteral("选择器缺少‘}’"));
                 break;
             }
             /*!< 下一个选择器没有‘{’*/
             else if(t_rightBraLab > t_leftBraLab)
             {
-                m_errorMsg.getErrorMsg = "error: "+segment.selectorName+QStringLiteral("的下一个选择器缺少‘{’");
+                createErrorMsg(segment.selectorName + QStringLiteral("的下一个选择器缺少‘{’"));
                 break;
             }
         }
         t_sizeLab = i;
     }
-qDebug()<<"m_errorMsg:"<<m_errorMsg.getErrorMsg;
+
     /*!< 数据出现异常情况未解析完成*/
     if(t_sizeLab < cssDataStr.size() - 1)
         m_errorMsg.parse = false;
@@ -302,6 +296,16 @@ DynamicPropType CssParseMethod::getDynamicType(QString dyname)
         return m_interateStyleMap.value(dyname.toLower());
     }
     return DInvalid;
+}
+
+void CssParseMethod::createErrorMsg(QString msg)
+{
+    m_errorMsg.errorMsg = QString("[ERROR]%1").arg(msg);
+}
+
+void CssParseMethod::createWarnMsg(QString msg)
+{
+    m_errorMsg.errorMsg = QString("[WARN]%1").arg(msg);
 }
 
 /**
@@ -327,11 +331,13 @@ QString CssParseMethod::specialDis(const QString &character, int startPosition, 
 bool CssParseMethod::traitsKey(QString &keyData)
 {
     if(removeComments(keyData)){
+        static QRegExp validKeyFormat("^(\\-?[a-zA-z]+\\-?)+$");
+
         if(keyData.contains("\r\n")){
             QStringList keyDataList = keyData.split("\r\n");
             if(keyDataList.size() >= 2){
                 QString tmpKey = keyDataList.last().trimmed();
-                if(tmpKey.size() > 0){
+                if(tmpKey.size() > 0 && tmpKey.contains(validKeyFormat)){
                     keyData = tmpKey;
                     return true;
                 }else{
@@ -341,7 +347,7 @@ bool CssParseMethod::traitsKey(QString &keyData)
         }
 
         //css的属性名格式为-ms-overflow-x 字符与-相间隔分割，
-        if(keyData.contains(QRegExp("^(\\-?[a-zA-z]+\\-?)+$")))
+        if(keyData.contains(validKeyFormat))
             return true;
     }
     return false;

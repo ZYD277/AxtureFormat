@@ -32,10 +32,8 @@ SOURCES += main.cpp\
     qui/qrc/qrcparsemethod.cpp \
     qui/qss/qssoutput.cpp \
     qui/qss/qssparsemethod.cpp \
-    clientoperate.cpp \
-    global.cpp \
-    viewdelegate.cpp \
-    viewmoudel.cpp
+    html/gumboparsemethod.cpp \
+    html/gumbonodewrapper.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -55,13 +53,10 @@ HEADERS  += widget.h \
     qui/qrc/qrcparsemethod.h \
     qui/qss/qssoutput.h \
     qui/qss/qssparsemethod.h \
-    clientoperate.h \
-    global.h \
-    viewdelegate.h \
-    viewmoudel.h
+    html/gumboparsemethod.h \
+    html/gumbonodewrapper.h
 
-FORMS    += widget.ui \
-    clientoperate.ui
+FORMS    += widget.ui
 
-RESOURCES += \
-    images.qrc
+INCLUDEPATH+="E:/3rdPartyLib/gumbo/include"
+LIBS+="E:/3rdPartyLib/gumbo/shared/debug/gumbo.lib"

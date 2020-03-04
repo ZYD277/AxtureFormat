@@ -1,4 +1,13 @@
-﻿#ifndef HTMLPARSER_H
+﻿/*!
+ *  @brief     axure html文件解析
+ *  @author    wey
+ *  @version   1.0
+ *  @date      2020.03.03
+ *  @warning
+ *  @copyright NanJing RenGu.
+ *  @note 20200303:wey:使用gumbo替代xml方式解析html
+ */
+#ifndef HTMLPARSER_H
 #define HTMLPARSER_H
 
 #include <QObject>
@@ -6,7 +15,7 @@
 
 namespace Html{
 
-class HtmlParseMethod;
+class GumboParseMethod;
 
 class HtmlParser : QObject
 {
@@ -19,7 +28,7 @@ public:
     DomHtmlPtr getParsedResult();
 
 private:
-    HtmlParseMethod * m_parseMethod;
+    GumboParseMethod * m_parseMethod;
     DomHtmlPtr m_parseResult;
 };
 

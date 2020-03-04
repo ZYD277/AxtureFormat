@@ -16,8 +16,8 @@ Widget::Widget(QWidget *parent) :
 {
     ui->setupUi(this);
     setWindowTitle(QStringLiteral("Axture转Qt工具-RGCompany"));
-//    connect(ui->chooseAxtureProject,SIGNAL(pressed()),this,SLOT(chooseAxtureProject()));
-//    connect(this,SIGNAL(updateProgress(QString)),this,SLOT(appendRecord(QString)));
+    connect(ui->chooseAxtureProject,SIGNAL(pressed()),this,SLOT(chooseAxtureProject()));
+    connect(this,SIGNAL(updateProgress(QString)),this,SLOT(appendRecord(QString)));
 }
 
 Widget::~Widget()
@@ -32,9 +32,9 @@ Widget::~Widget()
  *          3.逐个解析单个页面(先解析页面的css样式，再解析html(结合css计算样式))
  *          4.将依赖的image文件夹拷贝至目的目录
  */
-void Widget::chooseAxtureProject(QString projectPath,QString storagePath)
+void Widget::chooseAxtureProject()
 {
-//    QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axture工程目录"),QDir::homePath());
+    QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axture工程目录"),QDir::homePath());
     QDir pDir(projectPath);
     if(projectPath.size() > 0 && pDir.exists()){
         ui->progressRecord->clear();
@@ -84,12 +84,12 @@ void Widget::chooseAxtureProject(QString projectPath,QString storagePath)
             }else{
                 emit updateProgress(QString(QStringLiteral("解析通用样式失败,流程终止!")));
                 errorMsg = cssParser.getParsedErrorMsg();
-                emit updateProgress(errorMsg.getErrorMsg);
+                emit updateProgress(errorMsg.errorMsg);
                 return;
             }
 
             //[3]
-            QString outputDir = storagePath + "_qt";
+            QString outputDir = projectPath + "_qt";
             std::for_each(project.pages.begin(),project.pages.end(),[&](const AxturePage & page){
                 if(cssParser.parseFile(page.cssFilePath)){
                     if(m_htmlParser.parseHtmlFile(page.htmlFilePath)){
