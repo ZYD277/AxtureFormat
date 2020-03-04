@@ -6,6 +6,7 @@
  *  @date      2020.03.03
  *  @warning
  *  @copyright NanJing RenGu.
+ *  @note   20200304:wey:提取每种控件可转换的属性
  */
 #ifndef GUMBOPARSEMETHOD_H
 #define GUMBOPARSEMETHOD_H

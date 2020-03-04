@@ -30,7 +30,7 @@ bool GumboParseMethod::startParse(RTextFile *file)
         m_htmlResultPtr = DomHtmlPtr(new DomHtml);
         parseBody(bodyNode);
 
-        printBody(m_htmlResultPtr->body);
+//        printBody(m_htmlResultPtr->body);
     }
 
     return true;
@@ -235,6 +235,9 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
 {
     BaseData * data = new BaseData();
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    data->m_bChecked = element.firstChild().clazz().contains("selected");
+    data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     node->m_data = data;
 }
 
@@ -242,13 +245,22 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
 {
     BaseData * data = new BaseData();
     data->m_text = element.firstChild().firstChild().firstChild().firstChild().firstChild().text();
+    data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
+    data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 }
 
 void GumboParseMethod::parseTextFieldNodeData(GumboNodeWrapper &element, DomNode *node)
 {
-    BaseData * data = new BaseData();
+    TextFieldData * data = new TextFieldData();
+    data->m_bReadOnly = element.firstChild().hasAttribute(G_NodeHtml.READONLY);
+    data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
     data->m_text = element.firstChild().attribute(G_NodeHtml.VALUE);
+    data->m_type = element.firstChild().attribute(G_NodeHtml.TYPE);
+    if(element.firstChild().hasAttribute(G_NodeHtml.MAX_LEN))
+        data->m_maxLength = element.firstChild().attribute(G_NodeHtml.MAX_LEN).toInt();
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 }
 
@@ -256,6 +268,8 @@ void GumboParseMethod::parseImageNodeData(GumboNodeWrapper &element, DomNode *no
 {
     ImageData * data = new ImageData();
     data->m_src = element.firstChild().attribute(G_NodeHtml.SRC);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     node->m_data = data;
 }
@@ -296,6 +310,9 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
 {
     BaseData * data = new BaseData();
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
+    data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
+    data->m_bChecked = element.firstChild().clazz().contains("selected");
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 }
 
