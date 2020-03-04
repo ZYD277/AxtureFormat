@@ -86,6 +86,7 @@ private:
     NodeHtml m_nodeType;
     DomHtmlPtr m_result;
     int m_rdynamic;
+    QString m_classInfo;
 };
 
 } //namespace Html

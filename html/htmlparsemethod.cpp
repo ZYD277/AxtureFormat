@@ -114,6 +114,10 @@ NodeType HtmlParseMethod::getNodeType(const QDomElement &element,QDomElement par
     //TODO 20200112 容器节点如何检测？？？？
     if(!element.isNull()){
         QString classInfo = element.attribute(m_nodeType.CLASS);
+        if(classInfo == m_classInfo && classInfo == "ax_default"){
+            return RGROUP;
+        }
+        m_classInfo = classInfo;
         if(classInfo.isEmpty()){
             if(!parentElement.isNull()){
                 QDomElement secondElement = secondChildElement(parentElement);
@@ -307,6 +311,7 @@ void HtmlParseMethod::parserdynamicPanelNodeData(QDomElement &element, DomNode *
                 node->m_style = childs.at(i).toElement().attribute(m_nodeType.STYLE);
 
                 establishRelation(parentNode,node);
+                parseDiv(childs.at(i).toElement().childNodes().at(0).toElement(),node);
             }
             else{
                 parserdynamicPanelNodeData(childs.at(i).toElement(),parentNode);
@@ -382,7 +387,7 @@ void HtmlParseMethod::parseTableNodeData(QDomElement &element, DomNode *node)
 void HtmlParseMethod::parseTreeNodeData(QDomElement &element, DomNode *node)
 {
     if(element.toElement().attribute(m_nodeType.CLASS).contains("treeroot")){
-        QDomNodeList childs = element.childNodes().at(0).toElement().childNodes().at(1).toElement().childNodes();
+        QDomNodeList childs = element.childNodes().at(0).childNodes().at(1).childNodes();
         TreeData * data = new TreeData();
 
         for(int i = 1; i < childs.size(); i++){

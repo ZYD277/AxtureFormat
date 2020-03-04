@@ -114,7 +114,8 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
             child.setAttribute("name",node->m_id);
 
-            generateRect(doc,child,rect);
+            if(node->m_class != "panel_state")
+                generateRect(doc,child,rect);
 
             parent.appendChild(child);
 
@@ -217,16 +218,13 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             generateRect(doc,child,rect);
 
+            parent.appendChild(child);
+
             if(node->m_childs.size() > 0){
                 for(int i = 0;i < node->m_childs.size();i++){
-
-                    QDomElement widget = doc.createElement("widget");
-                    widget.setAttribute("class",m_htmlMapToQtWidget.value(node->m_childs.at(i)->m_type));
-                    widget.setAttribute("name",node->m_childs.at(i)->m_id);
-                    child.appendChild(widget);
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
                 }
             }
-            parent.appendChild(child);
             break;
 
         }
