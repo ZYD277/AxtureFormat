@@ -120,7 +120,7 @@ GumboNodeWrapper::AttributeList GumboNodeWrapper::attributes()
         if(!isValidElement()) break;
 
         GumboVector attrVector = m_node->v.element.attributes;
-        for(int i = 0; i < attrVector.length; i++){
+        for(uint i = 0; i < attrVector.length; i++){
             GumboAttribute* attr = static_cast<GumboAttribute*>(attrVector.data[i]);
             attrs.push_back(qMakePair(attr->name,attr->value));
         }
@@ -139,7 +139,7 @@ QString GumboNodeWrapper::attribute(QString attrName)
         attrName = attrName.toLower();
 
         GumboVector attrVector = m_node->v.element.attributes;
-        for(int i = 0; i < attrVector.length; i++){
+        for(uint i = 0; i < attrVector.length; i++){
             GumboAttribute* attr = static_cast<GumboAttribute*>(attrVector.data[i]);
             if(strcmp(attr->name,attrName.toLocal8Bit().data()) == 0)
                 return QString(attr->value);
@@ -149,30 +149,47 @@ QString GumboNodeWrapper::attribute(QString attrName)
     return result;
 }
 
+bool GumboNodeWrapper::hasAttribute(QString attrName)
+{
+    Check_Return(!isValidElement() || attrName.trimmed().size() == 0,false);
+
+    GumboVector attrVector = m_node->v.element.attributes;
+    for(uint i = 0; i < attrVector.length; i++){
+        GumboAttribute* attr = static_cast<GumboAttribute*>(attrVector.data[i]);
+        if(strcmp(attr->name,attrName.toLocal8Bit().data()) == 0)
+            return true;
+    }
+    return false;
+}
+
 QString GumboNodeWrapper::id()
 {
-    return attribute("id");
+    return attribute(m_nodeHtml.ID);
 }
 
 QString GumboNodeWrapper::clazz()
 {
-    return attribute("class");
+    return attribute(m_nodeHtml.CLASS);
+}
+
+QString GumboNodeWrapper::style()
+{
+    return attribute(m_nodeHtml.STYLE);
 }
 
 QString GumboNodeWrapper::tagName() const
 {
-    static NodeHtml nodeHtml;
     if(isValidElement() && m_node->type == GUMBO_NODE_ELEMENT){
         switch(m_node->v.element.tag){
-            case GUMBO_TAG_HTML:return nodeHtml.HTML;break;
-            case GUMBO_TAG_HEAD:return nodeHtml.HEAD;break;
-            case GUMBO_TAG_TITLE:return nodeHtml.TITLE;break;
-            case GUMBO_TAG_LINK:return nodeHtml.LINK;break;
-            case GUMBO_TAG_META:return nodeHtml.META;break;
-            case GUMBO_TAG_BODY:return nodeHtml.BODY;break;
-            case GUMBO_TAG_DIV:return nodeHtml.DIV;break;
-            case GUMBO_TAG_P:return nodeHtml.P;break;
-            case GUMBO_TAG_SPAN:return nodeHtml.SPAN;break;
+            case GUMBO_TAG_HTML:return m_nodeHtml.HTML;break;
+            case GUMBO_TAG_HEAD:return m_nodeHtml.HEAD;break;
+            case GUMBO_TAG_TITLE:return m_nodeHtml.TITLE;break;
+            case GUMBO_TAG_LINK:return m_nodeHtml.LINK;break;
+            case GUMBO_TAG_META:return m_nodeHtml.META;break;
+            case GUMBO_TAG_BODY:return m_nodeHtml.BODY;break;
+            case GUMBO_TAG_DIV:return m_nodeHtml.DIV;break;
+            case GUMBO_TAG_P:return m_nodeHtml.P;break;
+            case GUMBO_TAG_SPAN:return m_nodeHtml.SPAN;break;
             default:break;
         }
     }
@@ -215,23 +232,22 @@ GumboNodeWrapper::NodeType GumboNodeWrapper::type() const
  */
 GumboTag GumboNodeWrapper::getTagByTagName(QString tagName)
 {
-    static NodeHtml nodeHtml;
     QString lower = tagName.toLower();
-    if(lower.compare(nodeHtml.HEAD) == 0){
+    if(lower.compare(m_nodeHtml.HEAD) == 0){
         return GUMBO_TAG_HEAD;
-    }else if(lower.compare(nodeHtml.TITLE) == 0){
+    }else if(lower.compare(m_nodeHtml.TITLE) == 0){
         return GUMBO_TAG_TITLE;
-    }else if(lower.compare(nodeHtml.LINK) == 0){
+    }else if(lower.compare(m_nodeHtml.LINK) == 0){
         return GUMBO_TAG_LINK;
-    }else if(lower.compare(nodeHtml.META) == 0){
+    }else if(lower.compare(m_nodeHtml.META) == 0){
         return GUMBO_TAG_META;
-    }else if(lower.compare(nodeHtml.BODY) == 0){
+    }else if(lower.compare(m_nodeHtml.BODY) == 0){
         return GUMBO_TAG_BODY;
-    }else if(lower.compare(nodeHtml.DIV) == 0){
+    }else if(lower.compare(m_nodeHtml.DIV) == 0){
         return GUMBO_TAG_DIV;
-    }else if(lower.compare(nodeHtml.P) == 0){
+    }else if(lower.compare(m_nodeHtml.P) == 0){
         return GUMBO_TAG_P;
-    }else if(lower.compare(nodeHtml.SPAN) == 0){
+    }else if(lower.compare(m_nodeHtml.SPAN) == 0){
         return GUMBO_TAG_SPAN;
     }
 

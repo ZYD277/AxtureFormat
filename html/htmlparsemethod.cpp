@@ -244,7 +244,6 @@ void HtmlParseMethod::printBody(DomNode *node)
  * @param[in] element 待解析的确定的元素节点
  * @param[in] type 元素类型
  * @param[in] node 元素节点
- * @return
  */
 void HtmlParseMethod::parseNodeData(QDomElement &element, NodeType type, DomNode * node)
 {
