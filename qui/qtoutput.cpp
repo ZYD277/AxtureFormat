@@ -5,6 +5,7 @@
 #include "qtparsemethod.h"
 #include "qrc/qrcoutput.h"
 #include "qss/qssoutput.h"
+#include "formatproperty.h"
 
 namespace RQt{
 
@@ -38,6 +39,11 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
 
     QString resFile = "res.qrc";
     m_parseMethod->setResFile(resFile);
+
+    FormatProperty propFormat;
+    propFormat.setDataSource(ptr);
+    propFormat.setCssMap(globalCss,pageCss);
+    propFormat.formart();
 
     //[1]
     RXmlFile xmlFile(fullPath);
