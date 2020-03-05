@@ -299,17 +299,17 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             Html::TreeData * tdata = dynamic_cast<Html::TreeData *>(node->m_data);
 
-            for(int i = 1; i < tdata->m_colums.size(); i++){
+            for(int i = 0; i < tdata->m_colums.size(); i++){
                 QDomElement column = doc.createElement("column");
 
-                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("Item%1").arg(tdata->m_colums.at(i))));
+                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("%1").arg(tdata->m_colums.at(i))));
 
                 child.appendChild(column);
             }
-            for(int i = 1; i < tdata->m_items.size(); i++){
+            for(int i = 0; i < tdata->m_items.size(); i++){
                 QDomElement column = doc.createElement("item");
 
-                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("Item%1").arg(tdata->m_items.at(i))));
+                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("%1").arg(tdata->m_items.at(i))));
 
                 child.appendChild(column);
             }
