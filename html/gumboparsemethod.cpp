@@ -243,9 +243,6 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
 {
     BaseData * data = new BaseData();
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
-//    qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-//           <<data->m_text<<element.secondChild().id()
-//           <<"\n";
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
@@ -279,7 +276,7 @@ void GumboParseMethod::parserdynamicPanelNodeData(GumboNodeWrapper &element, Dom
             nodeChild->m_style = child.style();
 
             establishRelation(node,nodeChild);
-            parseDiv(child.firstChild(),node);
+            parseDiv(child.firstChild(),nodeChild);
         }
         else{
             parserdynamicPanelNodeData(child,node);
