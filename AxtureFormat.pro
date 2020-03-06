@@ -41,7 +41,8 @@ SOURCES += main.cpp\
     qui/props/mrect.cpp \
     qui/props/mrow.cpp \
     qui/props/mcolumn.cpp \
-    qui/props/mitem.cpp
+    qui/props/mitem.cpp \
+    qui/props/mdomresource.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -70,7 +71,8 @@ HEADERS  += widget.h \
     qui/props/mproperty.h \
     qui/props/mrow.h \
     qui/props/mcolumn.h \
-    qui/props/mitem.h
+    qui/props/mitem.h \
+    qui/props/mdomresource.h
 
 FORMS    += widget.ui
 

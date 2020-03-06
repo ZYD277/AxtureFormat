@@ -32,9 +32,9 @@ void FormatProperty::setCssMap(CSS::CssMap globalCss, CSS::CssMap pageCss)
 /*!
  * @brief 格式转换
  */
-bool FormatProperty::formart()
+RDomWidget *FormatProperty::formart()
 {
-    Check_Return(m_dataSrc.isNull() || m_pageCss.size() ==0,false);
+    Check_Return(m_dataSrc.isNull() || m_pageCss.size() ==0,nullptr);
 
     RDomWidget * rootWidget = new RDomWidget();
     Html::DomNode * root = m_dataSrc->body;
@@ -45,7 +45,7 @@ bool FormatProperty::formart()
         createDomWidget(rootWidget,element,QRect(QPoint(0,0),RUtil::screenSize()));
     });
 
-    return true;
+    return rootWidget;
 }
 
 /*!

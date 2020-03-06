@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  *  @brief     表格列属性
  *  @details
  *  @author    wey
@@ -11,6 +11,7 @@
 #define MCOLUMN_H
 
 #include <QList>
+#include <QXmlStreamWriter>
 
 namespace RQt{
 
@@ -21,6 +22,8 @@ class MColumn
 public:
     MColumn();
     ~MColumn();
+
+    void write(QXmlStreamWriter & writer,QString tagName);
 
     void addProperty(MProperty * prop);
 

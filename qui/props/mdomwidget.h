@@ -12,6 +12,7 @@
 
 #include <QString>
 #include <QList>
+#include <QXmlStreamWriter>
 
 namespace RQt{
 
@@ -25,6 +26,8 @@ class RDomWidget
 public:
     RDomWidget();
     ~RDomWidget();
+
+    void write(QXmlStreamWriter & writer,QString tagName);
 
     /*!< 属性操作 */
     inline void setAttributeName(QString id){m_attrName = id;m_bHasAttrName = true;}

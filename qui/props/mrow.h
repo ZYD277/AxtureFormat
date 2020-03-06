@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  *  @brief     表格行属性
  *  @details
  *  @author    wey
@@ -12,6 +12,7 @@
 
 #include <QString>
 #include <QList>
+#include <QXmlStreamWriter>
 
 namespace RQt{
 
@@ -22,6 +23,8 @@ class MRow
 public:
     MRow();
     ~MRow();
+
+    void write(QXmlStreamWriter & writer,QString tagName);
 
     void addProperty(MProperty * prop);
 

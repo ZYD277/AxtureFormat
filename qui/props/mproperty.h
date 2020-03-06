@@ -11,6 +11,7 @@
 #define RPROPERTY_H_2020_03_05
 
 #include <QString>
+#include <QXmlStreamWriter>
 #include "mrect.h"
 
 namespace RQt{
@@ -20,6 +21,8 @@ class MProperty
 public:
     MProperty();
     ~MProperty();
+
+    void write(QXmlStreamWriter & writer,QString tagName);
 
     inline void setAttributeName(QString name){m_attrName = name ; m_bHasAttrName = true;}
     inline QString attributeName()const {return m_attrName;}

@@ -6,6 +6,7 @@
 #include "qrc/qrcoutput.h"
 #include "qss/qssoutput.h"
 #include "formatproperty.h"
+#include "exportui.h"
 
 namespace RQt{
 
@@ -43,7 +44,26 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
     FormatProperty propFormat;
     propFormat.setDataSource(ptr);
     propFormat.setCssMap(globalCss,pageCss);
-    propFormat.formart();
+    RDomWidget * root = propFormat.formart();
+    if(root){
+        QFile file("d:/aaa.ui");
+        if(!file.open(QFile::WriteOnly)){
+            return false;
+        }
+
+        ExportUi ui;
+        ui.beginWrite(&file);
+
+        ui.setAttributeVersion("4.0");
+        ui.setElementClass("Form");
+        ui.setDomWidget(root);
+
+        MDomResource * resc = new MDomResource;
+        resc->addResource("res.qrc");
+        ui.setDomResource(resc);
+
+        ui.endWrite();
+    }
 
     //[1]
     RXmlFile xmlFile(fullPath);

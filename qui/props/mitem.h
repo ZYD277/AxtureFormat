@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  *  @brief     表格或树形控件单元格树形
  *  @details
  *  @author    wey
@@ -11,6 +11,7 @@
 #define RITEM_H
 
 #include <QString>
+#include <QXmlStreamWriter>
 
 namespace RQt{
 
@@ -22,11 +23,15 @@ public:
     MItem();
     ~MItem();
 
+    void write(QXmlStreamWriter & writer,QString tagName);
+
     void setAttributeRow(QString row){m_attrRow = row;m_hasAttrRow = true;}
+    bool hasAttributeRow()const{return m_hasAttrRow;}
     QString attributeRow()const{return m_attrRow;}
 
     void setAttributeColumn(QString column){m_attrColumn = column;m_hasAttrColumn = true;}
-    QString attributeColumn()const{return m_hasAttrColumn;}
+    bool hasAttributeColumn()const{return m_hasAttrColumn;}
+    QString attributeColumn()const{return m_attrColumn;}
 
     void setProperty(MProperty * prop){m_prop = prop;}
 

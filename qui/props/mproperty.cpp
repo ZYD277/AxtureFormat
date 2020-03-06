@@ -13,6 +13,40 @@ MProperty::~MProperty()
     m_propRect = nullptr;
 }
 
+void MProperty::write(QXmlStreamWriter &writer, QString tagName)
+{
+    writer.writeStartElement(tagName.isEmpty() ? "property" : tagName);
+
+    if(hasAtributeName())
+        writer.writeAttribute("name",attributeName());
+
+    switch(m_kind){
+        case Cstring:{
+            writer.writeTextElement("string",m_propString);
+            break;
+        }
+        case Bool:{
+            writer.writeTextElement("bool",m_propString);
+            break;
+        }
+        case Enum:{
+            writer.writeTextElement("enum",m_propString);
+            break;
+        }
+        case Number:{
+            writer.writeTextElement("number",m_propString);
+            break;
+        }
+        case Rect:{
+            m_propRect->write(writer,"rect");
+            break;
+        }
+        default:break;
+    }
+
+    writer.writeEndElement();
+}
+
 void MProperty::setPropString(QString value)
 {
     m_kind = Cstring;

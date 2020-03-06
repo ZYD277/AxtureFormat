@@ -28,7 +28,7 @@ public:
     void setDataSource(DomHtmlPtr ptr);
     void setCssMap(CSS::CssMap globalCss, CSS::CssMap pageCss);
 
-    bool formart();
+    RDomWidget * formart();
 
 private:
     QString getTypeName(Html::NodeType type);

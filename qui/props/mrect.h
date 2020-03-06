@@ -11,6 +11,7 @@
 #define RRECT_H
 
 #include <QRect>
+#include <QXmlStreamWriter>
 
 namespace RQt{
 
@@ -18,6 +19,8 @@ class MRect{
 public:
     MRect();
     ~MRect();
+
+    void write(QXmlStreamWriter & writer,QString tagName);
 
     void setRect(QRect rect);
     const QRect &rect()const;
