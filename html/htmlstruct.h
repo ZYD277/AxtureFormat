@@ -68,7 +68,7 @@ struct DomHead{
  * @brief 控件基础通用属性
  */
 struct BaseData{
-    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false){}
+    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true){}
     virtual ~BaseData(){}
 
     QString m_text;         /*!< 控件显示内容 */
@@ -77,6 +77,7 @@ struct BaseData{
     bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
     bool m_bDisabled;
     bool m_bReadOnly;       /*!< 只读 */
+    bool m_bLeftToRight;    /*!< 布局默认从左至右 */
 };
 
 /*!
@@ -136,7 +137,7 @@ struct GroupData : public BaseData{
  * @brief 单行文本编辑框
  */
 struct TextFieldData : public BaseData{
-    TextFieldData():m_maxLength(65535){}
+    TextFieldData():m_maxLength(32767){}
 
     QString m_type;         /*!< 文本类型：password、text等 */
     QString m_placeHolders; /*!< 文本占位符，生成在js中，无法提取 */

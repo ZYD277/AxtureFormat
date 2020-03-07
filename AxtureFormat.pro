@@ -33,7 +33,16 @@ SOURCES += main.cpp\
     qui/qss/qssoutput.cpp \
     qui/qss/qssparsemethod.cpp \
     html/gumboparsemethod.cpp \
-    html/gumbonodewrapper.cpp
+    html/gumbonodewrapper.cpp \
+    qui/formatproperty.cpp \
+    qui/exportui.cpp \
+    qui/props/mdomwidget.cpp \
+    qui/props/mproperty.cpp \
+    qui/props/mrect.cpp \
+    qui/props/mrow.cpp \
+    qui/props/mcolumn.cpp \
+    qui/props/mitem.cpp \
+    qui/props/mdomresource.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -54,7 +63,16 @@ HEADERS  += widget.h \
     qui/qss/qssoutput.h \
     qui/qss/qssparsemethod.h \
     html/gumboparsemethod.h \
-    html/gumbonodewrapper.h
+    html/gumbonodewrapper.h \
+    qui/formatproperty.h \
+    qui/exportui.h \
+    qui/props/mrect.h \
+    qui/props/mdomwidget.h \
+    qui/props/mproperty.h \
+    qui/props/mrow.h \
+    qui/props/mcolumn.h \
+    qui/props/mitem.h \
+    qui/props/mdomresource.h
 
 FORMS    += widget.ui
 
