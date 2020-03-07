@@ -52,7 +52,9 @@ enum NodeType{
     RTABLE_CELL,            /*!< 表格单元格 */
     RIMAGE,
     RLABEL,
-    RTREE                   /*!< 树形控件*/
+    RLINE,
+    RTREE,                   /*!< 树形控件*/
+    RTREE_CHILDNODE          /*!< 树形控件子节点*/
 };
 
 /*!
@@ -117,6 +119,8 @@ struct TreeData : public BaseData{
     QStringList m_dataCoIt;
     QStringList m_colums;
     QStringList m_items;
+
+    QString m_treeItems;
 };
 
 /*!
@@ -176,6 +180,8 @@ struct DomNode{
     QString m_id;           /*!< id属性 */
     QString m_class;        /*!< class属性 */
     QString m_style;        /*!< 控件中设置的样式属性 */
+
+    QString m_treeText;
 
     BaseData * m_data;      /*!< 元素所具备的数据信息 */
 

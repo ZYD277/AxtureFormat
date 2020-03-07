@@ -291,32 +291,68 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             break;
         }
+        case Html::RLINE:{
+            QDomElement child = doc.createElement("widget");
+            child.setAttribute("class","Line");
+            child.setAttribute("name",node->m_id);
+
+            generateRect(doc,child,rect);
+
+            Html::BaseData * data = dynamic_cast<Html::BaseData *>(node->m_data);
+
+            if(removePxUnit(cssMap.value("width"))>removePxUnit(cssMap.value("height"))){
+                if(!data->m_toolTip.isEmpty())
+                    child.appendChild(createChildElement(RProperty,RString,doc,"toolTip",QString("%1").arg(data->m_toolTip)));
+                if(data->m_bDisabled)
+                    child.appendChild(createChildElement(RProperty,RString,doc,"enabled",QString("false")));
+                child.appendChild(createChildElement(RProperty,RString,doc,"lineWidth",QString("%1").arg(removePxUnit(cssMap.value("height")))));
+                child.appendChild(createChildElement(RProperty,RString,doc,"orientation",QString("Qt::Horizontal")));
+            }
+            else{
+                if(!data->m_toolTip.isEmpty())
+                    child.appendChild(createChildElement(RProperty,RString,doc,"toolTip",QString("%1").arg(data->m_toolTip)));
+                if(data->m_bDisabled)
+                    child.appendChild(createChildElement(RProperty,RString,doc,"enabled",QString("false")));
+                child.appendChild(createChildElement(RProperty,RString,doc,"lineWidth",QString("%1").arg(removePxUnit(cssMap.value("width")))));
+                child.appendChild(createChildElement(RProperty,RString,doc,"orientation",QString("Qt::Vertical")));
+            }
+            parent.appendChild(child);
+            break;
+        }
         case Html::RTREE:{
+            QRect rectTree(0,0,parentGlobalRect.width(),parentGlobalRect.height());
+
             QDomElement child = doc.createElement("widget");
             child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
             child.setAttribute("name",node->m_id);
-            generateRect(doc,child,rect);
+            generateRect(doc,child,rectTree);
 
-            Html::TreeData * tdata = dynamic_cast<Html::TreeData *>(node->m_data);
-
-            for(int i = 0; i < tdata->m_colums.size(); i++){
-                QDomElement column = doc.createElement("column");
-
-                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("%1").arg(tdata->m_colums.at(i))));
-
-                child.appendChild(column);
-            }
-            for(int i = 0; i < tdata->m_items.size(); i++){
-                QDomElement column = doc.createElement("item");
-
-                column.appendChild(createChildElement(RProperty,RString,doc,"text",QString("%1").arg(tdata->m_items.at(i))));
-
-                child.appendChild(column);
-            }
+            QDomElement column = doc.createElement("column");
+            column.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_treeText));
+            child.appendChild(column);
 
             parent.appendChild(child);
+            if(node->m_childs.size() > 0){
+                for(int i = 0;i < node->m_childs.size();i++){
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rectTree);
+                }
+            }
             break;
-    }
+        }
+        case Html::RTREE_CHILDNODE:{
+
+            QDomElement child = doc.createElement("item");
+
+            child.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_treeText));
+
+            parent.appendChild(child);
+            if(node->m_childs.size() > 0){
+                for(int i = 0;i < node->m_childs.size();i++){
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
+                }
+            }
+            break;
+        }
         default:break;
     }
 }

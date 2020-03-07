@@ -386,27 +386,31 @@ void HtmlParseMethod::parseTableNodeData(QDomElement &element, DomNode *node)
 void HtmlParseMethod::parseTreeNodeData(QDomElement &element, DomNode *node)
 {
     if(element.toElement().attribute(m_nodeType.CLASS).contains("treeroot")){
-        QDomNodeList childs = element.childNodes().at(0).childNodes().at(1).childNodes();
-        TreeData * data = new TreeData();
+        if(element.childNodes().size()>0){
+            if(element.childNodes().at(0).childNodes().size()>1){
+                QDomNodeList childs = element.childNodes().at(0).childNodes().at(1).childNodes();
+                TreeData * data = new TreeData();
 
-        for(int i = 1; i < childs.size(); i++){
+                for(int i = 1; i < childs.size(); i++){
 
-            QDomElement childEle = childs.at(i).toElement();
+                    QDomElement childEle = childs.at(i).toElement();
 
-            DomWrapper wrapper(childEle.toElement());
+                    DomWrapper wrapper(childEle.toElement());
 
-            QString columsData = wrapper.data().text();
-            if(!columsData.isEmpty()){
-                data->m_dataCoIt.append(columsData);
+                    QString columsData = wrapper.data().text();
+                    if(!columsData.isEmpty()){
+                        data->m_dataCoIt.append(columsData);
+                    }
+                }
+                QString colums = data->m_dataCoIt[0];
+                QString items = data->m_dataCoIt[1];
+
+                data->m_colums = colums.split("Item");
+                data->m_items = items.split("Item");
+
+                node->m_data = data;
             }
         }
-        QString colums = data->m_dataCoIt[0];
-        QString items = data->m_dataCoIt[1];
-
-        data->m_colums = colums.split("Item");
-        data->m_items = items.split("Item");
-
-        node->m_data = data;
     }
 }
 
