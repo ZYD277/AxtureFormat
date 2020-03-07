@@ -13,6 +13,11 @@ MItem::~MItem()
 {
     delete m_prop;
     m_prop = nullptr;
+
+    foreach(auto hh,m_items)
+        delete hh;
+
+    m_items.clear();
 }
 
 void MItem::write(QXmlStreamWriter &writer, QString tagName)
@@ -26,6 +31,10 @@ void MItem::write(QXmlStreamWriter &writer, QString tagName)
         writer.writeAttribute("column",attributeColumn());
 
     m_prop->write(writer,"property");
+
+    foreach(auto hh,m_items){
+        hh->write(writer,"item");
+    }
 
     writer.writeEndElement();
 }

@@ -177,7 +177,7 @@ QString GumboNodeWrapper::style()
     return attribute(m_nodeHtml.STYLE);
 }
 
-QString GumboNodeWrapper::tagName() const
+QString GumboNodeWrapper::tagName()
 {
     if(isValidElement() && m_node->type == GUMBO_NODE_ELEMENT){
         switch(m_node->v.element.tag){
@@ -201,7 +201,7 @@ QString GumboNodeWrapper::tagName() const
  * @attention 只在类型为GUMBO_NODE_TEXT时才能返回
  * @return 节点文本
  */
-QString GumboNodeWrapper::text() const
+QString GumboNodeWrapper::text()
 {
     if(isValidText()){
         return QString(m_node->v.text.text);
@@ -254,14 +254,14 @@ GumboTag GumboNodeWrapper::getTagByTagName(QString tagName)
     return GUMBO_TAG_UNKNOWN;
 }
 
-bool GumboNodeWrapper::isValidElement() const
+bool GumboNodeWrapper::isValidElement()
 {
     if(!m_bValid || m_node->type != GUMBO_NODE_ELEMENT)
         return false;
     return true;
 }
 
-bool GumboNodeWrapper::isValidText() const
+bool GumboNodeWrapper::isValidText()
 {
     if(!m_bValid || m_node->type != GUMBO_NODE_TEXT)
         return false;

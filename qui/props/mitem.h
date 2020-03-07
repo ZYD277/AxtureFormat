@@ -34,6 +34,7 @@ public:
     QString attributeColumn()const{return m_attrColumn;}
 
     void setProperty(MProperty * prop){m_prop = prop;}
+    void addItem(MItem * item){m_items.append(item);}
 
 private:
     bool m_hasAttrRow;
@@ -43,7 +44,7 @@ private:
     QString m_attrColumn;
 
     MProperty * m_prop;
-
+    QList<MItem *> m_items;
 };
 
 } //namespace RQt

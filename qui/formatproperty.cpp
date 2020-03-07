@@ -1,5 +1,6 @@
 ﻿#include "formatproperty.h"
 
+#include <QDebug>
 #include "../head.h"
 #include "../util/rutil.h"
 #include "props/mdomwidget.h"
@@ -66,6 +67,7 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RIMAGE:
         case Html::RLABEL:return QString("QLabel");break;
         case Html::RTREE:return QString("QTreeWidget");break;
+        case Html::RLINE:return QString("Line");break;
 
         default:return QString();break;
     }
@@ -106,6 +108,38 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RGROUP:{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
             rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
+            break;
+        }
+        case Html::RDYNAMIC_PANEL:{
+            if(node->m_data->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            for(int i = 0; i < node->m_childs.size();i++){
+                createDomWidget(domWidget,node->m_childs.at(i),rect);
+            }
+
+            break;
+        }
+        case Html::RLINE:{
+            createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            if(node->m_data->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            //判断线条方向
+            int width = removePxUnit(cssMap.value("width"));
+            int height = removePxUnit(cssMap.value("height"));
+
+            MProperty * directProp = new MProperty();
+            directProp->setAttributeName("orientation");
+            if((width > 5) || (height <= width)){
+                directProp->setPropEnum("Qt::Horizontal");
+            }else {
+                directProp->setPropEnum("Qt::Vertical");
+            }
+
+            domWidget->addProperty(directProp);
+
             break;
         }
         case Html::RTABLE:{
@@ -177,6 +211,39 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
+        case Html::RTREE :{
+            Html::TreeItemData * virtualRoot = dynamic_cast<Html::TreeItemData *>(node->m_data);
+            //创建列(axure树只有一列，并且在qt ui中需要将水平表头隐藏)
+            MColumn  * column = new MColumn();
+            MProperty * rowProp = new MProperty();
+            rowProp->setPropString(virtualRoot->m_text);
+            column->addProperty(rowProp);
+            domWidget->addColumn(column);
+
+            MProperty * hVisibleProp = new MProperty();
+            hVisibleProp->setAttributeName("headerVisible");
+            hVisibleProp->setPropBool("false");
+            domWidget->addProperty(hVisibleProp);
+
+            QList<Html::TreeItemData *> childs = virtualRoot->m_childItems;
+            for(int i = 0; i < childs.size(); i++){
+                Html::TreeItemData * itemData = childs.at(i);
+                MItem * item = new MItem();
+
+                MProperty * prop = new MProperty();
+                prop->setAttributeName("text");
+                prop->setPropString(itemData->m_text);
+                item->setProperty(prop);
+
+                for(int j = 0 ; j < itemData->m_childItems.size(); j++){
+                    createTreeNode(item,itemData->m_childItems.at(j));
+                }
+
+                domWidget->addItem(item);
+            }
+
+            break;
+        }
         case Html::RTEXT_FIELD:{
             Html::TextFieldData * textData = dynamic_cast<Html::TextFieldData *>(node->m_data);
 
@@ -243,7 +310,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         default:break;
     }
 
-    if(node->m_childs.size() > 0 && node->m_type != Html::RTABLE){
+    if(node->m_childs.size() > 0 && node->m_type != Html::RTABLE && node->m_type != Html::RDYNAMIC_PANEL){
         std::for_each(node->m_childs.begin(),node->m_childs.end(),[&](Html::DomNode * element){
             createDomWidget(domWidget,element,rect);
         });
@@ -335,11 +402,11 @@ void FormatProperty::createReadonlyProp(RDomWidget *domWidget, bool readonly)
     domWidget->addProperty(readOnlyProp);
 }
 
-void FormatProperty::createEnableProp(RDomWidget *domWidget, bool enable)
+void FormatProperty::createEnableProp(RDomWidget *domWidget, bool disable)
 {
     MProperty * enableProp = new MProperty;
     enableProp->setAttributeName("enabled");
-    enableProp->setPropBool(enable?"true":"false");
+    enableProp->setPropBool(disable?"false":"true");
     domWidget->addProperty(enableProp);
 }
 
@@ -376,6 +443,22 @@ void FormatProperty::createToolTipProp(RDomWidget *domWidget, QString toolTip)
         tipProp->setAttributeName("statusTip");
         tipProp->setPropString(toolTip);
         domWidget->addProperty(tipProp);
+    }
+}
+
+void FormatProperty::createTreeNode(MItem * parentItem,Html::TreeItemData * textData)
+{
+    MItem * item = new MItem();
+
+    MProperty * prop = new MProperty();
+    prop->setAttributeName("text");
+    prop->setPropString(textData->m_text);
+    item->setProperty(prop);
+
+    parentItem->addItem(item);
+
+    for(int j = 0 ; j < textData->m_childItems.size(); j++){
+        createTreeNode(item,textData->m_childItems.at(j));
     }
 }
 

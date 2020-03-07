@@ -47,8 +47,8 @@ public:
 
     bool valid() const{return m_bValid;}
 
-    QString tagName() const;
-    QString text() const;
+    QString tagName();
+    QString text();
 
     enum NodeType{
         WInvalid,
@@ -63,8 +63,8 @@ public:
 
 private:
     GumboTag getTagByTagName(QString tagName);
-    inline bool isValidElement() const;
-    inline bool isValidText() const;
+    inline bool isValidElement();
+    inline bool isValidText();
 
     typedef std::function<GumboNodeWrapper(const GumboVector &)> IterCallback;
     GumboNodeWrapper _iteratorChildren(IterCallback callback);

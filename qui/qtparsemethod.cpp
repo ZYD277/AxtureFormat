@@ -339,20 +339,6 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             }
             break;
         }
-        case Html::RTREE_CHILDNODE:{
-
-            QDomElement child = doc.createElement("item");
-
-            child.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_treeText));
-
-            parent.appendChild(child);
-            if(node->m_childs.size() > 0){
-                for(int i = 0;i < node->m_childs.size();i++){
-                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
-                }
-            }
-            break;
-        }
         default:break;
     }
 }

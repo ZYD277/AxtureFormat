@@ -19,6 +19,7 @@
 namespace RQt{
 
 class RDomWidget;
+class MItem;
 
 class FormatProperty
 {
@@ -42,10 +43,12 @@ private:
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
-    inline void createEnableProp(RDomWidget * domWidget,bool enable);
+    inline void createEnableProp(RDomWidget * domWidget, bool disable);
     inline void createCheckedProp(RDomWidget * domWidget,bool checked);
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
     void createToolTipProp(RDomWidget * domWidget,QString toolTip);
+
+    void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
 
 private:
     DomHtmlPtr m_dataSrc;

@@ -52,9 +52,8 @@ enum NodeType{
     RTABLE_CELL,            /*!< 表格单元格 */
     RIMAGE,
     RLABEL,
-    RLINE,
-    RTREE,                   /*!< 树形控件*/
-    RTREE_CHILDNODE          /*!< 树形控件子节点*/
+    RLINE,                  /*!< 水平/竖直线条*/
+    RTREE                   /*!< 树形控件*/
 };
 
 /*!
@@ -109,6 +108,19 @@ struct TableData : public BaseData{
     int m_rows;
     int m_colums;
     QStringList m_items;
+};
+
+struct TreeItemData : public BaseData{
+    TreeItemData():m_parentItem(nullptr){}
+    ~TreeItemData(){
+        m_parentItem = nullptr;
+
+        foreach(auto pp,m_childItems)
+            delete pp;
+    }
+
+    TreeItemData * m_parentItem;                /*!< 父节点 */
+    QList<TreeItemData *>   m_childItems;       /*!< 子节点 */
 };
 
 /*!
