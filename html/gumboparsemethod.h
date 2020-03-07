@@ -46,10 +46,14 @@ private:
     void parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node);
     void parseButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parserdynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseTextFieldNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseImageNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseTableNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseTableCellNodeData(GumboNodeWrapper &element, DomNode *parentNode);
+    void parseLineNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseTreeNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseTreeDataNodeData(GumboNodeWrapper &element, DomNode *node);
 
     void parseGroupNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseLabelNodeData(GumboNodeWrapper &element, DomNode *node);
@@ -59,6 +63,8 @@ private:
 
     QString m_errorMsg;
     GumboOutput * m_gumboParser;
+    QString m_classInfo;
+    QString m_treeDatas;
 };
 
 } //namespace Html

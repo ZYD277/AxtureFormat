@@ -103,6 +103,8 @@ private:
     QStringList m_resources;
 
     QMap<Html::NodeType,QString> m_htmlMapToQtWidget;
+
+    int m_treeChilds;
 };
 
 } //namespace RQt

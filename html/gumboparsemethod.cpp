@@ -89,20 +89,25 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     GumboNodeWrapperList childNodeList = divNode.children();
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
-
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
+        NodeType ttypeNew = ttype;
+        if(ttype == RTREE)
+            ttypeNew = RCONTAINER;
 
-        if(ttype != RINVALID){
-            DomNode * node = new DomNode(ttype);
+        if(ttypeNew != RINVALID){
+            DomNode * node = new DomNode(ttypeNew);
             node->m_id = childEle.id();
             node->m_class = childEle.clazz();
             node->m_style = childEle.style();
 
-            parseNodeData(childEle,ttype,node);
+            if(ttype == RTREE)
+                parseNodeData(childEle,ttype,node);
+            else
+                parseNodeData(childEle,ttypeNew,node);
 
             establishRelation(parentNode,node);
 
-            if(ttype == RGROUP){
+            if(ttypeNew == RGROUP){
                 parseDiv(childEle,node);
             }
         }else{
@@ -123,6 +128,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
         QString classInfo = element.clazz();
+        if(classInfo == m_classInfo && classInfo == "ax_default"){
+            return RGROUP;
+        }
+        m_classInfo = classInfo;
         if(classInfo.isEmpty()){
             if(!parentElement.valid()){
                 GumboNodeWrapper secondElement = parentElement.secondChild();
@@ -157,6 +166,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RDYNAMIC_PANEL;
             else if(classInfo.contains("table_cell"))
                 return RTABLE;
+            else if(classInfo.contains("line"))
+                return RLINE;
+            else if(classInfo.contains("treeroot"))
+                return RTREE;
             else{
                 //img标签和box_1需要结合parentElement
                 if(parentElement.valid()){
@@ -222,11 +235,14 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     switch(type){
         case RBUTTON:parseButtonNodeData(element,node);break;
         case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
+        case RDYNAMIC_PANEL:parserdynamicPanelNodeData(element,node);break;
         case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
         case RIMAGE:parseImageNodeData(element,node);break;
         case RTABLE:parseTableNodeData(element,node);break;
         case RGROUP:parseGroupNodeData(element,node);break;
         case RLABEL:parseLabelNodeData(element,node);break;
+        case RLINE:parseLineNodeData(element,node);break;
+        case RTREE:parseTreeNodeData(element,node);break;
         default:break;
     }
 }
@@ -249,6 +265,28 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
     data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
+}
+
+/**
+ * @brief 解析rdynamicPanel
+ * @param element
+ * @param node
+ */
+void GumboParseMethod::parserdynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node)
+{
+    GumboNodeWrapperList childs = element.children();
+    for(int i = 0; i < childs.size(); i++){
+        GumboNodeWrapper child = childs.at(i);
+        if(child.clazz() == "panel_state"){
+            DomNode * nodeChild = new DomNode(RCONTAINER);
+            nodeChild->m_id = child.id();
+            nodeChild->m_class = child.clazz();
+            nodeChild->m_style = child.style();
+
+            establishRelation(node,nodeChild);
+            parseDiv(child.firstChild(),nodeChild);
+        }
+    }
 }
 
 void GumboParseMethod::parseTextFieldNodeData(GumboNodeWrapper &element, DomNode *node)
@@ -294,6 +332,67 @@ void GumboParseMethod::parseTableCellNodeData(GumboNodeWrapper &element, DomNode
     node->m_class = element.attribute(G_NodeHtml.CLASS);
     node->m_style = element.attribute(G_NodeHtml.STYLE);
     establishRelation(parentNode,node);
+}
+
+void GumboParseMethod::parseLineNodeData(GumboNodeWrapper &element, DomNode *node)
+{
+    BaseData * data = new BaseData();
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
+    node->m_data = data;
+}
+
+/**
+ * @brief 解析tree控件
+ * @param element
+ * @param node
+ */
+void GumboParseMethod::parseTreeNodeData(GumboNodeWrapper &element, DomNode *node)
+{
+    GumboNodeWrapperList childs = element.children();
+    TreeData * data = new TreeData();
+
+    for(int i = 0; i < childs.size(); i++){
+        GumboNodeWrapper child = childs.at(i);
+        if(!child.clazz().contains("treenode"))
+        {
+            parseTreeNodeData(child,node);
+        }
+        else
+        {
+            NodeType ttype;
+            if(node->m_class.contains("treeroot"))
+                ttype = RTREE;
+            else
+                ttype = RTREE_CHILDNODE;
+            DomNode * childNode = new DomNode(ttype);
+            childNode->m_id = child.id();
+            childNode->m_class = child.clazz();
+
+            parseTreeDataNodeData(child,childNode);
+            childNode->m_treeText = m_treeDatas;
+            establishRelation(node,childNode);
+            parseTreeNodeData(child,childNode);
+        }
+    }
+    node->m_data = data;
+}
+
+void GumboParseMethod::parseTreeDataNodeData(GumboNodeWrapper &element, DomNode *node)
+{
+    GumboNodeWrapperList childs = element.children();
+
+    for(int i = 0; i < childs.size(); i++){
+        GumboNodeWrapper child = childs.at(i);
+        GumboNodeWrapperList secondChilds = child.children();
+        for(int j = 0; j < secondChilds.size(); j++){
+            GumboNodeWrapper secondChild = secondChilds.at(j);
+            QString columsData = secondChild.firstChild().firstChild().firstChild().text();
+            if(!columsData.isEmpty()){
+                m_treeDatas = columsData;
+            }
+        }
+    }
 }
 
 void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *node)

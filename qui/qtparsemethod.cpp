@@ -17,6 +17,7 @@ QtParseMethod::QtParseMethod()
     m_htmlMapToQtWidget.insert(Html::RTABLE,"QTableWidget");
     m_htmlMapToQtWidget.insert(Html::RIMAGE,"QLabel");
     m_htmlMapToQtWidget.insert(Html::RLABEL,"QLabel");
+    m_htmlMapToQtWidget.insert(Html::RTREE,"QTreeWidget");
 }
 
 /*!
@@ -50,6 +51,7 @@ bool QtParseMethod::startSave(QDomDocument &doc)
 
         Html::DomNode * bodyNode = m_dataSrc->body;
         bodyNode->m_class = "body";
+
         generateNodeToUI(doc,docWrapper.data(),bodyNode,QRect(QPoint(0,0),RUtil::screenSize()));
 
         generateResources(doc,docWrapper.data());
@@ -113,7 +115,8 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
             child.setAttribute("name",node->m_id);
 
-            generateRect(doc,child,rect);
+            if(node->m_class != "panel_state")
+                generateRect(doc,child,rect);
 
             parent.appendChild(child);
 
@@ -136,6 +139,7 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
 
             parent.appendChild(child);
+
 
             if(node->m_childs.size() > 0){
                 for(int i = 0;i < node->m_childs.size();i++){
@@ -208,6 +212,23 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             }
             break;
         }
+        case Html::RDYNAMIC_PANEL:{
+            QDomElement child = doc.createElement("widget");
+            child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
+            child.setAttribute("name",node->m_id);
+
+            generateRect(doc,child,rect);
+
+            parent.appendChild(child);
+
+            if(node->m_childs.size() > 0){
+                for(int i = 0;i < node->m_childs.size();i++){
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
+                }
+            }
+            break;
+
+        }
         case Html::RTEXT_FIELD:
         case Html::RRADIO_BUTTON:
         case Html::RLABEL:
@@ -217,6 +238,11 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
             child.setAttribute("name",node->m_id);
 
             generateRect(doc,child,rect);
+
+            Html::PanelData * data = dynamic_cast<Html::PanelData *>(node->m_data);
+            if(data){
+                QString panellabel = data->m_data_label;
+            }
 
             child.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_data->m_text));
 
@@ -263,6 +289,68 @@ void QtParseMethod::generateNodeToUI(QDomDocument &doc,QDomElement parent,Html::
 
             parent.appendChild(child);
 
+            break;
+        }
+        case Html::RLINE:{
+            QDomElement child = doc.createElement("widget");
+            child.setAttribute("class","Line");
+            child.setAttribute("name",node->m_id);
+
+            generateRect(doc,child,rect);
+
+            Html::BaseData * data = dynamic_cast<Html::BaseData *>(node->m_data);
+
+            if(removePxUnit(cssMap.value("width"))>removePxUnit(cssMap.value("height"))){
+                if(!data->m_toolTip.isEmpty())
+                    child.appendChild(createChildElement(RProperty,RString,doc,"toolTip",QString("%1").arg(data->m_toolTip)));
+                if(data->m_bDisabled)
+                    child.appendChild(createChildElement(RProperty,RString,doc,"enabled",QString("false")));
+                child.appendChild(createChildElement(RProperty,RString,doc,"lineWidth",QString("%1").arg(removePxUnit(cssMap.value("height")))));
+                child.appendChild(createChildElement(RProperty,RString,doc,"orientation",QString("Qt::Horizontal")));
+            }
+            else{
+                if(!data->m_toolTip.isEmpty())
+                    child.appendChild(createChildElement(RProperty,RString,doc,"toolTip",QString("%1").arg(data->m_toolTip)));
+                if(data->m_bDisabled)
+                    child.appendChild(createChildElement(RProperty,RString,doc,"enabled",QString("false")));
+                child.appendChild(createChildElement(RProperty,RString,doc,"lineWidth",QString("%1").arg(removePxUnit(cssMap.value("width")))));
+                child.appendChild(createChildElement(RProperty,RString,doc,"orientation",QString("Qt::Vertical")));
+            }
+            parent.appendChild(child);
+            break;
+        }
+        case Html::RTREE:{
+            QRect rectTree(0,0,parentGlobalRect.width(),parentGlobalRect.height());
+
+            QDomElement child = doc.createElement("widget");
+            child.setAttribute("class",m_htmlMapToQtWidget.value(node->m_type));
+            child.setAttribute("name",node->m_id);
+            generateRect(doc,child,rectTree);
+
+            QDomElement column = doc.createElement("column");
+            column.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_treeText));
+            child.appendChild(column);
+
+            parent.appendChild(child);
+            if(node->m_childs.size() > 0){
+                for(int i = 0;i < node->m_childs.size();i++){
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rectTree);
+                }
+            }
+            break;
+        }
+        case Html::RTREE_CHILDNODE:{
+
+            QDomElement child = doc.createElement("item");
+
+            child.appendChild(createChildElement(RProperty,RString,doc,"text",node->m_treeText));
+
+            parent.appendChild(child);
+            if(node->m_childs.size() > 0){
+                for(int i = 0;i < node->m_childs.size();i++){
+                    generateNodeToUI(doc,child,node->m_childs.at(i),rect);
+                }
+            }
             break;
         }
         default:break;

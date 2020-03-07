@@ -114,6 +114,10 @@ NodeType HtmlParseMethod::getNodeType(const QDomElement &element,QDomElement par
     //TODO 20200112 容器节点如何检测？？？？
     if(!element.isNull()){
         QString classInfo = element.attribute(m_nodeType.CLASS);
+        if(classInfo == m_classInfo && classInfo == "ax_default"){
+            return RGROUP;
+        }
+        m_classInfo = classInfo;
         if(classInfo.isEmpty()){
             if(!parentElement.isNull()){
                 QDomElement secondElement = secondChildElement(parentElement);
@@ -144,10 +148,12 @@ NodeType HtmlParseMethod::getNodeType(const QDomElement &element,QDomElement par
                 return RLABEL;
             else if(classInfo.contains("button") || classInfo.contains("primary_button"))
                 return RBUTTON;
-            else if(classInfo.contains("panel_state"))
+            else if(classInfo.contains("panel_state")&&!classInfo.contains("panel_state_content"))
                 return RDYNAMIC_PANEL;
             else if(classInfo.contains("table_cell"))
                 return RTABLE;
+            else if(classInfo.contains("tree_node"))
+                return RTREE;
             else{
                 //img标签和box_1需要结合parentElement
                 if(!parentElement.isNull()){
@@ -250,11 +256,13 @@ void HtmlParseMethod::parseNodeData(QDomElement &element, NodeType type, DomNode
     switch(type){
         case RBUTTON:parseButtonNodeData(element,node);break;
         case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
+        case RDYNAMIC_PANEL:parserdynamicPanelNodeData(element,node);break;
         case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
         case RIMAGE:parseImageNodeData(element,node);break;
         case RTABLE:parseTableNodeData(element,node);break;
         case RGROUP:parseGroupNodeData(element,node);break;
         case RLABEL:parseLabelNodeData(element,node);break;
+        case RTREE:parseTreeNodeData(element,node);break;
         default:break;
     }
 }
@@ -283,6 +291,32 @@ void HtmlParseMethod::parseRadioButtonNodeData(QDomElement &element, DomNode *no
     BaseData * data = new BaseData();
     data->m_text = wrapper.firstChild().firstChild().firstChild().firstChild().data().text();
     node->m_data = data;
+}
+
+/**
+ * @brief 解析rdynamicPanel
+ * @param element
+ * @param node
+ */
+void HtmlParseMethod::parserdynamicPanelNodeData(QDomElement &element, DomNode *parentNode)
+{
+    QDomNodeList childs = element.childNodes();
+    for(int i = 0; i < childs.size(); i++){
+        if(childs.at(i).isElement()){
+            if(childs.at(i).toElement().attribute(m_nodeType.CLASS) == "panel_state"){
+                DomNode * node = new DomNode(RCONTAINER);
+                node->m_id = childs.at(i).toElement().attribute(m_nodeType.ID);
+                node->m_class = childs.at(i).toElement().attribute(m_nodeType.CLASS);
+                node->m_style = childs.at(i).toElement().attribute(m_nodeType.STYLE);
+
+                establishRelation(parentNode,node);
+                parseDiv(childs.at(i).toElement().childNodes().at(0).toElement(),node);
+            }
+            else{
+                parserdynamicPanelNodeData(childs.at(i).toElement(),parentNode);
+            }
+        }
+    }
 }
 
 void HtmlParseMethod::parseLabelNodeData(QDomElement &element, DomNode *node)
@@ -340,6 +374,42 @@ void HtmlParseMethod::parseTableNodeData(QDomElement &element, DomNode *node)
             parseTableCellNodeData(childs.at(i).toElement(),node);
 
             data->m_items.append(wrapper.secondChild().firstChild().firstChild().data().text());
+        }
+    }
+}
+
+/**
+ * @brief 解析tree控件
+ * @param element
+ * @param node
+ */
+void HtmlParseMethod::parseTreeNodeData(QDomElement &element, DomNode *node)
+{
+    if(element.toElement().attribute(m_nodeType.CLASS).contains("treeroot")){
+        if(element.childNodes().size()>0){
+            if(element.childNodes().at(0).childNodes().size()>1){
+                QDomNodeList childs = element.childNodes().at(0).childNodes().at(1).childNodes();
+                TreeData * data = new TreeData();
+
+                for(int i = 1; i < childs.size(); i++){
+
+                    QDomElement childEle = childs.at(i).toElement();
+
+                    DomWrapper wrapper(childEle.toElement());
+
+                    QString columsData = wrapper.data().text();
+                    if(!columsData.isEmpty()){
+                        data->m_dataCoIt.append(columsData);
+                    }
+                }
+                QString colums = data->m_dataCoIt[0];
+                QString items = data->m_dataCoIt[1];
+
+                data->m_colums = colums.split("Item");
+                data->m_items = items.split("Item");
+
+                node->m_data = data;
+            }
         }
     }
 }
