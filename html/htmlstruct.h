@@ -22,6 +22,7 @@ struct NodeHtml{
     const QString INPUT = "input";
     const QString P = "p";
     const QString SPAN = "span";
+    const QString IFRAME = "iframe";
 
     //属性
     const QString ID = "id";
@@ -47,12 +48,18 @@ enum NodeType{
     RBUTTON,                /*!< 按钮 */
     RDYNAMIC_PANEL,         /*!< StackWidget */
     RTEXT_FIELD,            /*!< 单行文本框 */
-    RRADIO_BUTTON,
+    RRADIO_BUTTON,          /*!< 单选框 */
     RTABLE,                 /*!< 表格 */
     RTABLE_CELL,            /*!< 表格单元格 */
-    RIMAGE,
-    RLABEL,
+    RIMAGE,                 /*!< 图片 */
+    RLABEL,                 /*!< 文本显示 */
     RLINE,                  /*!< 水平/竖直线条*/
+    RLIST_BOX,              /*!< 列表框 */
+    RTEXT_AREA,             /*!< 文本框 */
+    RCHECKBOX,              /*!< 复选框 */
+    RDROPLIST,              /*!< 下拉框 */
+    RBOX,                   /*!< 矩形 */
+    RINLINE_FRAME,          /*!< 内联窗口 */
     RTREE                   /*!< 树形控件*/
 };
 
@@ -167,6 +174,7 @@ struct ListData : public BaseData{
     ListData(){}
 
     QStringList m_itemList;     /*!< 选项集合 */
+    QString m_selectedValue;    /*!< 默认选择项 */
 };
 
 /*!

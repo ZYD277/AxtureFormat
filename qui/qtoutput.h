@@ -6,8 +6,6 @@
 
 namespace RQt{
 
-class QtParseMethod;
-
 class QtOutput
 {
 public:
@@ -18,7 +16,6 @@ public:
     QStringList getOriginalResouces(){return m_originalResoucesLinks;}
 
 private:
-    QtParseMethod * m_parseMethod;
     QStringList m_originalResoucesLinks;
 
 };

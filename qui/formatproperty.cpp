@@ -66,8 +66,14 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RTABLE:return QString("QTableWidget");break;
         case Html::RIMAGE:
         case Html::RLABEL:return QString("QLabel");break;
-        case Html::RTREE:return QString("QTreeWidget");break;
         case Html::RLINE:return QString("Line");break;
+        case Html::RLIST_BOX:return QString("QListWidget");break;
+        case Html::RTEXT_AREA:return QString("QPlainTextEdit");break;
+        case Html::RCHECKBOX:return QString("QCheckBox");break;
+        case Html::RDROPLIST:return QString("QComboBox");break;
+        case Html::RINLINE_FRAME:
+        case Html::RBOX:return QString("QWidget");break;
+        case Html::RTREE:return QString("QTreeWidget");break;
 
         default:return QString();break;
     }
@@ -143,6 +149,16 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
         case Html::RTABLE:{
+            MProperty * hvisible = new MProperty();
+            hvisible->setAttributeName("horizontalHeaderVisible");
+            hvisible->setPropBool("false");
+            domWidget->addProperty(hvisible);
+
+            MProperty * vvisible = new MProperty();
+            vvisible->setAttributeName("verticalHeaderVisible");
+            vvisible->setPropBool("false");
+            domWidget->addProperty(vvisible);
+
             //需根据表格宽度与单元格宽度相除结果，作为列数
             int cWidth = 0;
             if(node->m_childs.size() > 0){
@@ -274,6 +290,18 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
+        case Html::RCHECKBOX:{
+            createCheckedProp(domWidget,node->m_data->m_bChecked);
+            createEnableProp(domWidget,node->m_data->m_bDisabled);
+            createTextProp(domWidget,node->m_data->m_text);
+            createLayoutDirectionProp(domWidget,node->m_data->m_bLeftToRight);
+
+            if(node->m_data->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            break;
+        }
+
         case Html::RRADIO_BUTTON:{
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
@@ -282,6 +310,32 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            break;
+        }
+
+        case Html::RIMAGE:{
+            Html::ImageData * imgData = dynamic_cast<Html::ImageData *>(node->m_data);
+
+            //src中包含了所属页面信息，目前所有images目录下直接是图片，需要移除所属页面信息
+            QString imageSrc = imgData->m_src;
+            int firstSplitPos = imageSrc.indexOf("/");
+            int secondSplitPos = imageSrc.indexOf("/",firstSplitPos + 1);
+
+            imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
+
+            m_originalResources.append(imgData->m_src);
+            m_resources.append(imageSrc);
+
+            MProperty * styleProp = new MProperty();
+            styleProp->setAttributeName("styleSheet");
+            styleProp->setPropString(QString("background-image:url(:/%1);color:%2;").arg(imageSrc).arg(cssMap.value("color")));
+            domWidget->addProperty(styleProp);
+
+            createTextProp(domWidget,imgData->m_text);
+
+//            MProperty * alignProp = new MProperty();
+//            alignProp->setAttributeName("alignment");
 
             break;
         }
@@ -307,6 +361,65 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
+        case Html::RDROPLIST:
+        case Html::RLIST_BOX:{
+            Html::ListData * listData = static_cast<Html::ListData *>(node->m_data);
+
+            createEnableProp(domWidget,listData->m_bDisabled);
+
+            if(listData->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,listData->m_toolTip);
+
+            int t_selectedRow = -1;
+            for(int i = 0;i < listData->m_itemList.size(); i++){
+                MItem * item = new MItem();
+
+                MProperty * prop = new MProperty();
+                prop->setAttributeName("text");
+                prop->setPropString(listData->m_itemList.at(i));
+                item->setProperty(prop);
+
+                domWidget->addItem(item);
+
+                if(listData->m_selectedValue.size() > 0 && listData->m_selectedValue == listData->m_itemList.at(i)){
+                    t_selectedRow = i;
+                }
+            }
+
+            MProperty * currentRow = new MProperty();
+            if(node->m_type == Html::RDROPLIST)
+                currentRow->setAttributeName("currentIndex");
+            else if(node->m_type == Html::RLIST_BOX)
+                currentRow->setAttributeName("currentRow");
+            currentRow->setPropNumber(QString::number(t_selectedRow));
+            domWidget->addProperty(currentRow);
+
+            break;
+        }
+
+        case Html::RTEXT_AREA:{
+
+            createReadonlyProp(domWidget,node->m_data->m_bReadOnly);
+            createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            MProperty * currentRow = new MProperty();
+            currentRow->setAttributeName("plainText");
+            currentRow->setPropString(node->m_data->m_text);
+            domWidget->addProperty(currentRow);
+
+            if(node->m_data->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            break;
+        }
+
+        case Html::RBOX:{
+            createEnableProp(domWidget,node->m_data->m_bDisabled);
+            if(node->m_data->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            break;
+        }
         default:break;
     }
 

@@ -2,7 +2,6 @@
 
 #include <QFileInfo>
 #include <QDir>
-#include "qtparsemethod.h"
 #include "qrc/qrcoutput.h"
 #include "qss/qssoutput.h"
 #include "formatproperty.h"
@@ -10,15 +9,14 @@
 
 namespace RQt{
 
-QtOutput::QtOutput():m_parseMethod(nullptr)
+QtOutput::QtOutput()
 {
 
 }
 
 QtOutput::~QtOutput()
 {
-    if(m_parseMethod)
-        delete m_parseMethod;
+
 }
 
 /*!
@@ -31,26 +29,17 @@ QtOutput::~QtOutput()
  */
 bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, QString fullPath)
 {
-    if(m_parseMethod == nullptr){
-        m_parseMethod = new QtParseMethod();
-    }
-
-    m_parseMethod->setDataSource(ptr);
-    m_parseMethod->setCssMap(globalCss,pageCss);
-
-    QString resFile = "res.qrc";
-    m_parseMethod->setResFile(resFile);
-
     FormatProperty propFormat;
     propFormat.setDataSource(ptr);
     propFormat.setCssMap(globalCss,pageCss);
     RDomWidget * root = propFormat.formart();
     if(root){
-        QFile file("d:/aaa.ui");
+        QFile file(fullPath);
         if(!file.open(QFile::WriteOnly)){
             return false;
         }
 
+        //[1]
         ExportUi ui;
         ui.beginWrite(&file);
 
@@ -63,22 +52,15 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
         ui.setDomResource(resc);
 
         ui.endWrite();
-    }
-
-    //[1]
-    RXmlFile xmlFile(fullPath);
-    xmlFile.disableAutoAddXmlSuffix();
-    xmlFile.setParseMethod(m_parseMethod,false);
-
-    if(xmlFile.startSave()){
 
         //[2]
         QrcOutput qrc;
-        qrc.addResources("/",m_parseMethod->getResources());
+        qrc.addResources("/",propFormat.getResources());
 
-        m_originalResoucesLinks = m_parseMethod->getOriginalResources();
+        m_originalResoucesLinks = propFormat.getOriginalResources();
 
         QFileInfo uiPath(fullPath);
+        QString resFile = "res.qrc";
         QString qrcPath = uiPath.path() + QDir::separator() + resFile;
 
         if(qrc.save(qrcPath)){

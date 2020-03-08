@@ -190,6 +190,7 @@ QString GumboNodeWrapper::tagName()
             case GUMBO_TAG_DIV:return m_nodeHtml.DIV;break;
             case GUMBO_TAG_P:return m_nodeHtml.P;break;
             case GUMBO_TAG_SPAN:return m_nodeHtml.SPAN;break;
+            case GUMBO_TAG_IFRAME:return m_nodeHtml.IFRAME;break;
             default:break;
         }
     }

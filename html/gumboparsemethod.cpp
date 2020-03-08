@@ -121,6 +121,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 {
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
+
+        if(element.tagName() == "iframe")
+            return RINLINE_FRAME;
+
         QString classInfo = element.clazz();
         if(classInfo == m_classInfo && classInfo == "ax_default"){
             return RGROUP;
@@ -152,7 +156,9 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RRADIO_BUTTON;
             else if(classInfo.contains("text_field"))
                 return RTEXT_FIELD;
-            else if(classInfo.contains("label") || classInfo.contains("text"))
+            else if((classInfo.contains("label") || classInfo.contains("text")) && (!classInfo.contains("text_area")))
+                return RLABEL;
+            else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
             else if(classInfo.contains("button") || classInfo.contains("primary_button"))
                 return RBUTTON;
@@ -160,6 +166,16 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RDYNAMIC_PANEL;
             else if(classInfo.contains("table_cell"))
                 return RTABLE;
+            else if(classInfo.contains("checkbox"))
+                return RCHECKBOX;
+            else if(classInfo.contains("list_box"))
+                return RLIST_BOX;
+            else if(classInfo.contains("droplist"))
+                return RDROPLIST;
+            else if(classInfo.contains("text_area"))
+                return RTEXT_AREA;
+            else if(classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3"))
+                return RBOX;
             else if(classInfo.contains("line"))
                 return RLINE;
             else if(classInfo.contains("treeroot"))
@@ -235,10 +251,73 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         case RTABLE:parseTableNodeData(element,node);break;
         case RGROUP:parseGroupNodeData(element,node);break;
         case RLABEL:parseLabelNodeData(element,node);break;
+        case RCHECKBOX:parseCheckBoxNodeData(element,node);break;
+        case RLIST_BOX:
+        case RDROPLIST:parseListNodeData(element,node);break;
+        case RTEXT_AREA:parseTextAreaNodeData(element,node);break;
+        case RINLINE_FRAME:parseInlineFrameNodeData(element,node);break;
+        case RBOX:parseBoxNodeData(element,node);break;
         case RLINE:parseLineNodeData(element,node);break;
         case RTREE:parseTreeNodeData(element,node);break;
         default:break;
     }
+}
+
+void GumboParseMethod::parseCheckBoxNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    BaseData * data = new BaseData();
+    data->m_text = element.firstChild().firstChild().firstChild().firstChild().firstChild().text();
+    data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
+    data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    node->m_data = data;
+}
+
+void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    ListData *data = new ListData();
+
+    GumboNodeWrapperList chids = element.firstChild().children();
+    for(int i = 0;i < chids.size();i++)
+    {
+       GumboNodeWrapper chid = chids.at(i);
+       if(chid.hasAttribute("selected")){
+           data->m_selectedValue = chid.attribute(G_NodeHtml.VALUE);
+       }
+       data->m_itemList.append(chid.attribute("value"));
+    }
+    data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    node->m_data = data;
+
+}
+
+void GumboParseMethod::parseTextAreaNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    BaseData *data = new BaseData();
+    data->m_text = element.firstChild().firstChild().text();
+    data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    data->m_bReadOnly = element.secondChild().hasAttribute(G_NodeHtml.READONLY);
+    node->m_data = data;
+}
+
+void GumboParseMethod::parseInlineFrameNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    BaseData *data = new BaseData();
+    data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    //WARNING 无法从html中识别inlineframe引用的资源路径信息，需要web容器加载js后才能获取。
+    node->m_data = data;
+}
+
+void GumboParseMethod::parseBoxNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    BaseData *data = new BaseData();
+    data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
+    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
+    data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
+    node->m_data = data;
 }
 
 void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *node)

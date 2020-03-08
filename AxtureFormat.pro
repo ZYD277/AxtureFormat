@@ -19,9 +19,7 @@ SOURCES += main.cpp\
     util/fileutils.cpp \
     util/rsingleton.cpp \
     util/rutil.cpp \
-    html/htmlparsemethod.cpp \
     html/htmlstruct.cpp \
-    qui/qtparsemethod.cpp \
     qui/qtstruct.cpp \
     qui/qtoutput.cpp \
     head.cpp \
@@ -49,9 +47,7 @@ HEADERS  += widget.h \
     util/fileutils.h \
     util/rsingleton.h \
     util/rutil.h \
-    html/htmlparsemethod.h \
     html/htmlstruct.h \
-    qui/qtparsemethod.h \
     qui/qtstruct.h \
     qui/qtoutput.h \
     head.h \

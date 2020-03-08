@@ -31,6 +31,9 @@ public:
 
     RDomWidget * formart();
 
+    QStringList getOriginalResources(){return m_originalResources;}
+    QStringList getResources(){return m_resources;}
+
 private:
     QString getTypeName(Html::NodeType type);
 
@@ -54,6 +57,9 @@ private:
     DomHtmlPtr m_dataSrc;
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
+
+    QStringList m_originalResources;        /*!< 原始图片资源地址 */
+    QStringList m_resources;                /*!< 处理后改成相对路径图片资源地址 */
 
 };
 

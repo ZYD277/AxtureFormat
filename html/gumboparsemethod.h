@@ -44,6 +44,7 @@ private:
 
     //解析特定控件
     void parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node);
+    void parseCheckBoxNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parserdynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node);
@@ -52,6 +53,10 @@ private:
     void parseTableNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseTableCellNodeData(GumboNodeWrapper &element, DomNode *parentNode);
     void parseLineNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseListNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseTextAreaNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseInlineFrameNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseBoxNodeData(GumboNodeWrapper &element,DomNode *node);
 
     void parseTreeNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseSubTreeDataNodeData(GumboNodeWrapper element, TreeItemData *parentNode);
