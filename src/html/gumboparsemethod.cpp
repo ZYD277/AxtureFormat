@@ -245,7 +245,7 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     switch(type){
         case RBUTTON:parseButtonNodeData(element,node);break;
         case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
-        case RDYNAMIC_PANEL:parserdynamicPanelNodeData(element,node);break;
+        case RDYNAMIC_PANEL:parserDynamicPanelNodeData(element,node);break;
         case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
         case RIMAGE:parseImageNodeData(element,node);break;
         case RTABLE:parseTableNodeData(element,node);break;
@@ -340,7 +340,7 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
     node->m_data = data;
 }
 
-void GumboParseMethod::parserdynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node)
+void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     BaseData * data = new BaseData();
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
@@ -350,7 +350,7 @@ void GumboParseMethod::parserdynamicPanelNodeData(GumboNodeWrapper &element, Dom
     for(int i = 0; i < childs.size(); i++){
         GumboNodeWrapper child = childs.at(i);
         if(child.clazz() == "panel_state"){
-            DomNode * nodeChild = new DomNode(RCONTAINER);
+            DomNode * nodeChild = new DomNode(RDYNAMIC_PANEL_PAGE);
             nodeChild->m_id = child.id();
             nodeChild->m_class = child.clazz();
             nodeChild->m_style = child.style();

@@ -47,6 +47,7 @@ enum NodeType{
     RGROUP,                 /*!< 分组 */
     RBUTTON,                /*!< 按钮 */
     RDYNAMIC_PANEL,         /*!< StackWidget */
+    RDYNAMIC_PANEL_PAGE,    /*!< StackWidget页 */
     RTEXT_FIELD,            /*!< 单行文本框 */
     RRADIO_BUTTON,          /*!< 单选框 */
     RTABLE,                 /*!< 表格 */

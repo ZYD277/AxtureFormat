@@ -47,7 +47,7 @@ private:
     void parseCheckBoxNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node);
-    void parserdynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parserDynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseTextFieldNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseImageNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseTableNodeData(GumboNodeWrapper &element, DomNode *node);

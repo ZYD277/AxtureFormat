@@ -58,6 +58,7 @@ QString FormatProperty::getTypeName(Html::NodeType type)
 {
     switch(type){
         case Html::RCONTAINER:
+        case Html::RDYNAMIC_PANEL_PAGE:
         case Html::RGROUP:return QString("QWidget");break;
         case Html::RBUTTON:return QString("QPushButton");break;
         case Html::RDYNAMIC_PANEL:return QString("QStackedWidget");break;
@@ -485,8 +486,11 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     }
 
     //转换成父窗口的相对坐标
-    rect.moveLeft(rect.x() - parentRect.x());
-    rect.moveTop(rect.y() - parentRect.y());
+    //NOTE dynamic panel中每个子页面容器已经是相对位置，不必计算相对位置。
+    if(node->m_type != Html::RDYNAMIC_PANEL_PAGE){
+        rect.moveLeft(rect.x() - parentRect.x());
+        rect.moveTop(rect.y() - parentRect.y());
+    }
 
     return rect;
 }
