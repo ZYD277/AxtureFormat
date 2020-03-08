@@ -72,5 +72,10 @@ HEADERS  += widget.h \
 
 FORMS    += widget.ui
 
-INCLUDEPATH+="E:/3rdPartyLib/gumbo/include"
-LIBS+="E:/3rdPartyLib/gumbo/shared/debug/gumbo.lib"
+
+DEPENDLIB_PATH=$$PWD/../3rdPartyLib/
+
+message($$DEPENDLIB_PATH)
+
+INCLUDEPATH+="$$DEPENDLIB_PATH/include/gumbo"
+LIBS+="$$DEPENDLIB_PATH/lib/shared/debug/gumbo.lib"
