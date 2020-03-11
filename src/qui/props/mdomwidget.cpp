@@ -4,6 +4,7 @@
 #include "mrow.h"
 #include "mcolumn.h"
 #include "mitem.h"
+#include "mattribute.h"
 
 namespace RQt{
 
@@ -44,6 +45,10 @@ void RDomWidget::write(QXmlStreamWriter &writer, QString tagName)
         hh->write(writer,"property");
     }
 
+    foreach(MAttribute * hh,m_attrinutes){
+        hh->write(writer,"attribute");
+    }
+
     foreach(MRow * hh,m_rows){
         hh->write(writer,"row");
     }
@@ -66,6 +71,11 @@ void RDomWidget::write(QXmlStreamWriter &writer, QString tagName)
 void RDomWidget::addProperty(MProperty *prop)
 {
     m_props.push_back(prop);
+}
+
+void RDomWidget::addAttrinute(MAttribute *attrinute)
+{
+    m_attrinutes.push_back(attrinute);
 }
 
 void RDomWidget::addWidget(RDomWidget *widget)

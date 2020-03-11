@@ -107,6 +107,11 @@ void Widget::chooseAxtureProject()
                             QDir srcImageDir(srcImagePath);
                             QString dstImagePath = pageDir + QDir::separator() + "images";
                             if(RUtil::createDir(dstImagePath)){
+                                QDir dir(dstImagePath);
+                                dir.setFilter(QDir::Files);
+                                int fileCount = dir.count();
+                                for (int i = 0; i < fileCount; i++)
+                                    dir.remove(dir[i]);
                                 //根据图片引用的资源链接去拷贝
                                 QStringList resourcesLinks = m_qtOutput.getOriginalResouces();
                                 foreach(const QString & links,resourcesLinks){

@@ -8,6 +8,7 @@
 #include "props/mrow.h"
 #include "props/mcolumn.h"
 #include "props/mitem.h"
+#include "props/mattribute.h"
 
 namespace RQt{
 
@@ -138,27 +139,32 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             int height = removePxUnit(cssMap.value("height"));
 
             MProperty * directProp = new MProperty();
+            MProperty * lineWidthProp = new MProperty();
             directProp->setAttributeName("orientation");
+            lineWidthProp->setAttributeName("lineWidth");
             if((width > 5) || (height <= width)){
                 directProp->setPropEnum("Qt::Horizontal");
+                lineWidthProp->setPropNumber(QString::number(height));
             }else {
                 directProp->setPropEnum("Qt::Vertical");
+                lineWidthProp->setPropNumber(QString::number(width));
             }
 
+            domWidget->addProperty(lineWidthProp);
             domWidget->addProperty(directProp);
 
             break;
         }
         case Html::RTABLE:{
-            MProperty * hvisible = new MProperty();
+            MAttribute * hvisible = new MAttribute();
             hvisible->setAttributeName("horizontalHeaderVisible");
-            hvisible->setPropBool("false");
-            domWidget->addProperty(hvisible);
+            hvisible->setAttributeBool("false");
+            domWidget->addAttrinute(hvisible);
 
-            MProperty * vvisible = new MProperty();
+            MAttribute * vvisible = new MAttribute();
             vvisible->setAttributeName("verticalHeaderVisible");
-            vvisible->setPropBool("false");
-            domWidget->addProperty(vvisible);
+            vvisible->setAttributeBool("false");
+            domWidget->addAttrinute(vvisible);
 
             //需根据表格宽度与单元格宽度相除结果，作为列数
             int cWidth = 0;
@@ -180,15 +186,15 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 int rowCount = rect.width() / cWidth;
                 int columnCount = node->m_childs.size() / rowCount;
 
-                MProperty * hprop = new MProperty();
+                MAttribute * hprop = new MAttribute();
                 hprop->setAttributeName("horizontalHeaderVisible");
-                hprop->setPropBool("false");
+                hprop->setAttributeBool("false");
 
-                MProperty * vprop = new MProperty();
+                MAttribute * vprop = new MAttribute();
                 vprop->setAttributeName("verticalHeaderVisible");
-                vprop->setPropBool("false");
+                vprop->setAttributeBool("false");
 
-                for(int i = 0; i < rowCount; i++){
+                for(int i = 0; i < columnCount; i++){
                     MRow  * row = new MRow();
 
                     MProperty * rowProp = new MProperty();
@@ -198,7 +204,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                     domWidget->addRow(row);
                 }
 
-                for(int i = 0; i < columnCount; i++){
+                for(int i = 0; i < rowCount; i++){
                     MColumn  * column = new MColumn();
 
                     MProperty * rowProp = new MProperty();
@@ -210,15 +216,15 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
                 Html::TableData * tdata = dynamic_cast<Html::TableData *>(node->m_data);
 
-                for(int i = 0; i < rowCount; i++){
-                    for(int j = 0; j < columnCount; j++){
+                for(int i = 0; i < columnCount; i++){
+                    for(int j = 0; j < rowCount; j++){
                         MItem * item = new MItem();
 
                         item->setAttributeRow(QString::number(i));
                         item->setAttributeColumn(QString::number(j));
                         MProperty * prop = new MProperty();
                         prop->setAttributeName("text");
-                        prop->setPropString(QString(tdata->m_items.at(i*columnCount + j)));
+                        prop->setPropString(QString(tdata->m_items.at(i*rowCount + j)));
                         item->setProperty(prop);
 
                         domWidget->addItem(item);
@@ -237,10 +243,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             column->addProperty(rowProp);
             domWidget->addColumn(column);
 
-            MProperty * hVisibleProp = new MProperty();
-            hVisibleProp->setAttributeName("headerVisible");
-            hVisibleProp->setPropBool("false");
-            domWidget->addProperty(hVisibleProp);
+            MAttribute * hVisibleAttribute = new MAttribute();
+            hVisibleAttribute->setAttributeName("headerVisible");
+            hVisibleAttribute->setAttributeBool("false");
+            domWidget->addAttrinute(hVisibleAttribute);
 
             QList<Html::TreeItemData *> childs = virtualRoot->m_childItems;
             for(int i = 0; i < childs.size(); i++){

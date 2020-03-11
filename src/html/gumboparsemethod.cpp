@@ -89,6 +89,10 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     GumboNodeWrapperList childNodeList = divNode.children();
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
+        GumboNodeWrapperList childNodeListBox = childEle.children();
+        GumboNodeWrapper childEleBox = childNodeListBox.at(0);
+        if(childEle.clazz() == "ax_default" && childEleBox.clazz().contains("box"))
+            parseDiv(childEle,parentNode);
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
 
         if(ttype != RINVALID){
@@ -121,7 +125,6 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 {
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
-
         if(element.tagName() == "iframe")
             return RINLINE_FRAME;
 

@@ -20,6 +20,7 @@ class MProperty;
 class MRow;
 class MColumn;
 class MItem;
+class MAttribute;
 
 class RDomWidget
 {
@@ -40,6 +41,9 @@ public:
 
     void addProperty(MProperty * prop);
     QList<MProperty *> props(){return m_props;}
+
+    void addAttrinute(MAttribute * attrinute);
+    QList<MAttribute *> attrinutes(){return m_attrinutes;}
 
     void addWidget(RDomWidget * widget);
     QList<RDomWidget *> widgets(){return m_widgets;}
@@ -66,6 +70,7 @@ private:
     QList<MRow *> m_rows;
     QList<MColumn *> m_columns;
     QList<MItem *> m_items;
+    QList<MAttribute *> m_attrinutes;
 
 };
 
