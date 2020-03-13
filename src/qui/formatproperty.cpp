@@ -108,6 +108,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
     parentWidget->addWidget(domWidget);
 
+    if(!node->m_id.isEmpty())
+        m_selectorType.insert(node->m_id,node->m_type);
+
     switch(node->m_type){
         case Html::RCONTAINER:{
 
@@ -341,6 +344,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             createTextProp(domWidget,imgData->m_text);
 
+            if(imgData->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,imgData->m_toolTip);
+
 //            MProperty * alignProp = new MProperty();
 //            alignProp->setAttributeName("alignment");
 
@@ -563,7 +569,7 @@ void FormatProperty::createToolTipProp(RDomWidget *domWidget, QString toolTip)
 {
     if(toolTip.size() != 0){
         MProperty * tipProp = new MProperty;
-        tipProp->setAttributeName("statusTip");
+        tipProp->setAttributeName("toolTip");
         tipProp->setPropString(toolTip);
         domWidget->addProperty(tipProp);
     }

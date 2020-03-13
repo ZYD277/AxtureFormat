@@ -163,7 +163,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RLABEL;
             else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
-            else if(classInfo.contains("button") || classInfo.contains("primary_button"))
+            else if(classInfo.contains("button") || classInfo.contains("primary_button") || element.attribute("data-label").contains(QStringLiteral("按钮")))
                 return RBUTTON;
             else if(classInfo.contains("panel_state"))
                 return RDYNAMIC_PANEL;

@@ -15,6 +15,7 @@
 #include "qtstruct.h"
 #include "../html/htmlstruct.h"
 #include "../css/cssstruct.h"
+#include "qui/qtstruct.h"
 
 namespace RQt{
 
@@ -33,6 +34,7 @@ public:
 
     QStringList getOriginalResources(){return m_originalResources;}
     QStringList getResources(){return m_resources;}
+    SelectorTypeMap getHtmlParsedResult(){return m_selectorType;}
 
 private:
     QString getTypeName(Html::NodeType type);
@@ -60,6 +62,8 @@ private:
 
     QStringList m_originalResources;        /*!< 原始图片资源地址 */
     QStringList m_resources;                /*!< 处理后改成相对路径图片资源地址 */
+
+    SelectorTypeMap m_selectorType;
 
 };
 

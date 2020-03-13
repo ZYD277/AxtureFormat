@@ -2,6 +2,8 @@
 
 #include <QDebug>
 #include <QTextStream>
+#include "qui/formatproperty.h"
+#include "html/htmlstruct.h"
 
 namespace RQt{
 
@@ -16,10 +18,11 @@ QSSParseMethod::QSSParseMethod()
  * @param[in]
  * @return
  */
-void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss)
+void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss,SelectorTypeMap selectorType)
 {
     m_globalCss = globalCss;
     m_pageCss = pageCss;
+    m_selectorType = selectorType;
 }
 
 bool QSSParseMethod::startSave(RTextFile *file)
@@ -32,6 +35,10 @@ bool QSSParseMethod::startSave(RTextFile *file)
         auto iter = cssMap.begin();
         while(iter != cssMap.end()){
             CSS::CssSegment & seg = iter.value();
+
+            SelectorTypeMap selectorType;
+            FormatProperty formatProperty;
+            selectorType = formatProperty.getHtmlParsedResult();
 
             if(seg.type == CSS::Clazz){
                 stream<<".";
@@ -57,6 +64,20 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
             stream<<"}"<<newLine<<newLine;
 
+            for(int i=0;i<m_selectorType.size();i++){
+                if(m_selectorType.keys().at(i) == seg.selectorName){
+                    if(m_selectorType.values().at(i) == Html::RDROPLIST)
+                        seg.selectorName ="#" + seg.selectorName + " QAbstractItemView";
+//                    else if(m_selectorType.values().at(i) == Html::RTREE)
+//                        seg.selectorName ="#" + seg.selectorName + "::item";
+                    stream<<seg.selectorName<<" {"<<newLine;
+                    foreach(const CSS::CssRule & rule,seg.rules)
+                       stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                    stream<<"}"<<newLine<<newLine;
+                    break;
+                }
+            }
+
             iter++;
         }
     };
@@ -67,5 +88,4 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
     return true;
 }
-
 } //namespace RQt
