@@ -41,7 +41,13 @@ SOURCES += main.cpp\
     qui/props/mcolumn.cpp \
     qui/props/mitem.cpp \
     qui/props/mdomresource.cpp \
-    qui/props/mattribute.cpp
+    qui/props/mattribute.cpp \
+    clientoperate.cpp \
+    global.cpp \
+    startthreads.cpp \
+    threadswitch.cpp \
+    viewdelegate.cpp \
+    viewmoudel.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -70,9 +76,16 @@ HEADERS  += widget.h \
     qui/props/mcolumn.h \
     qui/props/mitem.h \
     qui/props/mdomresource.h \
-    qui/props/mattribute.h
+    qui/props/mattribute.h \
+    clientoperate.h \
+    global.h \
+    startthreads.h \
+    threadswitch.h \
+    viewdelegate.h \
+    viewmoudel.h
 
-FORMS    += widget.ui
+FORMS    += widget.ui \
+    clientoperate.ui
 
 
 DEPENDLIB_PATH=$$PWD/../3rdPartyLib/

@@ -7,6 +7,16 @@
 #define Check_Return(condition,returnVal) {if(condition) return returnVal;}
 #define Check_Return_Cb(condition,returnVal,callback){if(condition){ callback(); return returnVal;}}
 
+/**
+ * @brief 进度条信息
+ */
+struct ProcessBarData{
+    QString textDescription;
+    bool switchState;
+    int finishedTime;
+    int currentTime;
+};
+
 /*!
  * @brief Axuture工程中单个页面文件信息
  */
@@ -14,6 +24,8 @@ struct AxturePage{
     QString htmlFilePath;
     QString jsFilePath;
     QString cssFilePath;
+    QString htmlFileName;
+    ProcessBarData processData;
 };
 
 typedef QList<AxturePage> AxturePages;
@@ -23,6 +35,7 @@ typedef QList<AxturePage> AxturePages;
  */
 struct AxtureProject{
     QString projectName;
+    QString projectPath;
 
     QString baseJsFilePath;
     QString baseCssFilePath;        /*!< axture通用样式文件 */
