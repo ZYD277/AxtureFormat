@@ -94,3 +94,6 @@ message($$DEPENDLIB_PATH)
 
 INCLUDEPATH+="$$DEPENDLIB_PATH/include/gumbo"
 LIBS+="$$DEPENDLIB_PATH/lib/shared/debug/gumbo.lib"
+
+RESOURCES += \
+    images.qrc
