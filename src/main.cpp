@@ -1,6 +1,7 @@
-#include "widget.h"
+﻿#include "widget.h"
 #include <QApplication>
 #include <QTextCodec>
+#include "clientoperate.h"
 
 #if _MSC_VER >= 1600
 #pragma execution_character_set("utf-8")
@@ -15,7 +16,8 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForLocale(codec);
 #endif
 
-    Widget w;
+//    Widget w;
+    ClientOperate w;
     w.show();
 
     return a.exec();
