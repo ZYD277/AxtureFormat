@@ -168,7 +168,7 @@ void ThreadSwitch::updataProcessBar(AxturePage page,int curentProcess,bool symbo
     //更新进度条数据
     page.processData.currentTime = curentProcess;
     page.processData.finishedTime = 4;
-    page.processData.switchState = symbol;
+    page.processData.error = symbol;
     float t_data = (float)page.processData.currentTime/(float)page.processData.finishedTime;
     if(symbol)
     {

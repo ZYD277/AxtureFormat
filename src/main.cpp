@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForLocale(codec);
 #endif
 
-//    Widget w;
     ClientOperate w;
     w.show();
 

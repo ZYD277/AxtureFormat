@@ -47,7 +47,7 @@ SOURCES += main.cpp\
     startthreads.cpp \
     threadswitch.cpp \
     viewdelegate.cpp \
-    viewmoudel.cpp
+    viewmodel.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -82,7 +82,7 @@ HEADERS  += widget.h \
     startthreads.h \
     threadswitch.h \
     viewdelegate.h \
-    viewmoudel.h
+    viewmodel.h
 
 FORMS    += widget.ui \
     clientoperate.ui

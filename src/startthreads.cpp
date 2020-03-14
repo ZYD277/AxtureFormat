@@ -95,7 +95,7 @@ void StartThreads::updataProcessBar(AxturePage page,int curentProcess,bool succe
     //更新进度条数据
     page.processData.currentTime = curentProcess;
     page.processData.finishedTime = 4;
-    page.processData.switchState = success;
+    page.processData.error = success;
     float t_data = (float)page.processData.currentTime/(float)page.processData.finishedTime;
     if(success)
     {

@@ -1,21 +1,28 @@
-﻿#ifndef CLIENTOPERATE_H
+﻿/*!
+ *  @brief     转换控制页面
+ *  @details
+ *  @author    zyd
+ *  @version   1.0
+ *  @date      2020.03.09
+ *  @warning
+ *  @copyright NanJing RenGu.
+ */
+#ifndef CLIENTOPERATE_H
 #define CLIENTOPERATE_H
-
-#include "global.h"
-#include "viewdelegate.h"
-#include "viewmoudel.h"
-#include "startthreads.h"
 
 #include <QWidget>
 #include <QButtonGroup>
-#include <QAbstractTableModel>
-#include <QStyledItemDelegate>
-#include <QItemDelegate>
-#include <QProcess>
 
+#include "head.h"
+
+#include "global.h"
+#include "startthreads.h"
 #include "threadswitch.h"
 
 #define MAXTHREAD 4
+
+class ViewModel;
+class ViewDelegate;
 
 namespace Ui {
 class ClientOperate;
@@ -32,14 +39,17 @@ signals:
     void switchObjFile(AxturePage,QString,QString);
 
 private slots:
-    void on_openAxPrjBtn_clicked();
+    void openAxureProject();
+    void clearAxureTable();
+    void chooseUserFilePath();
+
+    void viewFile(QString htmlFilePath);
+    void deletFileData(QString filePath);
     void switchLineHtmlFile(QString htmlFilePath);
+
     void startSwitchFiles();
-    void slot_QtVisonGroupClicked(int);
+    void slot_QtVersionGroupClicked(int);
     void slot_DirPathGroupClicked(int);
-    void on_deletListBtn_clicked();
-    void on_selectDirBtn_clicked();
-    void deletFileData(QString htmlFilePath);
     void appendErrorRecord(QString record);
     void appendWarningRecord(QString record);
     void appendRecord(QString record);
@@ -47,35 +57,43 @@ private slots:
     void controlWidget(bool state);
 
 private:
-    void innitSwitchNeedMsgStru();
+    void initView();
     void findFixedFiles();
-    bool findHadHtmlFile(QString newFilePath);
-    void updateListInformation();
-    bool updateBranch(QString projectName, AxtureProject newProject);
+    bool isRepeatedFile(QString filePath);
+    void updateTableModel();
 
     bool checkJsCssExisted(QString path,bool isSinglePage = true);
     QPair<QString, QString> getJsCssFile(QString path,bool isSinglePage = true);
     void showWarnings(QString content);
 
-    void createThreads(AxtureProject project, QString outputDir);
+private:
+    enum QtVersion{
+        Qt4,
+        Qt5
+    };
+
+    enum ExportPath{
+        Path_Current,
+        Path_SelfDefine
+    };
 
 private:
     Ui::ClientOperate *ui;
 
-    QButtonGroup* QtVsionButtonGroup;
-    QButtonGroup* DirPathButtonGroup;
+    QButtonGroup* m_versionButtGroup;
+    QButtonGroup* m_dirPathButtGroup;
+
+    ViewModel* m_model;
+    ViewDelegate * m_viewDelegate;
+
+    QString m_lastAxureProjectPath;         /*!< 保存上次打开axure的工程目录，作为下次打开的默认位置 */
 
     const QString cssBaseFileName;
     const QString jsSinglePageFileName;
     const QString jsBaseFileName;
 
+    QList<AxtureProject> m_axureProjList;
 
-    QList<AxtureProject> rootPathList;
-
-    bool radioBtnSign;
-
-    ViewMoudel* m_model;
-    ViewDelegate *m_viewDelegate;
     ThreadSwitch *sonThread;
     StartThreads *m_signalFile;
 //    ThreadSwitch *sonThread[MAXTHREAD];
