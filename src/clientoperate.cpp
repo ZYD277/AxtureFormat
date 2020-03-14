@@ -414,6 +414,7 @@ void ClientOperate::controlWidget(bool state)
     ui->createOutDirLedit->setEnabled(state);
     ui->selectDirBtn->setEnabled(state);
     ui->tableView->setEnabled(state);
+    ui->startChangeBtn->setEnabled(state);
 
 }
 /**
