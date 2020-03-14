@@ -31,6 +31,10 @@ private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
     SelectorTypeMap m_selectorType;
+
+    QString m_name;
+    QString m_value;
+    int m_ruleSize;
 };
 
 } //namespace RQt

@@ -267,6 +267,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
                 domWidget->addItem(item);
             }
+            if(!virtualRoot->m_lastChildItemId.isEmpty()){
+                virtualRoot->m_lastChildItemId = virtualRoot->m_lastChildItemId + "_div_" + node->m_id;
+                m_selectorType.insert(virtualRoot->m_lastChildItemId,Html::RTREE);
+            }
 
             break;
         }

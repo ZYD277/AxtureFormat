@@ -445,6 +445,7 @@ void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeIt
         for(int i = 0; i < childs.size();i++){
             GumboNodeWrapper tmpChild = childs.at(i);
             if(tmpChild.attribute("selectiongroup").contains("tree_group")){
+                parentNode->m_lastChildItemId = tmpChild.id();
                 data->m_text = tmpChild.secondChild().firstChild().firstChild().firstChild().text();
             }else if(tmpChild.clazz().contains("children")){
                 GumboNodeWrapperList subChilds = tmpChild.children();

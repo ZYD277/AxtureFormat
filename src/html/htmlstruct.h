@@ -129,6 +129,7 @@ struct TreeItemData : public BaseData{
 
     TreeItemData * m_parentItem;                /*!< 父节点 */
     QList<TreeItemData *>   m_childItems;       /*!< 子节点 */
+    QString m_lastChildItemId;                  /*!< 子节点id用于tree的样式*/
 };
 
 /*!

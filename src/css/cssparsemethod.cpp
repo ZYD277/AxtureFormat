@@ -165,6 +165,8 @@ bool CssParseMethod::parseFile(RTextFile *file)
                     segment.selectorName = segment.selectorName.replace("_div.mouseDown",":pressed");
                 else if(segment.selectorName.contains("mouseOver"))
                     segment.selectorName = segment.selectorName.replace("_div.mouseOver",":hover");
+                else if(segment.selectorName.contains("selected"))
+                    segment.selectorName = segment.selectorName.replace("_div.selected",":checked");
                 else
                     segment.selectorName = segment.selectorName.replace("_div.",":");
             }
