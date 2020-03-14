@@ -89,6 +89,10 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     GumboNodeWrapperList childNodeList = divNode.children();
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
+        GumboNodeWrapperList childNodeListBox = childEle.children();
+        GumboNodeWrapper childEleBox = childNodeListBox.at(0);
+        if(childEle.clazz() == "ax_default" && childEleBox.clazz().contains("box"))
+            parseDiv(childEle,parentNode);
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
 
         if(ttype != RINVALID){
@@ -121,7 +125,6 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 {
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
-
         if(element.tagName() == "iframe")
             return RINLINE_FRAME;
 
@@ -160,7 +163,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RLABEL;
             else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
-            else if(classInfo.contains("button") || classInfo.contains("primary_button"))
+            else if(classInfo.contains("button") || classInfo.contains("primary_button") || element.attribute("data-label").contains(QStringLiteral("按钮")))
                 return RBUTTON;
             else if(classInfo.contains("panel_state"))
                 return RDYNAMIC_PANEL;
@@ -442,6 +445,7 @@ void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeIt
         for(int i = 0; i < childs.size();i++){
             GumboNodeWrapper tmpChild = childs.at(i);
             if(tmpChild.attribute("selectiongroup").contains("tree_group")){
+                parentNode->m_lastChildItemId = tmpChild.id();
                 data->m_text = tmpChild.secondChild().firstChild().firstChild().firstChild().text();
             }else if(tmpChild.clazz().contains("children")){
                 GumboNodeWrapperList subChilds = tmpChild.children();

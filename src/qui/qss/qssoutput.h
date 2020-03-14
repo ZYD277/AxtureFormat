@@ -16,6 +16,7 @@
 #include <QString>
 #include <QStringList>
 #include "../../css/cssstruct.h"
+#include "qui/formatproperty.h"
 
 namespace RQt{
 
@@ -24,13 +25,14 @@ class QSSOutput
 public:
     QSSOutput();
 
-    void setCommonStyle(const CSS::CssMap & globalCss,const CSS::CssMap & pageCss);
+    void setCommonStyle(const CSS::CssMap & globalCss, const CSS::CssMap & pageCss, RQt::SelectorTypeMap selectorType);
     void setDynamicStyle();
     bool save(QString fullPath);
 
 private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
+    SelectorTypeMap m_selectorType;
 };
 
 } //namespace RQt

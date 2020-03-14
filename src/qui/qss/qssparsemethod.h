@@ -14,6 +14,7 @@
 
 #include "../../util/fileutils.h"
 #include "../../css/cssstruct.h"
+#include "qui/formatproperty.h"
 
 namespace RQt{
 
@@ -22,13 +23,18 @@ class QSSParseMethod : public RTextParseMethod
 public:
     QSSParseMethod();
 
-    void setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss);
+    void setCommonStyle(const CSS::CssMap& globalCss, const CSS::CssMap& pageCss, SelectorTypeMap selectorType);
 
     bool  startSave(RTextFile * file) override;
 
 private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
+    SelectorTypeMap m_selectorType;
+
+    QString m_name;
+    QString m_value;
+    int m_ruleSize;
 };
 
 } //namespace RQt

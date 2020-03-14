@@ -3,6 +3,7 @@
 
 #include "../html/htmlstruct.h"
 #include "../css/cssstruct.h"
+#include "../qui/formatproperty.h"
 
 namespace RQt{
 
@@ -17,6 +18,7 @@ public:
 
 private:
     QStringList m_originalResoucesLinks;
+    SelectorTypeMap m_selectorType;
 
 };
 

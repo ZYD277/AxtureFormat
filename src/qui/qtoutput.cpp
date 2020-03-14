@@ -4,6 +4,7 @@
 #include <QDir>
 #include "qrc/qrcoutput.h"
 #include "qss/qssoutput.h"
+#include "qss/qssparsemethod.h"
 #include "formatproperty.h"
 #include "exportui.h"
 
@@ -63,11 +64,12 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
         QString resFile = "res.qrc";
         QString qrcPath = uiPath.path() + QDir::separator() + resFile;
 
-        if(qrc.save(qrcPath)){
+        m_selectorType = propFormat.getHtmlParsedResult();
 
+        if(qrc.save(qrcPath)){
             //[3]
             QSSOutput qss;
-            qss.setCommonStyle(globalCss,pageCss);
+            qss.setCommonStyle(globalCss,pageCss,m_selectorType);
 
             QFileInfo uiPath(fullPath);
             QString qssPath = uiPath.path() + QDir::separator() + "qss";
