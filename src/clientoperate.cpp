@@ -1,31 +1,31 @@
 ﻿#include "clientoperate.h"
 #include "ui_clientoperate.h"
 
+#include <iostream>
+#include <functional>
+
 #include <QFileDialog>
 #include <QListView>
 #include <QDebug>
 #include <QDir>
 #include <QMessageBox>
 #include <QProcess>
+#include <QMutexLocker>
 
 #include "util/rutil.h"
+#include "util/threadpool.h"
 #include "viewdelegate.h"
 #include "viewmodel.h"
+#include "switchtask.h"
 
 ClientOperate::ClientOperate(QWidget *parent) :
     QWidget(parent),cssBaseFileName("styles.css"),jsBaseFileName("document.js"),jsSinglePageFileName("data.js"),
-    ui(new Ui::ClientOperate),m_versionButtGroup(nullptr),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr)
+    ui(new Ui::ClientOperate),m_versionButtGroup(nullptr),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr),
+    m_pool(new ThreadPool(5))
 {
     ui->setupUi(this);
     setWindowTitle(QStringLiteral("Axure转Qt工具-RGCompany"));
-
-    sonThread = nullptr;
-    m_signalFile = nullptr;
-
-    if(!sonThread)
-    {
-        sonThread = new ThreadSwitch();
-    }
+    qRegisterMetaType<SwitchProgress>("SwitchProgress");
 
     initView();
 }
@@ -35,9 +35,7 @@ ClientOperate::~ClientOperate()
     delete ui;
     delete m_model;
     delete m_viewDelegate;
-
-    delete sonThread;
-    delete m_signalFile;
+    delete m_pool;
 }
 
 void ClientOperate::initView()
@@ -86,19 +84,20 @@ void ClientOperate::initView()
     ui->createOutDirLedit->setEnabled(false);
     ui->selectDirBtn->setEnabled(false);
 
-    connect(m_versionButtGroup, SIGNAL(buttonClicked(int)),this,SLOT(slot_QtVersionGroupClicked(int)));
-    connect(m_dirPathButtGroup, SIGNAL(buttonClicked(int)),this,SLOT(slot_DirPathGroupClicked(int)));
+    connect(m_versionButtGroup, SIGNAL(buttonClicked(int)),this,SLOT(chooseQtVersion(int)));
+    connect(m_dirPathButtGroup, SIGNAL(buttonClicked(int)),this,SLOT(chooseOutputPath(int)));
 
     connect(ui->openAxPrjBtn,SIGNAL(pressed()),this,SLOT(openAxureProject()));
     connect(ui->clearList,SIGNAL(pressed()),this,SLOT(clearAxureTable()));
     connect(ui->selectDirBtn,SIGNAL(pressed()),this,SLOT(chooseUserFilePath()));
     connect(ui->startChangeBtn,SIGNAL(clicked(bool)),this,SLOT(startSwitchFiles()));
+    connect(ui->clearLog,&QPushButton::pressed,[&](){ui->textBrowser->clear();});
 }
 
 /**
  * @brief 获取qt版本
  */
-void ClientOperate::slot_QtVersionGroupClicked(int)
+void ClientOperate::chooseQtVersion(int)
 {
     QtVersion version = static_cast<QtVersion>(m_versionButtGroup->checkedId());
     switch(version)
@@ -115,7 +114,7 @@ void ClientOperate::slot_QtVersionGroupClicked(int)
 /**
  * @brief 获取文件存储路径
  */
-void ClientOperate::slot_DirPathGroupClicked(int)
+void ClientOperate::chooseOutputPath(int)
 {
     ExportPath path = static_cast<ExportPath>(m_dirPathButtGroup->checkedId());
     switch(path)
@@ -139,19 +138,18 @@ void ClientOperate::slot_DirPathGroupClicked(int)
  */
 void ClientOperate::openAxureProject()
 {
+    QDir parent = QDir(m_lastAxureProjectPath);
+    parent.cdUp();
+
     QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axure工程目录"),
-                                                            m_lastAxureProjectPath.isEmpty() ? QDir::homePath() : m_lastAxureProjectPath);
+                                                            m_lastAxureProjectPath.isEmpty() ? QDir::homePath() : parent.path());
     Check_Return(projectPath.isEmpty(),);
     m_lastAxureProjectPath = projectPath;
 
     QDir pDir(projectPath);
     if(pDir.exists())
     {
-        appendRecord(QString(QStringLiteral("开始解析[%1]")).arg(pDir.path()));
-
-        AxtureProject project;
-        project.projectName = pDir.dirName();
-        project.projectPath = projectPath;
+        appendLog(LogNormal,QString(QStringLiteral("开始解析工程[%1]")).arg(pDir.path()));
 
         QString basePath = projectPath + QDir::separator() + "data";
         if(!checkJsCssExisted(basePath,false)){
@@ -159,10 +157,8 @@ void ClientOperate::openAxureProject()
             return;
         }
 
-        appendRecord(QStringLiteral("检测通用样式."));
+        appendLog(LogNormal,QStringLiteral("检测通用样式."));
         QPair<QString,QString> jsCssPair = getJsCssFile(basePath,false);
-        project.baseJsFilePath = jsCssPair.first;
-        project.baseCssFilePath = jsCssPair.second;
 
         QStringList nameFilters;
         nameFilters<<"*.html";
@@ -170,7 +166,12 @@ void ClientOperate::openAxureProject()
         QFileInfoList htmlFiles = pDir.entryInfoList(nameFilters,QDir::Files | QDir::NoDotAndDotDot);
         std::for_each(htmlFiles.begin(),htmlFiles.end(),[&](const QFileInfo & fileInfo){
             if(!isRepeatedFile(fileInfo.filePath())){
-                AxturePage page;
+                AxurePage page;
+
+                page.baseJsFilePath = jsCssPair.first;
+                page.baseCssFilePath = jsCssPair.second;
+
+
                 page.htmlFilePath = fileInfo.filePath();
                 page.htmlFileName = fileInfo.fileName();
                 QString pageJsCssPath = fileInfo.absoluteDir().path() + QDir::separator() + "files" + QDir::separator() + fileInfo.baseName();
@@ -180,29 +181,17 @@ void ClientOperate::openAxureProject()
                     page.jsFilePath = jsCssPair.first;
                     page.cssFilePath = jsCssPair.second;
 
-                    appendRecord(QString(QStringLiteral("检测到页面[%1].")).arg(fileInfo.fileName()));
+                    appendLog(LogNormal,QString(QStringLiteral("检测到页面[%1].")).arg(fileInfo.fileName()));
 
-                    //初始化进度条数据
-                    page.processData.currentTime = 0;
-                    page.processData.finishedTime = 1;
                     page.processData.error = false;
                     page.processData.textDescription = QStringLiteral("0%");
 
-                    project.pages.append(page);
+                    m_pageList.append(page);
                 }
             }
         });
 
-        if(project.pages.size() > 0){
-            auto iter = std::find_if(m_axureProjList.begin(),m_axureProjList.end(),[&project](const AxtureProject & proj){return proj.projectPath == project.projectPath;});
-            if(iter != m_axureProjList.end()){
-                (*iter).pages.append(project.pages);
-            }else{
-                m_axureProjList.append(project);
-            }
-
-            updateTableModel();
-        }
+        updateTableModel();
     }
 }
 
@@ -243,6 +232,17 @@ void ClientOperate::showWarnings(QString content)
     QMessageBox::warning(this,QStringLiteral("警告"),content,QMessageBox::Yes);
 }
 
+void ClientOperate::generateTask(AxurePage &page)
+{
+    QString outDir = ui->createOutDirRadioBtn->isChecked() ?ui->createOutDirLedit->text():QFileInfo(page.htmlFilePath).path() + "_qt";
+    SwitchTask * task = new SwitchTask;
+    connect(task,SIGNAL(updateProgress(SwitchProgress)),this,SLOT(updateProgress(SwitchProgress)),Qt::QueuedConnection);
+    m_pool->enqueue([&](SwitchTask * switchTask,AxurePage & pp,QString outPath){
+        switchTask->initTask(pp,outPath);
+        delete switchTask;
+    },task,page,outDir);
+}
+
 /**
  * @brief 是否已经将文件加入队列
  * @param[in] filePath 待判断文件全路径
@@ -250,18 +250,11 @@ void ClientOperate::showWarnings(QString content)
  */
 bool ClientOperate::isRepeatedFile(QString filePath)
 {
-    for(int i = 0; i< m_axureProjList.size(); i++)
-    {
-        const AxtureProject & t_axureProj = m_axureProjList.at(i);
+    auto iter = std::find_if(m_pageList.begin(),m_pageList.end(),[&filePath](const AxurePage & page){return page.htmlFilePath == filePath;});
 
-        auto iter =std::find_if(t_axureProj.pages.begin(),t_axureProj.pages.end(),[&filePath](const AxturePage & page){
-            return page.htmlFilePath == filePath;
-        });
-
-        if(iter != t_axureProj.pages.end()){
-            appendWarningRecord(QString(QStringLiteral("该文件已经存在[%1]")).arg((*iter).htmlFileName));
-            return true;
-        }
+    if(iter != m_pageList.end()){
+        appendLog(LogWarn,QString(QStringLiteral("该文件已经存在[%1]")).arg((*iter).htmlFileName));
+        return true;
     }
     return false;
 }
@@ -271,47 +264,34 @@ bool ClientOperate::isRepeatedFile(QString filePath)
  */
 void ClientOperate::updateTableModel()
 {
-    m_model->setModelData(m_axureProjList);
+    m_model->setModelData(m_pageList);
     m_model->refreshModel();
 }
 
-/**
- * @brief 开始转换指定html文件
- */
-void ClientOperate::switchLineHtmlFile(QString htmlFilePath)
+void ClientOperate::appendLog(ClientOperate::LogLevel level, QString record)
 {
-    if(!m_signalFile)
-    {
-        m_signalFile = new StartThreads();
-        connect(m_signalFile,SIGNAL(updateProgress(QString)),this,SLOT(appendRecord(QString)));
-        connect(m_signalFile,SIGNAL(updateErrorProgress(QString)),this,SLOT(appendErrorRecord(QString)));
-        connect(m_signalFile,SIGNAL(updateWaringProgress(QString)),this,SLOT(appendWarningRecord(QString)));
-        connect(m_signalFile,SIGNAL(updataProgressBar(AxturePage)),this,SLOT(updateProcess(AxturePage)));
-
-        connect(this,SIGNAL(switchObjFile(AxturePage,QString,QString)),m_signalFile,SLOT(threadProcessingData(AxturePage,QString,QString)));
+    QString textColor;
+    switch(level){
+        case LogNormal:textColor = "#000000";break;
+        case LogWarn:textColor = "#FFC000";break;
+        case LogError:textColor = "#FF0000";break;
+        default:break;
     }
-    for(int i = 0; i<m_axureProjList.size();i++)
-    {
-        AxtureProject t_project = m_axureProjList.at(i);
-        for(int j = 0;j<t_project.pages.size();j++)
-        {
-            AxturePage fileInfo = t_project.pages.at(j);
-            if(fileInfo.htmlFilePath == htmlFilePath)
-            {
-                QString outputDir;
-                QString projectPath = t_project.projectPath;
-                if(ui->createOutDirRadioBtn->isChecked())
-                {
-                    ui->createOutDirLedit->text();
-                    outputDir = QString("%1%2%3%4").arg(ui->createOutDirLedit->text())
-                            .arg(QDir::separator())
-                            .arg(t_project.projectName).arg(QStringLiteral("_qt"));
-                }
-                else
-                    outputDir = projectPath + QStringLiteral("_qt");
-                emit switchObjFile(fileInfo,outputDir,projectPath);
-            }
-        }
+
+    ui->textBrowser->append(QString("<font color=\"%1\">" + RUtil::getTimeStamp()+":"+record + "</font>").arg(textColor));
+}
+
+/**
+ * @brief 转换单个html文件
+ */
+void ClientOperate::switchLineHtmlFile(QString pageId)
+{
+    Check_Return(!checkBeforeSwitch(),);
+
+    auto iter =std::find_if(m_pageList.begin(),m_pageList.end(),[&pageId](const AxurePage & page){return page.id == pageId;});
+    if(iter != m_pageList.end()){
+        appendLog(LogError,QStringLiteral("开始转换..."));
+        generateTask(*iter);
     }
 }
 
@@ -320,52 +300,34 @@ void ClientOperate::switchLineHtmlFile(QString htmlFilePath)
  */
 void ClientOperate::startSwitchFiles()
 {
-    if(m_axureProjList.size() == 0){
+    Check_Return(!checkBeforeSwitch(),);
+
+    appendLog(LogError,QString(QStringLiteral("准备转换[%1]个页面...")).arg(m_pageList.size()));
+    std::for_each(m_pageList.begin(),m_pageList.end(),[&](AxurePage & page){
+        generateTask(page);
+    });
+}
+
+/*!
+ * @brief 转换前验证相关参数是否具备
+ */
+bool ClientOperate::checkBeforeSwitch()
+{
+    if(m_pageList.size() == 0){
         showWarnings(QStringLiteral("转换列表为空，请选择axure工程。"));
-        return;
+        return false;
     }
 
     if(ui->createOutDirRadioBtn->isChecked()){
         QFileInfo fileInfo(ui->createOutDirLedit->text());
         if(!fileInfo.exists()){
             showWarnings(QStringLiteral("自定义导出目录不存在，请重新选择!"));
-            return;
+            return false;
         }
     }
 
-
-
-    {
-        //设置控件失能
-//        controlWidget(false);
-
-//        connect(sonThread,SIGNAL(updateProgress(QString)),this,SLOT(appendRecord(QString)));
-//        connect(sonThread,SIGNAL(updateErrorProgress(QString)),this,SLOT(appendErrorRecord(QString)));
-//        connect(sonThread,SIGNAL(updateWaringProgress(QString)),this,SLOT(appendWarningRecord(QString)));
-
-//        connect(sonThread,SIGNAL(updataProgressBar(AxturePage)),this,SLOT(updateProcess(AxturePage)));
-
-//        connect(sonThread,SIGNAL(updataWidgetState(bool)),this,SLOT(controlWidget(bool)));
-
-
-//        for(int i = 0;i<m_axureProjList.size();i++)
-//        {
-//            AxtureProject t_rootDirInfo = m_axureProjList.at(i);
-//            QString  t_customizedPath;
-//            if(ui->createOutDirRadioBtn->isChecked())
-//            {
-//                t_customizedPath = QString("%1%2%3").arg(ui->createOutDirLedit->text()).arg(QDir::separator()).arg(t_rootDirInfo.projectName);
-//                sonThread->getFileInfo(t_rootDirInfo,t_customizedPath);
-//            }
-//            else
-//            {
-//                sonThread->getFileInfo(t_rootDirInfo,t_rootDirInfo.projectPath);
-//            }
-//        }
-//        sonThread->threadStart();
-    }
+    return true;
 }
-
 
 /**
  * @brief 控制控件使能情况
@@ -393,8 +355,7 @@ void ClientOperate::clearAxureTable()
 {
     int result = QMessageBox::question(this,QStringLiteral("提示"),QStringLiteral("是否清空当前列表?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
     if(result == QMessageBox::Yes){
-        m_axureProjList.clear();
-
+        m_pageList.clear();
         updateTableModel();
     }
 }
@@ -429,72 +390,41 @@ void ClientOperate::viewFile(QString htmlFilePath)
  * @brief 删除一行数据
  * @param filePath 删除行文件名
  */
-void ClientOperate::deletFileData(QString filePath)
+void ClientOperate::deletFileData(QString pageId)
 {
     int result = QMessageBox::question(this,QStringLiteral("提示"),QStringLiteral("是否删除此记录?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
 
     if(result == QMessageBox::Yes){
-        for(int i = 0;i < m_axureProjList.size(); i++)
-        {
-            AxtureProject & project = m_axureProjList.operator [](i);
+        auto iter =std::find_if(m_pageList.begin(),m_pageList.end(),[&pageId](const AxurePage & page){
+            return page.id == pageId;
+        });
 
-            auto iter =std::find_if(project.pages.begin(),project.pages.end(),[&filePath](const AxturePage & page){
-                return page.htmlFilePath == filePath;
-            });
-
-            if(iter != project.pages.end()){
-                project.pages.erase(iter);
-                updateTableModel();
-                break;
-            }
+        if(iter != m_pageList.end()){
+            m_pageList.erase(iter);
+            updateTableModel();
         }
     }
 }
 
 /**
- * @brief 更新日志记录(错误消息)
- * @param record更新数据
- */
-void ClientOperate::appendErrorRecord(QString record)
-{
-    ui->textBrowser->append("<font color=\"#FF0000\">" +RUtil::getTimeStamp()+":"+record + "</font>");
-}
-
-/**
- * @brief 更新日志记录(警告消息)
- * @param record日志记录
- */
-void ClientOperate::appendWarningRecord(QString record)
-{
-    ui->textBrowser->append("<font color=\"#A2AA00\">" +RUtil::getTimeStamp()+":"+record + "</font>");
-}
-
-/**
- * @brief 更新日志记录(正常消息)
- * @param record日志记录
- */
-void ClientOperate::appendRecord(QString record)
-{
-    ui->textBrowser->append("<font color=\"#00FF00\">" +RUtil::getTimeStamp()+":"+record + "</font>");
-}
-
-/**
  * @brief 更新进度条
  */
-void ClientOperate::updateProcess(AxturePage newProcessInfo)
+void ClientOperate::updateProgress(SwitchProgress proj)
 {
-    for(int i = 0;i<m_axureProjList.size();i++)
+    QMutexLocker locker(&m_progressMutex);
+    for(int i = 0;i < m_pageList.size();i++)
     {
-        AxtureProject project = m_axureProjList.at(i);
-        for(int j = 0;j<project.pages.size();j++)
-        {
-            AxturePage fileInfo = project.pages.at(j);
-            if(fileInfo.htmlFilePath == newProcessInfo.htmlFilePath)
-            {
-                project.pages.replace(j,newProcessInfo);
-                m_axureProjList.replace(i,project);
-            }
+        AxurePage & page = m_pageList[i];
+        if(proj.pageId == page.id){
+            page.processData = proj.progress;
+            break;
         }
+    }
+
+    if(proj.progress.error){
+        appendLog(LogError,"["+proj.pageName + "] "+ proj.progress.textDescription);
+    }else{
+        appendLog(LogNormal,"["+proj.pageName + "] "+ proj.progress.textDescription);
     }
 
     updateTableModel();

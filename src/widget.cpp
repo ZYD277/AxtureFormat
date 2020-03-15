@@ -34,106 +34,101 @@ Widget::~Widget()
  */
 void Widget::chooseAxtureProject()
 {
-    QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axture工程目录"),QDir::homePath());
-    QDir pDir(projectPath);
-    if(projectPath.size() > 0 && pDir.exists()){
-        ui->progressRecord->clear();
+//    QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axture工程目录"),QDir::homePath());
+//    QDir pDir(projectPath);
+//    if(projectPath.size() > 0 && pDir.exists()){
+//        ui->progressRecord->clear();
 
-        emit updateProgress(QString(QStringLiteral("开始解析[%1]")).arg(pDir.path()));
+//        emit updateProgress(QString(QStringLiteral("开始解析[%1]")).arg(pDir.path()));
 
-        AxtureProject project;
-        project.projectName = pDir.dirName();
+//        QString basePath = projectPath + QDir::separator() + "data";
+//        if(!checkJsCssExisted(basePath,false)){
+//            showWarnings(QStringLiteral("通用样式表或js文件不存在!"));
+//            return;
+//        }
 
-        QString basePath = projectPath + QDir::separator() + "data";
-        if(!checkJsCssExisted(basePath,false)){
-            showWarnings(QStringLiteral("通用样式表或js文件不存在!"));
-            return;
-        }
+//        emit updateProgress(QStringLiteral("检测通用样式."));
 
-        emit updateProgress(QStringLiteral("检测通用样式."));
+//        QPair<QString,QString> jsCssPair = getJsCssFile(basePath,false);
 
-        QPair<QString,QString> jsCssPair = getJsCssFile(basePath,false);
-        project.baseJsFilePath = jsCssPair.first;
-        project.baseCssFilePath = jsCssPair.second;
+//        QFileInfoList htmlFiles = pDir.entryInfoList(QDir::Files);
+//        std::for_each(htmlFiles.begin(),htmlFiles.end(),[&](const QFileInfo & fileInfo){
+//            AxurePage page;
+//            page.htmlFilePath = fileInfo.filePath();
+//            QString pageJsCssPath = fileInfo.absoluteDir().path() + QDir::separator() + "files" + QDir::separator() + fileInfo.baseName();
 
-        QFileInfoList htmlFiles = pDir.entryInfoList(QDir::Files);
-        std::for_each(htmlFiles.begin(),htmlFiles.end(),[&](const QFileInfo & fileInfo){
-            AxturePage page;
-            page.htmlFilePath = fileInfo.filePath();
-            QString pageJsCssPath = fileInfo.absoluteDir().path() + QDir::separator() + "files" + QDir::separator() + fileInfo.baseName();
+//            if(checkJsCssExisted(pageJsCssPath)){
+//                jsCssPair = getJsCssFile(pageJsCssPath);
+//                page.jsFilePath = jsCssPair.first;
+//                page.cssFilePath = jsCssPair.second;
 
-            if(checkJsCssExisted(pageJsCssPath)){
-                jsCssPair = getJsCssFile(pageJsCssPath);
-                page.jsFilePath = jsCssPair.first;
-                page.cssFilePath = jsCssPair.second;
+//                emit updateProgress(QString(QStringLiteral("检测到页面[%1].")).arg(fileInfo.fileName()));
 
-                emit updateProgress(QString(QStringLiteral("检测到页面[%1].")).arg(fileInfo.fileName()));
+//                project.pages.append(page);
+//            }
+//        });
 
-                project.pages.append(page);
-            }
-        });
+//        if(project.pages.size() > 0){
+//            //[2]
+//            CSS::CssParser cssParser;
+//            CSS::CssMap globalCssMap;
+//            CSS::ErrorMsg errorMsg;
+//            if(cssParser.parseFile(project.baseCssFilePath)){
+//                emit updateProgress(QString(QStringLiteral("解析通用样式成功.")));
+//                globalCssMap = cssParser.getParsedResult();
+//            }else{
+//                emit updateProgress(QString(QStringLiteral("解析通用样式失败,流程终止!")));
+//                errorMsg = cssParser.getParsedErrorMsg();
+//                emit updateProgress(errorMsg.errorMsg);
+//                return;
+//            }
 
-        if(project.pages.size() > 0){
-            //[2]
-            CSS::CssParser cssParser;
-            CSS::CssMap globalCssMap;
-            CSS::ErrorMsg errorMsg;
-            if(cssParser.parseFile(project.baseCssFilePath)){
-                emit updateProgress(QString(QStringLiteral("解析通用样式成功.")));
-                globalCssMap = cssParser.getParsedResult();
-            }else{
-                emit updateProgress(QString(QStringLiteral("解析通用样式失败,流程终止!")));
-                errorMsg = cssParser.getParsedErrorMsg();
-                emit updateProgress(errorMsg.errorMsg);
-                return;
-            }
+//            //[3]
+//            QString outputDir = projectPath + "_qt";
+//            std::for_each(project.pages.begin(),project.pages.end(),[&](const AxturePage & page){
+//                if(cssParser.parseFile(page.cssFilePath)){
+//                    if(m_htmlParser.parseHtmlFile(page.htmlFilePath)){
+//                        QString htmlName = QFileInfo(page.htmlFilePath).baseName();
+//                        emit updateProgress(QString(QStringLiteral("解析Html[%1]结束.")).arg(htmlName));
 
-            //[3]
-            QString outputDir = projectPath + "_qt";
-            std::for_each(project.pages.begin(),project.pages.end(),[&](const AxturePage & page){
-                if(cssParser.parseFile(page.cssFilePath)){
-                    if(m_htmlParser.parseHtmlFile(page.htmlFilePath)){
-                        QString htmlName = QFileInfo(page.htmlFilePath).baseName();
-                        emit updateProgress(QString(QStringLiteral("解析Html[%1]结束.")).arg(htmlName));
+//                        QString pageDir = outputDir + QDir::separator() + htmlName;
+//                        if(RUtil::createDir(outputDir) && RUtil::createDir(pageDir)){
+//                            QString pageUiName = pageDir + QDir::separator() + htmlName  +".ui";
+//                            m_qtOutput.save(m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName);
 
-                        QString pageDir = outputDir + QDir::separator() + htmlName;
-                        if(RUtil::createDir(outputDir) && RUtil::createDir(pageDir)){
-                            QString pageUiName = pageDir + QDir::separator() + htmlName  +".ui";
-                            m_qtOutput.save(m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName);
+//                            //[4]
+//                            QString baseImagePath = projectPath + QDir::separator() + "images" + QDir::separator();
+//                            QString srcImagePath = baseImagePath + QDir::separator() + htmlName;
+//                            QDir srcImageDir(srcImagePath);
+//                            QString dstImagePath = pageDir + QDir::separator() + "images";
+//                            if(RUtil::createDir(dstImagePath)){
+//                                QDir dir(dstImagePath);
+//                                dir.setFilter(QDir::Files);
+//                                int fileCount = dir.count();
+//                                for (int i = 0; i < fileCount; i++)
+//                                    dir.remove(dir[i]);
+//                                //根据图片引用的资源链接去拷贝
+//                                QStringList resourcesLinks = m_qtOutput.getOriginalResouces();
+//                                foreach(const QString & links,resourcesLinks){
+//                                    QString imgPath = projectPath + QDir::separator() + links;
+//                                    QString dstImageFullPath = dstImagePath + QDir::separator() + QFileInfo(imgPath).fileName();
+//                                    QFile::copy(imgPath,dstImageFullPath);
+//                                }
 
-                            //[4]
-                            QString baseImagePath = projectPath + QDir::separator() + "images" + QDir::separator();
-                            QString srcImagePath = baseImagePath + QDir::separator() + htmlName;
-                            QDir srcImageDir(srcImagePath);
-                            QString dstImagePath = pageDir + QDir::separator() + "images";
-                            if(RUtil::createDir(dstImagePath)){
-                                QDir dir(dstImagePath);
-                                dir.setFilter(QDir::Files);
-                                int fileCount = dir.count();
-                                for (int i = 0; i < fileCount; i++)
-                                    dir.remove(dir[i]);
-                                //根据图片引用的资源链接去拷贝
-                                QStringList resourcesLinks = m_qtOutput.getOriginalResouces();
-                                foreach(const QString & links,resourcesLinks){
-                                    QString imgPath = projectPath + QDir::separator() + links;
-                                    QString dstImageFullPath = dstImagePath + QDir::separator() + QFileInfo(imgPath).fileName();
-                                    QFile::copy(imgPath,dstImageFullPath);
-                                }
-
-                                //拷贝对应目录下所有文件
-                                QFileInfoList srcFileInfos = srcImageDir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
-                                std::for_each(srcFileInfos.begin(),srcFileInfos.end(),[&](QFileInfo & finfo){
-                                    QString dstImageFullPath = dstImagePath + QDir::separator() + finfo.fileName();
-                                    QFile::copy(finfo.filePath(),dstImageFullPath);
-                                });
-                                emit updateProgress(QString(QStringLiteral("拷贝图片资源[%1]结束.")).arg(htmlName));
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    }
+//                                //拷贝对应目录下所有文件
+//                                QFileInfoList srcFileInfos = srcImageDir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+//                                std::for_each(srcFileInfos.begin(),srcFileInfos.end(),[&](QFileInfo & finfo){
+//                                    QString dstImageFullPath = dstImagePath + QDir::separator() + finfo.fileName();
+//                                    QFile::copy(finfo.filePath(),dstImageFullPath);
+//                                });
+//                                emit updateProgress(QString(QStringLiteral("拷贝图片资源[%1]结束.")).arg(htmlName));
+//                            }
+//                        }
+//                    }
+//                }
+//            });
+//        }
+//    }
 }
 
 void Widget::appendRecord(QString record)

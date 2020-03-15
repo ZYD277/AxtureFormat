@@ -42,7 +42,7 @@ void ViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     else if(index.column() == T_Progress)
     {
         bool error = index.data(Qt::UserRole + T_OccurrError).toBool();
-        if(!error)
+        if(error)
         {
             painter->setBrush(QBrush(QColor(0xff,0,0)));
             QColor t_red(0xff,0,0);

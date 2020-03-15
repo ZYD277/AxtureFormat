@@ -21,10 +21,10 @@ public:
     Qt::ItemFlags flags(const QModelIndex & index) const override;
 
     void refreshModel();
-    void setModelData(const QList<AxtureProject> &dataList);
+    void setModelData(const AxturePages &dataList);
 
 private:
-    QList<AxturePage> m_moudelList;
+    AxturePages m_moudelList;
 };
 
 #endif // VIEWMOUDEL_H

@@ -12,17 +12,18 @@
 
 #include <QWidget>
 #include <QButtonGroup>
+#include <QMutex>
 
 #include "head.h"
 
 #include "global.h"
-#include "startthreads.h"
-#include "threadswitch.h"
 
 #define MAXTHREAD 4
 
 class ViewModel;
 class ViewDelegate;
+
+class ThreadPool;
 
 namespace Ui {
 class ClientOperate;
@@ -36,7 +37,7 @@ public:
     explicit ClientOperate(QWidget *parent = 0);
     ~ClientOperate();
 signals:
-    void switchObjFile(AxturePage,QString,QString);
+    void switchObjFile(AxurePage,QString,QString);
 
 private slots:
     void openAxureProject();
@@ -44,17 +45,22 @@ private slots:
     void chooseUserFilePath();
 
     void viewFile(QString htmlFilePath);
-    void deletFileData(QString filePath);
-    void switchLineHtmlFile(QString htmlFilePath);
+    void deletFileData(QString pageId);
+    void switchLineHtmlFile(QString pageId);
 
     void startSwitchFiles();
-    void slot_QtVersionGroupClicked(int);
-    void slot_DirPathGroupClicked(int);
-    void appendErrorRecord(QString record);
-    void appendWarningRecord(QString record);
-    void appendRecord(QString record);
-    void updateProcess(AxturePage newProcessInfo);
+    void updateProgress(SwitchProgress proj);
+
+    void chooseQtVersion(int);
+    void chooseOutputPath(int);
     void controlWidget(bool state);
+
+private:
+    enum LogLevel{
+        LogNormal,
+        LogWarn,
+        LogError
+    };
 
 private:
     void initView();
@@ -62,9 +68,14 @@ private:
     bool isRepeatedFile(QString filePath);
     void updateTableModel();
 
+    void appendLog(LogLevel level,QString record);
+
     bool checkJsCssExisted(QString path,bool isSinglePage = true);
     QPair<QString, QString> getJsCssFile(QString path,bool isSinglePage = true);
     void showWarnings(QString content);
+
+    bool checkBeforeSwitch();
+    void generateTask(AxurePage & page);
 
 private:
     enum QtVersion{
@@ -80,6 +91,9 @@ private:
 private:
     Ui::ClientOperate *ui;
 
+    QMutex m_progressMutex;
+    ThreadPool * m_pool;
+
     QButtonGroup* m_versionButtGroup;
     QButtonGroup* m_dirPathButtGroup;
 
@@ -92,11 +106,7 @@ private:
     const QString jsSinglePageFileName;
     const QString jsBaseFileName;
 
-    QList<AxtureProject> m_axureProjList;
-
-    ThreadSwitch *sonThread;
-    StartThreads *m_signalFile;
-//    ThreadSwitch *sonThread[MAXTHREAD];
+    AxturePages m_pageList;
 };
 #endif // CLIENTOPERATE_H
 

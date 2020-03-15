@@ -32,7 +32,7 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
 
     if( row >= 0 && row < m_moudelList.size())
     {
-        AxturePage axurePage = m_moudelList.at(row);
+        AxurePage axurePage = m_moudelList.at(row);
         switch(role)
         {
             case Qt::TextAlignmentRole:
@@ -48,10 +48,14 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
                 }
                 break;
             }
-            case Qt::UserRole + T_Open:
+            case Qt::UserRole + T_Open:{
+                return axurePage.htmlFilePath;
+                break;
+            }
             case Qt::UserRole + T_Delete:
             case Qt::UserRole + T_Switch:{
-                return axurePage.htmlFilePath;break;
+                return axurePage.id;
+                break;
             }
             case Qt::UserRole + T_OccurrError:{
                 return axurePage.processData.error;
@@ -126,11 +130,9 @@ void ViewModel::refreshModel()
     endResetModel();
 }
 
-void ViewModel::setModelData(const QList<AxtureProject> &dataList)
+void ViewModel::setModelData(const AxturePages &dataList)
 {
     m_moudelList.clear();
 
-    std::for_each(dataList.begin(),dataList.end(),[&](const AxtureProject & proj){
-        m_moudelList.append(proj.pages);
-    });
+    m_moudelList = dataList;
 }

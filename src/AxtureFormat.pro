@@ -44,10 +44,10 @@ SOURCES += main.cpp\
     qui/props/mattribute.cpp \
     clientoperate.cpp \
     global.cpp \
-    startthreads.cpp \
-    threadswitch.cpp \
     viewdelegate.cpp \
-    viewmodel.cpp
+    viewmodel.cpp \
+    util/threadpool.cpp \
+    switchtask.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -79,18 +79,17 @@ HEADERS  += widget.h \
     qui/props/mattribute.h \
     clientoperate.h \
     global.h \
-    startthreads.h \
-    threadswitch.h \
     viewdelegate.h \
-    viewmodel.h
+    viewmodel.h \
+    util/threadpool.h \
+    switchtask.h \
+    util/windumpfile.h
 
 FORMS    += widget.ui \
     clientoperate.ui
 
 
 DEPENDLIB_PATH=$$PWD/../3rdPartyLib/
-
-message($$DEPENDLIB_PATH)
 
 INCLUDEPATH+="$$DEPENDLIB_PATH/include/gumbo"
 LIBS+="$$DEPENDLIB_PATH/lib/shared/debug/gumbo.lib"
