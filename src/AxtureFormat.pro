@@ -41,7 +41,13 @@ SOURCES += main.cpp\
     qui/props/mcolumn.cpp \
     qui/props/mitem.cpp \
     qui/props/mdomresource.cpp \
-    qui/props/mattribute.cpp
+    qui/props/mattribute.cpp \
+    clientoperate.cpp \
+    global.cpp \
+    viewdelegate.cpp \
+    viewmodel.cpp \
+    util/threadpool.cpp \
+    switchtask.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -70,14 +76,23 @@ HEADERS  += widget.h \
     qui/props/mcolumn.h \
     qui/props/mitem.h \
     qui/props/mdomresource.h \
-    qui/props/mattribute.h
+    qui/props/mattribute.h \
+    clientoperate.h \
+    global.h \
+    viewdelegate.h \
+    viewmodel.h \
+    util/threadpool.h \
+    switchtask.h \
+    util/windumpfile.h
 
-FORMS    += widget.ui
+FORMS    += widget.ui \
+    clientoperate.ui
 
 
 DEPENDLIB_PATH=$$PWD/../3rdPartyLib/
 
-message($$DEPENDLIB_PATH)
-
 INCLUDEPATH+="$$DEPENDLIB_PATH/include/gumbo"
 LIBS+="$$DEPENDLIB_PATH/lib/shared/debug/gumbo.lib"
+
+RESOURCES += \
+    images.qrc

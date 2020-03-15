@@ -126,7 +126,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
                 if(chooser.contains("."))
                 {
                     //#xx.mouseOver 交互属性格式
-                    static QRegExp exp("\\.(\\w+)$");
+                    QRegExp exp("\\.(\\w+)$");
                     int matchPos = 0;
                     int indexPos = exp.indexIn(chooser,matchPos);        //提取交互式类型
                     if(indexPos >= 0){
@@ -140,7 +140,7 @@ bool CssParseMethod::parseFile(RTextFile *file)
                 {
                     //FIXED 修复在选择器中包含:分号，示例#u409_input:disabled
                     if(chooser.contains(":") && t_colonLab > 0){
-                        static QRegExp exp(":(\\w+)$");
+                        QRegExp exp(":(\\w+)$");
                         int matchPos = 0;
                         int indexPos = exp.indexIn(chooser,matchPos);        //提取交互式类型disabled
                         if(indexPos >= 0){
@@ -342,7 +342,7 @@ QString CssParseMethod::specialDis(const QString &character, int startPosition, 
 bool CssParseMethod::traitsKey(QString &keyData)
 {
     if(removeComments(keyData)){
-        static QRegExp validKeyFormat("^(\\-?[a-zA-z]+\\-?)+$");
+        QRegExp validKeyFormat("^(\\-?[a-zA-z]+\\-?)+$");
 
         if(keyData.contains("\r\n")){
             QStringList keyDataList = keyData.split("\r\n");
