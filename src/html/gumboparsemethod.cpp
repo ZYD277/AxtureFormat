@@ -90,9 +90,11 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
         GumboNodeWrapperList childNodeListBox = childEle.children();
-        GumboNodeWrapper childEleBox = childNodeListBox.at(0);
-        if(childEle.clazz() == "ax_default" && childEleBox.clazz().contains("box"))
-            parseDiv(childEle,parentNode);
+        if(childNodeListBox.size() > 0){
+            GumboNodeWrapper childEleBox = childNodeListBox.at(0);
+            if(childEle.clazz() == "ax_default" && childEleBox.clazz().contains("box"))
+                parseDiv(childEle,parentNode);
+        }
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
 
         if(ttype != RINVALID){
@@ -163,7 +165,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RLABEL;
             else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
-            else if(classInfo.contains("button") || classInfo.contains("primary_button") || element.attribute("data-label").contains(QStringLiteral("按钮")))
+            else if(classInfo.contains("button") || classInfo.contains("primary_button"))
                 return RBUTTON;
             else if(classInfo.contains("panel_state"))
                 return RDYNAMIC_PANEL;
@@ -397,6 +399,14 @@ void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *no
         parseTableCellNodeData(child,node);
 
         data->m_items.append(child.secondChild().firstChild().firstChild().firstChild().text());
+
+        GumboNodeWrapperList childImage = child.children();
+        if(childImage.size()>0){
+            GumboNodeWrapper image = childImage.at(0);
+            if(image.clazz().contains("img")){
+                data->m_srcImage = image.attribute(G_NodeHtml.SRC);
+            }
+        }
     }
 }
 

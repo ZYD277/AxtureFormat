@@ -274,7 +274,9 @@ bool CssParseMethod::parseFile(RTextFile *file)
             /*!< 当前选择器缺少‘}’*/
             else if(t_rightBraLab < t_leftBraLab)
             {
-                createErrorMsg(segment.selectorName.split("{").at(0) + QStringLiteral("选择器缺少‘}’"));
+                QStringList selectorNames = segment.selectorName.split("{");
+                if(selectorNames.size() > 0)
+                    createErrorMsg(selectorNames.at(0) + QStringLiteral("选择器缺少‘}’"));
                 break;
             }
             /*!< 下一个选择器没有‘{’*/
