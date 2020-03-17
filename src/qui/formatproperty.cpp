@@ -169,6 +169,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             vvisible->setAttributeBool("false");
             domWidget->addAttrinute(vvisible);
 
+            QString imageSrc = node->m_data->m_srcImage;
+            createImageProp(domWidget,imageSrc);
+
             //需根据表格宽度与单元格宽度相除结果，作为列数
             int cWidth = 0;
             if(node->m_childs.size() > 0){
@@ -219,6 +222,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
                 Html::TableData * tdata = dynamic_cast<Html::TableData *>(node->m_data);
 
+                if(!tdata->m_itemId.isEmpty()){
+                    tdata->m_itemId = tdata->m_itemId + "_div_" + node->m_id;
+                    m_selectorType.insert(tdata->m_itemId,Html::RTABLE);
+                }
                 for(int i = 0; i < columnCount; i++){
                     for(int j = 0; j < rowCount; j++){
                         MItem * item = new MItem();
@@ -267,9 +274,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
                 domWidget->addItem(item);
             }
-            if(!virtualRoot->m_lastChildItemId.isEmpty()){
-                virtualRoot->m_lastChildItemId = virtualRoot->m_lastChildItemId + "_div_" + node->m_id;
-                m_selectorType.insert(virtualRoot->m_lastChildItemId,Html::RTREE);
+            if(!virtualRoot->m_childItemId.isEmpty()){
+                virtualRoot->m_childItemId = virtualRoot->m_childItemId + "_div_" + node->m_id;
+                m_selectorType.insert(virtualRoot->m_childItemId,Html::RTREE);
             }
 
             break;
@@ -305,6 +312,34 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RCHECKBOX:{
+        QString m_idText = node->m_id;
+        m_idText = "u" + QString::number(m_idText.remove("u").toInt()+1);
+        QString m_valueText;
+        CSS::Rules m_checkBox = m_pageCss.value(m_idText).rules;
+        for(int i=0;i<m_checkBox.size();i++){
+            QString m_name = m_checkBox.at(i).name;
+            m_valueText = m_checkBox.at(i).value;
+            if(m_name == "left" && m_valueText.contains("px")){
+                m_valueText = m_valueText.remove("px");
+                break;
+            }
+        }
+
+        QString m_idInput = node->m_id;
+        m_idInput = m_idInput + "_input";
+        QString m_valueInput;
+        CSS::Rules m_checkBoxInput = m_pageCss.value(m_idInput).rules;
+        for(int i=0;i<m_checkBoxInput.size();i++){
+            QString m_name = m_checkBoxInput.at(i).name;
+            m_valueInput = m_checkBoxInput.at(i).value;
+            if(m_name == "left" && m_valueInput.contains("px")){
+                m_valueInput = m_valueInput.remove("px");
+                break;
+            }
+        }
+        if(m_valueText < m_valueInput)
+            node->m_data->m_bLeftToRight = false;
+
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
@@ -317,6 +352,34 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RRADIO_BUTTON:{
+        QString m_idText = node->m_id;
+        m_idText = "u" + QString::number(m_idText.remove("u").toInt()+1);
+        QString m_valueText;
+        CSS::Rules m_checkBox = m_pageCss.value(m_idText).rules;
+        for(int i=0;i<m_checkBox.size();i++){
+            QString m_name = m_checkBox.at(i).name;
+            m_valueText = m_checkBox.at(i).value;
+            if(m_name == "left" && m_valueText.contains("px")){
+                m_valueText = m_valueText.remove("px");
+                break;
+            }
+        }
+
+        QString m_idInput = node->m_id;
+        m_idInput = m_idInput + "_input";
+        QString m_valueInput;
+        CSS::Rules m_checkBoxInput = m_pageCss.value(m_idInput).rules;
+        for(int i=0;i<m_checkBoxInput.size();i++){
+            QString m_name = m_checkBoxInput.at(i).name;
+            m_valueInput = m_checkBoxInput.at(i).value;
+            if(m_name == "left" && m_valueInput.contains("px")){
+                m_valueInput = m_valueInput.remove("px");
+                break;
+            }
+        }
+        if(m_valueText < m_valueInput)
+            node->m_data->m_bLeftToRight = false;
+
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
@@ -333,18 +396,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             //src中包含了所属页面信息，目前所有images目录下直接是图片，需要移除所属页面信息
             QString imageSrc = imgData->m_src;
-            int firstSplitPos = imageSrc.indexOf("/");
-            int secondSplitPos = imageSrc.indexOf("/",firstSplitPos + 1);
 
-            imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
-
-            m_originalResources.append(imgData->m_src);
-            m_resources.append(imageSrc);
-
-            MProperty * styleProp = new MProperty();
-            styleProp->setAttributeName("styleSheet");
-            styleProp->setPropString(QString("background-image:url(:/%1);color:%2;").arg(imageSrc).arg(cssMap.value("color")));
-            domWidget->addProperty(styleProp);
+            createImageProp(domWidget,imageSrc);
 
             createTextProp(domWidget,imgData->m_text);
 
@@ -358,12 +411,24 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RLABEL:{
-
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
 
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
+
+            if(node->m_class.contains(QStringLiteral("_一级标题")))
+                m_selectorType.insert(node->m_id+"_div_32px",Html::RLABEL);
+            else if(node->m_class.contains(QStringLiteral("_二级标题")))
+                m_selectorType.insert(node->m_id+"_div_24px",Html::RLABEL);
+            else if(node->m_class.contains(QStringLiteral("_三级标题")))
+                m_selectorType.insert(node->m_id+"_div_18px",Html::RLABEL);
+            else if(node->m_class.contains(QStringLiteral("_四级标题")))
+                m_selectorType.insert(node->m_id+"_div_14px",Html::RLABEL);
+            else if(node->m_class.contains(QStringLiteral("_五级标题")))
+                m_selectorType.insert(node->m_id+"_div_13px",Html::RLABEL);
+            else if(node->m_class.contains(QStringLiteral("_六级标题")))
+                m_selectorType.insert(node->m_id+"_div_10px",Html::RLABEL);
 
             break;
         }
@@ -517,6 +582,23 @@ int FormatProperty::removePxUnit(QString valueWithUnit)
         return valueWithUnit.left(valueWithUnit.indexOf("px")).toInt();
     }
     return valueWithUnit.toInt();
+}
+
+void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
+{
+    QString imagePath = imageSrc;
+    int firstSplitPos = imageSrc.indexOf("/");
+    int secondSplitPos = imageSrc.indexOf("/",firstSplitPos + 1);
+
+    imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
+
+    m_originalResources.append(imagePath);
+    m_resources.append(imageSrc);
+
+    MProperty * styleProp = new MProperty();
+    styleProp->setAttributeName("styleSheet");
+    styleProp->setPropString(QString("border-image:url(:/%1);").arg(imageSrc));
+    domWidget->addProperty(styleProp);
 }
 
 void FormatProperty::createTextProp(RDomWidget *domWidget, QString text)

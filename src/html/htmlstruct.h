@@ -83,6 +83,7 @@ struct BaseData{
     QString m_text;         /*!< 控件显示内容 */
     QString m_toolTip;      /*!< 工具提示信息，鼠标移入显示 */
     QString m_inlineStyle;  /*!< 内嵌的样式信息 */
+    QString m_srcImage;     /*!< 背景图片信息*/
     bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
     bool m_bDisabled;
     bool m_bReadOnly;       /*!< 只读 */
@@ -116,6 +117,7 @@ struct TableData : public BaseData{
     int m_rows;
     int m_colums;
     QStringList m_items;
+    QString m_itemId;
 };
 
 struct TreeItemData : public BaseData{
@@ -129,7 +131,7 @@ struct TreeItemData : public BaseData{
 
     TreeItemData * m_parentItem;                /*!< 父节点 */
     QList<TreeItemData *>   m_childItems;       /*!< 子节点 */
-    QString m_lastChildItemId;                  /*!< 子节点id用于tree的样式*/
+    QString m_childItemId;                  /*!< 子节点id用于tree的样式*/
 };
 
 /*!

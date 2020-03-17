@@ -46,6 +46,7 @@ private:
     QRect calculateGeomerty(StyleMap & cssMap,Html::DomNode *node,QRect & parentRect);
     int removePxUnit(QString valueWithUnit);
 
+    inline void createImageProp(RDomWidget * domWidget, QString imageSrc);
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
     inline void createEnableProp(RDomWidget * domWidget, bool disable);

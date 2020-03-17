@@ -24,7 +24,13 @@ bool QSSOutput::save(QString fullPath)
     method.setCommonStyle(m_globalCss,m_pageCss,m_selectorType);
 
     file.setParseMethod(&method,false);
-    return file.startSave(QFile::WriteOnly | QFile::Truncate | QFile::Text);
+
+    if(file.startSave(QFile::WriteOnly | QFile::Truncate | QFile::Text)){
+        m_resources = method.getResources();
+        return true;
+    }
+    else
+        return false;
 }
 
 } //namespace RQt
