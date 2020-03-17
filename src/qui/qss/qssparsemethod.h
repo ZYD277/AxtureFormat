@@ -25,12 +25,15 @@ public:
 
     void setCommonStyle(const CSS::CssMap& globalCss, const CSS::CssMap& pageCss, SelectorTypeMap selectorType);
 
+    QStringList getResources(){return m_resources;}
+
     bool  startSave(RTextFile * file) override;
 
 private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
     SelectorTypeMap m_selectorType;
+    QStringList m_resources;
 
     QString m_name;
     QString m_value;

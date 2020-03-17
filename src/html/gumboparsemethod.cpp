@@ -398,6 +398,8 @@ void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *no
         GumboNodeWrapper child = childs.at(i);
         parseTableCellNodeData(child,node);
 
+        if(child.clazz().contains("table_cell"))
+            data->m_itemId = child.id();
         data->m_items.append(child.secondChild().firstChild().firstChild().firstChild().text());
 
         GumboNodeWrapperList childImage = child.children();
@@ -455,7 +457,7 @@ void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeIt
         for(int i = 0; i < childs.size();i++){
             GumboNodeWrapper tmpChild = childs.at(i);
             if(tmpChild.attribute("selectiongroup").contains("tree_group")){
-                parentNode->m_lastChildItemId = tmpChild.id();
+                parentNode->m_childItemId = tmpChild.id();
                 data->m_text = tmpChild.secondChild().firstChild().firstChild().firstChild().text();
             }else if(tmpChild.clazz().contains("children")){
                 GumboNodeWrapperList subChilds = tmpChild.children();

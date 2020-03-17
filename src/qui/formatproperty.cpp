@@ -222,6 +222,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
                 Html::TableData * tdata = dynamic_cast<Html::TableData *>(node->m_data);
 
+                if(!tdata->m_itemId.isEmpty()){
+                    tdata->m_itemId = tdata->m_itemId + "_div_" + node->m_id;
+                    m_selectorType.insert(tdata->m_itemId,Html::RTABLE);
+                }
                 for(int i = 0; i < columnCount; i++){
                     for(int j = 0; j < rowCount; j++){
                         MItem * item = new MItem();
@@ -270,9 +274,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
                 domWidget->addItem(item);
             }
-            if(!virtualRoot->m_lastChildItemId.isEmpty()){
-                virtualRoot->m_lastChildItemId = virtualRoot->m_lastChildItemId + "_div_" + node->m_id;
-                m_selectorType.insert(virtualRoot->m_lastChildItemId,Html::RTREE);
+            if(!virtualRoot->m_childItemId.isEmpty()){
+                virtualRoot->m_childItemId = virtualRoot->m_childItemId + "_div_" + node->m_id;
+                m_selectorType.insert(virtualRoot->m_childItemId,Html::RTREE);
             }
 
             break;
@@ -593,7 +597,7 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
 
     MProperty * styleProp = new MProperty();
     styleProp->setAttributeName("styleSheet");
-    styleProp->setPropString(QString("background-image:url(:/%1);").arg(imageSrc));
+    styleProp->setPropString(QString("border-image:url(:/%1);").arg(imageSrc));
     domWidget->addProperty(styleProp);
 }
 

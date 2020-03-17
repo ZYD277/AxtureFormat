@@ -117,6 +117,7 @@ struct TableData : public BaseData{
     int m_rows;
     int m_colums;
     QStringList m_items;
+    QString m_itemId;
 };
 
 struct TreeItemData : public BaseData{
@@ -130,7 +131,7 @@ struct TreeItemData : public BaseData{
 
     TreeItemData * m_parentItem;                /*!< 父节点 */
     QList<TreeItemData *>   m_childItems;       /*!< 子节点 */
-    QString m_lastChildItemId;                  /*!< 子节点id用于tree的样式*/
+    QString m_childItemId;                  /*!< 子节点id用于tree的样式*/
 };
 
 /*!

@@ -54,27 +54,25 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
 
         ui.endWrite();
 
-        //[2]
-        QrcOutput qrc;
-        qrc.addResources("/",propFormat.getResources());
-
-        m_originalResoucesLinks = propFormat.getOriginalResources();
-
-        QFileInfo uiPath(fullPath);
-        QString resFile = "res.qrc";
-        QString qrcPath = uiPath.path() + QDir::separator() + resFile;
-
         m_selectorType = propFormat.getHtmlParsedResult();
+        //[3]
+        QSSOutput qss;
+        qss.setCommonStyle(globalCss,pageCss,m_selectorType);
 
-        if(qrc.save(qrcPath)){
-            //[3]
-            QSSOutput qss;
-            qss.setCommonStyle(globalCss,pageCss,m_selectorType);
+        QFileInfo uiPathQss(fullPath);
+        QString qssPath = uiPathQss.path() + QDir::separator() + "qss";
+
+        if(qss.save(qssPath)){
+            //[2]
+            QrcOutput qrc;
+            qrc.addResources("/",propFormat.getResources() + qss.getResources());
+
+            m_originalResoucesLinks = propFormat.getOriginalResources();
 
             QFileInfo uiPath(fullPath);
-            QString qssPath = uiPath.path() + QDir::separator() + "qss";
-
-            return qss.save(qssPath);
+            QString resFile = "res.qrc";
+            QString qrcPath = uiPath.path() + QDir::separator() + resFile;
+            return qrc.save(qrcPath);
         }
     }
     return false;

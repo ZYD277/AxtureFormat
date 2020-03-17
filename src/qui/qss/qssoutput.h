@@ -28,11 +28,13 @@ public:
     void setCommonStyle(const CSS::CssMap & globalCss, const CSS::CssMap & pageCss, RQt::SelectorTypeMap selectorType);
     void setDynamicStyle();
     bool save(QString fullPath);
+    QStringList getResources(){return m_resources;}
 
 private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
     SelectorTypeMap m_selectorType;
+    QStringList m_resources;
 };
 
 } //namespace RQt
