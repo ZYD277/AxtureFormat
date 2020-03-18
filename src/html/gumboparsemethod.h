@@ -71,6 +71,7 @@ private:
     GumboOutput * m_gumboParser;
     QString m_classInfo;
     QString m_treeDatas;
+    QStringList m_panlIdList;
 };
 
 } //namespace Html

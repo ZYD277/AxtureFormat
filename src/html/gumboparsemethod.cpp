@@ -111,7 +111,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
                 parseDiv(childEle,node);
             }
         }else{
-
+            parseDiv(childEle,parentNode);
         }
     }
 }
@@ -135,6 +135,13 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             return RGROUP;
         }
         m_classInfo = classInfo;
+        if((classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
+            &&(element.attribute("data-label").contains(QStringLiteral("按钮"))))
+            return RBUTTON;
+        else if((classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
+                &&(!element.attribute("data-label").isEmpty())){
+            return RLABEL;
+            }
         if(classInfo.isEmpty()){
             if(!parentElement.valid()){
                 GumboNodeWrapper secondElement = parentElement.secondChild();
@@ -319,6 +326,7 @@ void GumboParseMethod::parseInlineFrameNodeData(GumboNodeWrapper &element,DomNod
 void GumboParseMethod::parseBoxNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     BaseData *data = new BaseData();
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
@@ -350,6 +358,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     BaseData * data = new BaseData();
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
+    data->m_srcImageId.clear();
 
     GumboNodeWrapperList childs = element.children();
     for(int i = 0; i < childs.size(); i++){
@@ -360,8 +369,31 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             nodeChild->m_class = child.clazz();
             nodeChild->m_style = child.style();
 
+            GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
+
+            if(data->m_srcImageId.isEmpty()&&(imageChild.clazz().contains("im")||imageChild.id().contains("div")))
+                data->m_srcImageId = imageChild.id();
+            if(imageChild.firstChild().clazz().contains("img"))
+                data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
+
+            if(child.firstChild().clazz().contains("panel_state_content")){
+                parseDiv(child.firstChild().firstChild(),nodeChild);
+            }
             establishRelation(node,nodeChild);
-            parseDiv(child.firstChild(),nodeChild);
+            bool panelId = true;
+            for(int j = 0; j < m_panlIdList.size(); j++){
+                if(!m_panlIdList.isEmpty()){
+                    if(m_panlIdList.at(j) == child.firstChild().id()){
+                        panelId = false;
+                        break;
+                    }
+                }
+            }
+            if(panelId){
+                parseDiv(child.firstChild(),nodeChild);
+            }
+            m_panlIdList.append(child.firstChild().id());
+
         }
     }
 }
@@ -485,6 +517,7 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
 void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     BaseData * data = new BaseData();
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_bChecked = element.firstChild().clazz().contains("selected");

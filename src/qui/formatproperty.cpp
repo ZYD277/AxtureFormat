@@ -124,6 +124,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RDYNAMIC_PANEL:{
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
+            QString imageSrc = node->m_data->m_srcImage;
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
 
             for(int i = 0; i < node->m_childs.size();i++){
                 createDomWidget(domWidget,node->m_childs.at(i),rect);
@@ -170,7 +173,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             domWidget->addAttrinute(vvisible);
 
             QString imageSrc = node->m_data->m_srcImage;
-            createImageProp(domWidget,imageSrc);
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
 
             //需根据表格宽度与单元格宽度相除结果，作为列数
             int cWidth = 0;
@@ -396,8 +400,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             //src中包含了所属页面信息，目前所有images目录下直接是图片，需要移除所属页面信息
             QString imageSrc = imgData->m_src;
-
-            createImageProp(domWidget,imageSrc);
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
 
             createTextProp(domWidget,imgData->m_text);
 
@@ -413,6 +417,15 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RLABEL:{
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
+
+            MProperty * prop = new MProperty();
+            prop->setAttributeName("alignment");
+            prop->setPropSet("Qt::AlignCenter");
+            domWidget->addProperty(prop);
+
+            QString imageSrc = node->m_data->m_srcImage;
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
 
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
@@ -497,6 +510,11 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
         case Html::RBOX:{
             createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            QString imageSrc = node->m_data->m_srcImage;
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
+
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
 
@@ -572,7 +590,21 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.moveLeft(rect.x() - parentRect.x());
         rect.moveTop(rect.y() - parentRect.y());
     }
-
+    if(node->m_type == Html::RDYNAMIC_PANEL){
+        if(!node->m_data->m_srcImageId.isEmpty()){
+            QString m_width;
+            QString m_height;
+            CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
+            for(int i=0;i<cellSegment.rules.size();i++){
+                if(cellSegment.rules.at(i).name == "width")
+                    m_width = cellSegment.rules.at(i).value;
+                else if(cellSegment.rules.at(i).name == "height")
+                    m_height = cellSegment.rules.at(i).value;
+            }
+            rect.setWidth(m_width.remove("px").toInt());
+            rect.setHeight(m_height.remove("px").toInt());
+        }
+    }
     return rect;
 }
 
@@ -595,10 +627,12 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
     m_originalResources.append(imagePath);
     m_resources.append(imageSrc);
 
-    MProperty * styleProp = new MProperty();
-    styleProp->setAttributeName("styleSheet");
-    styleProp->setPropString(QString("border-image:url(:/%1);").arg(imageSrc));
-    domWidget->addProperty(styleProp);
+    if(!imageSrc.isEmpty()){
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("border-image:url(:/%1);").arg(imageSrc));
+        domWidget->addProperty(styleProp);
+    }
 }
 
 void FormatProperty::createTextProp(RDomWidget *domWidget, QString text)

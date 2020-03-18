@@ -45,6 +45,9 @@ public:
     void setPropNumber(QString value);
     QString propNumber()const {return m_propString;}
 
+    void setPropSet(QString value);
+    QString propSet()const {return m_propString;}
+
     void setPropRect(MRect * rect);
     MRect * propRect()const {return m_propRect;}
 

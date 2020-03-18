@@ -84,6 +84,7 @@ struct BaseData{
     QString m_toolTip;      /*!< 工具提示信息，鼠标移入显示 */
     QString m_inlineStyle;  /*!< 内嵌的样式信息 */
     QString m_srcImage;     /*!< 背景图片信息*/
+    QString m_srcImageId;
     bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
     bool m_bDisabled;
     bool m_bReadOnly;       /*!< 只读 */
