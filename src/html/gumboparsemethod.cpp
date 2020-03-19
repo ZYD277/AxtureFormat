@@ -30,7 +30,7 @@ bool GumboParseMethod::startParse(RTextFile *file)
         m_htmlResultPtr = DomHtmlPtr(new DomHtml);
         parseBody(bodyNode);
 
-//        printBody(m_htmlResultPtr->body);
+        //        printBody(m_htmlResultPtr->body);
     }
 
     return true;
@@ -135,13 +135,21 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             return RGROUP;
         }
         m_classInfo = classInfo;
-        if((classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
-            &&(element.attribute("data-label").contains(QStringLiteral("按钮"))))
-            return RBUTTON;
-        else if((classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
-                &&(!element.attribute("data-label").isEmpty())){
-            return RLABEL;
+
+        //解析定制化控件(部分官方控件会包含data-label属性，需要过滤)
+        if(element.hasAttribute("data-label")){
+            QString dataLabel = element.attribute("data-label");
+            if(dataLabel.contains(QStringLiteral("按钮"))){
+                if((classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3") || classInfo.contains("label"))){
+                    return RBUTTON;
+                }
+            }else{
+                if(classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label")){
+                    return RLABEL;
+                }
             }
+        }
+
         if(classInfo.isEmpty()){
             if(!parentElement.valid()){
                 GumboNodeWrapper secondElement = parentElement.secondChild();
@@ -292,11 +300,11 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
     GumboNodeWrapperList chids = element.firstChild().children();
     for(int i = 0;i < chids.size();i++)
     {
-       GumboNodeWrapper chid = chids.at(i);
-       if(chid.hasAttribute("selected")){
-           data->m_selectedValue = chid.attribute(G_NodeHtml.VALUE);
-       }
-       data->m_itemList.append(chid.attribute("value"));
+        GumboNodeWrapper chid = chids.at(i);
+        if(chid.hasAttribute("selected")){
+            data->m_selectedValue = chid.attribute(G_NodeHtml.VALUE);
+        }
+        data->m_itemList.append(chid.attribute("value"));
     }
     data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
