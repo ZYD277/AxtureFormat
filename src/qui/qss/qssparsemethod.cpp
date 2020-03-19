@@ -127,7 +127,8 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                     imageSrc = imageSrc.remove("')");
                                     imageValue = "url(:/images/"+imageValue;
                                     imageValue = imageValue.remove("'");
-                                    m_resources.append(imageSrc);
+                                    if(!m_resources.contains(imageSrc))
+                                        m_resources.append(imageSrc);
                                     stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
                                 }
                             }

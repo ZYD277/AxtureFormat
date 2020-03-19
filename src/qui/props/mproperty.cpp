@@ -37,6 +37,10 @@ void MProperty::write(QXmlStreamWriter &writer, QString tagName)
             writer.writeTextElement("number",m_propString);
             break;
         }
+        case Set:{
+            writer.writeTextElement("set",m_propString);
+            break;
+        }
         case Rect:{
             m_propRect->write(writer,"rect");
             break;
@@ -68,6 +72,12 @@ void MProperty::setPropEnum(QString value)
 void MProperty::setPropNumber(QString value)
 {
     m_kind = Number;
+    m_propString = value;
+}
+
+void MProperty::setPropSet(QString value)
+{
+    m_kind = Set;
     m_propString = value;
 }
 

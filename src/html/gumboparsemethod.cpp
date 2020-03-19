@@ -89,15 +89,19 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     GumboNodeWrapperList childNodeList = divNode.children();
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
-        GumboNodeWrapperList childNodeListBox = childEle.children();
-        if(childNodeListBox.size() > 0){
-            GumboNodeWrapper childEleBox = childNodeListBox.at(0);
-            if(childEle.clazz() == "ax_default" && childEleBox.clazz().contains("box"))
-                parseDiv(childEle,parentNode);
-        }
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
 
         if(ttype != RINVALID){
+            if(ttype == RGROUP){
+                parseDiv(childEle,parentNode);
+            }
+            else if(ttype == RLABEL||ttype == RBOX){
+                if(!(childEle.firstChild().clazz().contains("text")
+                     ||childEle.firstChild().clazz().contains("img")
+                     ||childEle.firstChild().clazz().contains("ellipse")
+                     ||childEle.firstChild().clazz().isEmpty()))
+                    parseDiv(childEle,parentNode);
+            }
             DomNode * node = new DomNode(ttype);
             node->m_id = childEle.id();
             node->m_class = childEle.clazz();
@@ -106,12 +110,8 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             parseNodeData(childEle,ttype,node);
 
             establishRelation(parentNode,node);
-
-            if(ttype == RGROUP){
-                parseDiv(childEle,node);
-            }
         }else{
-
+            parseDiv(childEle,parentNode);
         }
     }
 }
@@ -135,6 +135,13 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             return RGROUP;
         }
         m_classInfo = classInfo;
+        if((classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
+            &&(element.attribute("data-label").contains(QStringLiteral("按钮"))))
+            return RBUTTON;
+        else if((classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
+                &&(!element.attribute("data-label").isEmpty())){
+            return RLABEL;
+            }
         if(classInfo.isEmpty()){
             if(!parentElement.valid()){
                 GumboNodeWrapper secondElement = parentElement.secondChild();
@@ -319,6 +326,7 @@ void GumboParseMethod::parseInlineFrameNodeData(GumboNodeWrapper &element,DomNod
 void GumboParseMethod::parseBoxNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     BaseData *data = new BaseData();
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
@@ -355,10 +363,30 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     for(int i = 0; i < childs.size(); i++){
         GumboNodeWrapper child = childs.at(i);
         if(child.clazz() == "panel_state"){
+            data->m_srcImageId.clear();
             DomNode * nodeChild = new DomNode(RDYNAMIC_PANEL_PAGE);
             nodeChild->m_id = child.id();
             nodeChild->m_class = child.clazz();
             nodeChild->m_style = child.style();
+
+            GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
+
+            GumboNodeWrapper panleChild = child.firstChild();
+            GumboNodeWrapperList panleChilds= panleChild.children();
+            for(int j = 0; j < panleChilds.size(); j++){
+                GumboNodeWrapper panleChildChild = panleChilds.at(j);
+                if(panleChildChild.clazz().contains("image")){
+                    data->m_srcImageId = panleChildChild.id();
+                    break;
+                }
+            }
+            if(data->m_srcImageId.isEmpty()&&(imageChild.clazz().contains("im")
+                                              ||imageChild.id().contains("div")
+                                              ||imageChild.clazz().contains(QStringLiteral("_图片"))))
+                data->m_srcImageId = imageChild.id();
+
+            if(imageChild.firstChild().clazz().contains("img"))
+                data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
 
             establishRelation(node,nodeChild);
             parseDiv(child.firstChild(),nodeChild);
@@ -485,6 +513,7 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
 void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     BaseData * data = new BaseData();
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_bChecked = element.firstChild().clazz().contains("selected");
