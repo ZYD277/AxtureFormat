@@ -74,7 +74,7 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RCHECKBOX:return QString("QCheckBox");break;
         case Html::RDROPLIST:return QString("QComboBox");break;
         case Html::RINLINE_FRAME:
-        case Html::RBOX:return QString("QWidget");break;
+        case Html::RBOX:return QString("QLabel");break;
         case Html::RTREE:return QString("QTreeWidget");break;
 
         default:return QString();break;
@@ -125,7 +125,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
             QString imageSrc = node->m_data->m_srcImage;
-            if(!imageSrc.isEmpty())
+            if(!imageSrc.isEmpty() && rect.width()<1)
                 createImageProp(domWidget,imageSrc);
 
             for(int i = 0; i < node->m_childs.size();i++){
@@ -514,6 +514,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             QString imageSrc = node->m_data->m_srcImage;
             if(!imageSrc.isEmpty())
                 createImageProp(domWidget,imageSrc);
+            if(!node->m_data->m_text.isEmpty())
+                createTextProp(domWidget,node->m_data->m_text);
 
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
@@ -590,7 +592,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.moveLeft(rect.x() - parentRect.x());
         rect.moveTop(rect.y() - parentRect.y());
     }
-    if(node->m_type == Html::RDYNAMIC_PANEL){
+    if(node->m_type == Html::RDYNAMIC_PANEL && rect.width()<1){
         if(!node->m_data->m_srcImageId.isEmpty()){
             QString m_width;
             QString m_height;
@@ -625,7 +627,8 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
     imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
 
     m_originalResources.append(imagePath);
-    m_resources.append(imageSrc);
+    if(!m_resources.contains(imageSrc))
+        m_resources.append(imageSrc);
 
     if(!imageSrc.isEmpty()){
         MProperty * styleProp = new MProperty();
