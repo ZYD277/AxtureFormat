@@ -36,8 +36,12 @@ class ClientOperate : public QWidget
 public:
     explicit ClientOperate(QWidget *parent = 0);
     ~ClientOperate();
+
 signals:
     void switchObjFile(AxurePage,QString,QString);
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event);
 
 private slots:
     void openAxureProject();
@@ -77,6 +81,10 @@ private:
     bool checkBeforeSwitch();
     void generateTask(AxurePage & page);
 
+    QString chooseAxureProject();
+    void parseAxureProject(QString projectPath);
+    void switchMainWidget();
+
 private:
     enum QtVersion{
         Qt4,
@@ -107,6 +115,10 @@ private:
     const QString jsBaseFileName;
 
     AxturePages m_pageList;
+
+    QPixmap m_normalPix;
+    QPixmap m_activePix;
+    bool m_b_mouseActive;           /*!< 鼠标是否激活监控区域 */
 };
 #endif // CLIENTOPERATE_H
 

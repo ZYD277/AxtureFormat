@@ -8,7 +8,7 @@
 
 #include "head.h"
 
-ViewDelegate::ViewDelegate():m_iconSize(25,25)
+ViewDelegate::ViewDelegate():m_iconSize(24,24)
 {
 
 }

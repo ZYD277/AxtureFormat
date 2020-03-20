@@ -48,6 +48,15 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
                 }
                 break;
             }
+            case Qt::ToolTipRole:{
+                switch(static_cast<TColumn>(column)){
+                    case T_Open: return QStringLiteral("打开原文件");break;
+                    case T_Delete: return QStringLiteral("删除记录");break;
+                    case T_Switch: return QStringLiteral("单条转换");break;
+                    default:break;
+                }
+                break;
+            }
             case Qt::UserRole + T_Open:{
                 return axurePage.htmlFilePath;
                 break;

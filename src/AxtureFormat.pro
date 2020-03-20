@@ -88,6 +88,7 @@ HEADERS  += widget.h \
 FORMS    += widget.ui \
     clientoperate.ui
 
+RC_ICONS = logo.ico
 
 DEPENDLIB_PATH=$$PWD/../3rdPartyLib/
 

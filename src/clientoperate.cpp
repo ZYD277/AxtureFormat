@@ -11,6 +11,11 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QMutexLocker>
+#include <QPainter>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
 
 #include "util/rutil.h"
 #include "util/threadpool.h"
@@ -18,14 +23,24 @@
 #include "viewmodel.h"
 #include "switchtask.h"
 
+#define IMG_FIXED_WIDTH 120
+
 ClientOperate::ClientOperate(QWidget *parent) :
     QWidget(parent),cssBaseFileName("styles.css"),jsBaseFileName("document.js"),jsSinglePageFileName("data.js"),
     ui(new Ui::ClientOperate),m_versionButtGroup(nullptr),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr),
-    m_pool(new ThreadPool(5))
+    m_pool(new ThreadPool(5)),m_b_mouseActive(false)
 {
     ui->setupUi(this);
-    setWindowTitle(QStringLiteral("Axure转Qt工具-RGCompany"));
+    setWindowTitle(QStringLiteral("原型转换工具"));
     qRegisterMetaType<SwitchProgress>("SwitchProgress");
+
+    if(m_normalPix.load(":/icon/image/normal.png")){
+        m_normalPix = m_normalPix.scaled(IMG_FIXED_WIDTH,IMG_FIXED_WIDTH);
+    }
+
+    if(m_activePix.load(":/icon/image/active.png")){
+        m_activePix = m_activePix.scaled(IMG_FIXED_WIDTH,IMG_FIXED_WIDTH);
+    }
 
     initView();
 }
@@ -38,8 +53,131 @@ ClientOperate::~ClientOperate()
     delete m_pool;
 }
 
+bool ClientOperate::eventFilter(QObject *watched, QEvent *event)
+{
+    if(watched == ui->dropArea){
+        switch(event->type()){
+            case QEvent::Paint:{
+                QPainter  painter(ui->dropArea);
+                painter.setRenderHints(QPainter::SmoothPixmapTransform,true);
+                QRect availRect =  ui->dropArea->rect();
+
+                int x = (availRect.width() - IMG_FIXED_WIDTH)/2;
+                int y = (availRect.height() - IMG_FIXED_WIDTH)/3;
+
+                if(m_b_mouseActive){
+                    painter.drawPixmap(QRect(x,y,IMG_FIXED_WIDTH,IMG_FIXED_WIDTH),m_activePix);
+                    painter.setPen(QColor(17,149,219));
+                }else{
+                    painter.drawPixmap(QRect(x,y,IMG_FIXED_WIDTH,IMG_FIXED_WIDTH),m_normalPix);
+                    painter.setPen(QColor(205,205,205));
+                }
+
+                int t_textHeight = 30;
+
+                QFont  font = painter.font();
+                font.setPixelSize(18);
+                font.setBold(true);
+                painter.setFont(font);
+                painter.drawText(QRect(0,availRect.height() / 3 * 2,availRect.width(),t_textHeight),Qt::AlignCenter,QStringLiteral("点击添加文件夹 / 推拽到此区域"));
+
+                break;
+            }
+            case QEvent::Enter:{
+                m_b_mouseActive = true;
+                update();
+                break;
+            }
+            case QEvent::Leave:{
+                m_b_mouseActive = false;
+                update();
+                break;
+            }
+            case QEvent::MouseButtonPress:{
+                QString projectPath = chooseAxureProject();
+                if(!projectPath.isEmpty()){
+                    parseAxureProject(projectPath);
+
+                    switchMainWidget();
+                }
+            }
+            case QEvent::DragEnter:{
+                QDragEnterEvent * dragEnter = dynamic_cast<QDragEnterEvent *>(event);
+                if(dragEnter){
+                    if(dragEnter->mimeData()->hasUrls()){
+                        QList<QUrl> urls = dragEnter->mimeData()->urls();
+                        auto iter = std::find_if(urls.begin(),urls.end(),[&](QUrl & url){
+                            QString path = url.path();
+                            if(path.startsWith("/"))
+                                path = path.remove(0,1);
+
+                            return QFileInfo(path).isDir();
+                        });
+
+                        if(iter != urls.end()){
+                            m_b_mouseActive = true;
+                            update();
+
+                            dragEnter->setDropAction(Qt::MoveAction);
+                            dragEnter->accept();
+
+                            return true;
+                        }
+                    }
+
+                    dragEnter->acceptProposedAction();
+                }
+                break;
+            }
+            case QEvent::DragMove:{
+                QDragMoveEvent * dragMove = dynamic_cast<QDragMoveEvent *>(event);
+                if(dragMove->mimeData()->hasUrls()){
+                    dragMove->setDropAction(Qt::MoveAction);
+                    dragMove->accept();
+                }else{
+                    dragMove->acceptProposedAction();
+                }
+                break;
+            }
+            case QEvent::DragLeave:{
+                m_b_mouseActive = false;
+                update();
+
+                break;
+            }
+            case QEvent::Drop:{
+                QDropEvent * drop = dynamic_cast<QDropEvent *>(event);
+                if(drop->mimeData()->hasUrls()){
+                    bool t_bHasDir = false;
+                    QList<QUrl> urls = drop->mimeData()->urls();
+                    std::for_each(urls.begin(),urls.end(),[&](QUrl & url){
+                        QString path = url.path();
+                        if(path.startsWith("/"))
+                            path = path.remove(0,1);
+
+                        if(QFileInfo(path).isDir()){
+                            t_bHasDir = true;
+                            parseAxureProject(path);
+                        }
+                    });
+                    if(t_bHasDir){
+                        switchMainWidget();
+                    }
+                }
+                break;
+            }
+            default:break;
+        }
+    }
+    return QWidget::eventFilter(watched,event);
+}
+
 void ClientOperate::initView()
 {
+    setFixedSize(480,680);
+    ui->dropArea->installEventFilter(this);
+    ui->dropArea->setAcceptDrops(true);
+
     m_model = new ViewModel();
     m_viewDelegate = new ViewDelegate();
 
@@ -91,7 +229,7 @@ void ClientOperate::initView()
     connect(ui->clearList,SIGNAL(pressed()),this,SLOT(clearAxureTable()));
     connect(ui->selectDirBtn,SIGNAL(pressed()),this,SLOT(chooseUserFilePath()));
     connect(ui->startChangeBtn,SIGNAL(clicked(bool)),this,SLOT(startSwitchFiles()));
-    connect(ui->clearLog,&QPushButton::pressed,[&](){ui->textBrowser->clear();});
+    //    connect(ui->clearLog,&QPushButton::pressed,[&](){ui->textBrowser->clear();});
 }
 
 /**
@@ -138,61 +276,11 @@ void ClientOperate::chooseOutputPath(int)
  */
 void ClientOperate::openAxureProject()
 {
-    QDir parent = QDir(m_lastAxureProjectPath);
-    parent.cdUp();
+    QString projectPath = chooseAxureProject();
 
-    QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axure工程目录"),
-                                                            m_lastAxureProjectPath.isEmpty() ? QDir::homePath() : parent.path());
     Check_Return(projectPath.isEmpty(),);
-    m_lastAxureProjectPath = projectPath;
 
-    QDir pDir(projectPath);
-    if(pDir.exists())
-    {
-        appendLog(LogNormal,QString(QStringLiteral("开始解析工程[%1]")).arg(pDir.path()));
-
-        QString basePath = projectPath + QDir::separator() + "data";
-        if(!checkJsCssExisted(basePath,false)){
-            showWarnings(QStringLiteral("通用样式表或js文件不存在!"));
-            return;
-        }
-
-        appendLog(LogNormal,QStringLiteral("检测通用样式."));
-        QPair<QString,QString> jsCssPair = getJsCssFile(basePath,false);
-
-        QStringList nameFilters;
-        nameFilters<<"*.html";
-
-        QFileInfoList htmlFiles = pDir.entryInfoList(nameFilters,QDir::Files | QDir::NoDotAndDotDot);
-        std::for_each(htmlFiles.begin(),htmlFiles.end(),[&](const QFileInfo & fileInfo){
-            if(!isRepeatedFile(fileInfo.filePath())){
-                AxurePage page;
-
-                page.baseJsFilePath = jsCssPair.first;
-                page.baseCssFilePath = jsCssPair.second;
-
-
-                page.htmlFilePath = fileInfo.filePath();
-                page.htmlFileName = fileInfo.fileName();
-                QString pageJsCssPath = fileInfo.absoluteDir().path() + QDir::separator() + "files" + QDir::separator() + fileInfo.baseName();
-
-                if(checkJsCssExisted(pageJsCssPath)){
-                    jsCssPair = getJsCssFile(pageJsCssPath);
-                    page.jsFilePath = jsCssPair.first;
-                    page.cssFilePath = jsCssPair.second;
-
-                    appendLog(LogNormal,QString(QStringLiteral("检测到页面[%1].")).arg(fileInfo.fileName()));
-
-                    page.processData.error = false;
-                    page.processData.textDescription = QStringLiteral("0%");
-
-                    m_pageList.append(page);
-                }
-            }
-        });
-
-        updateTableModel();
-    }
+    parseAxureProject(projectPath);
 }
 
 /*!
@@ -244,6 +332,86 @@ void ClientOperate::generateTask(AxurePage &page)
     },task,page,outDir);
 }
 
+/*!
+ * @brief 选择打开axure工程
+ * @return 若取消则返回空,否则返回打开的路径
+ */
+QString ClientOperate::chooseAxureProject()
+{
+    QDir parent = QDir(m_lastAxureProjectPath);
+    parent.cdUp();
+
+    QString projectPath = QFileDialog::getExistingDirectory(this,QStringLiteral("选择Axure工程目录"),
+                                                            m_lastAxureProjectPath.isEmpty() ? QDir::homePath() : parent.path());
+    return projectPath;
+}
+
+/*!
+ * @brief 解析axure工程目录
+ * @details 验证指定目录是否为axure工程目录,若是则将目录下的html文件添加到转换表格
+ */
+void ClientOperate::parseAxureProject(QString projectPath)
+{
+    m_lastAxureProjectPath = projectPath;
+
+    QDir pDir(projectPath);
+    if(pDir.exists())
+    {
+        appendLog(LogNormal,QString(QStringLiteral("开始解析工程[%1]")).arg(pDir.path()));
+
+        QString basePath = projectPath + QDir::separator() + "data";
+        if(!checkJsCssExisted(basePath,false)){
+            showWarnings(QStringLiteral("通用样式表或js文件不存在!"));
+            return;
+        }
+
+        appendLog(LogNormal,QStringLiteral("检测通用样式."));
+        QPair<QString,QString> jsCssPair = getJsCssFile(basePath,false);
+
+        QStringList nameFilters;
+        nameFilters<<"*.html";
+
+        QFileInfoList htmlFiles = pDir.entryInfoList(nameFilters,QDir::Files | QDir::NoDotAndDotDot);
+        std::for_each(htmlFiles.begin(),htmlFiles.end(),[&](const QFileInfo & fileInfo){
+            if(!isRepeatedFile(fileInfo.filePath())){
+                AxurePage page;
+
+                page.baseJsFilePath = jsCssPair.first;
+                page.baseCssFilePath = jsCssPair.second;
+
+
+                page.htmlFilePath = fileInfo.filePath();
+                page.htmlFileName = fileInfo.fileName();
+                QString pageJsCssPath = fileInfo.absoluteDir().path() + QDir::separator() + "files" + QDir::separator() + fileInfo.baseName();
+
+                if(checkJsCssExisted(pageJsCssPath)){
+                    jsCssPair = getJsCssFile(pageJsCssPath);
+                    page.jsFilePath = jsCssPair.first;
+                    page.cssFilePath = jsCssPair.second;
+
+                    appendLog(LogNormal,QString(QStringLiteral("检测到页面[%1].")).arg(fileInfo.fileName()));
+
+                    page.processData.error = false;
+                    page.processData.textDescription = QStringLiteral("0%");
+
+                    m_pageList.append(page);
+                }
+            }
+        });
+
+        updateTableModel();
+    }
+}
+
+void ClientOperate::switchMainWidget()
+{
+    ui->stackedWidget->setCurrentIndex(1);
+    QRect screen = RUtil::screenGeometry();
+    QSize initWindowSize(990,740);
+    setFixedSize(initWindowSize);
+    setGeometry(QRect(QPoint((screen.width() - initWindowSize.width())/2,(screen.height() - initWindowSize.height())/2),initWindowSize));
+}
+
 /**
  * @brief 是否已经将文件加入队列
  * @param[in] filePath 待判断文件全路径
@@ -279,7 +447,7 @@ void ClientOperate::appendLog(ClientOperate::LogLevel level, QString record)
         default:break;
     }
 
-    ui->textBrowser->append(QString("<font color=\"%1\">" + RUtil::getTimeStamp()+":"+record + "</font>").arg(textColor));
+    //    ui->textBrowser->append(QString("<font color=\"%1\">" + RUtil::getTimeStamp()+":"+record + "</font>").arg(textColor));
 }
 
 /**
