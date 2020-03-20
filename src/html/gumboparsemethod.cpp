@@ -92,6 +92,14 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
 
         if(ttype != RINVALID){
+            DomNode * node = new DomNode(ttype);
+            node->m_id = childEle.id();
+            node->m_class = childEle.clazz();
+            node->m_style = childEle.style();
+
+            parseNodeData(childEle,ttype,node);
+            establishRelation(parentNode,node);
+
             if(ttype == RGROUP){
                 parseDiv(childEle,parentNode);
             }
@@ -102,14 +110,6 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
                      ||childEle.firstChild().clazz().isEmpty()))
                     parseDiv(childEle,parentNode);
             }
-            DomNode * node = new DomNode(ttype);
-            node->m_id = childEle.id();
-            node->m_class = childEle.clazz();
-            node->m_style = childEle.style();
-
-            parseNodeData(childEle,ttype,node);
-
-            establishRelation(parentNode,node);
         }else{
             parseDiv(childEle,parentNode);
         }
@@ -367,6 +367,9 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
+    if(element.hasAttribute("data-label")){
+        data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
+    }
     GumboNodeWrapperList childs = element.children();
     for(int i = 0; i < childs.size(); i++){
         GumboNodeWrapper child = childs.at(i);
@@ -378,6 +381,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             nodeChild->m_style = child.style();
 
             GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
+            GumboNodeWrapper textChild = child.firstChild().firstChild().secondChild();
 
             GumboNodeWrapper panleChild = child.firstChild();
             GumboNodeWrapperList panleChilds= panleChild.children();
@@ -392,6 +396,13 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
                                               ||imageChild.id().contains("div")
                                               ||imageChild.clazz().contains(QStringLiteral("_图片"))))
                 data->m_srcImageId = imageChild.id();
+            if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
+                                                   ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
+                if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
+                    if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
+                        data->m_panelTextId = textChild.id();
+                }
+            }
 
             if(imageChild.firstChild().clazz().contains("img"))
                 data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
@@ -419,6 +430,10 @@ void GumboParseMethod::parseImageNodeData(GumboNodeWrapper &element, DomNode *no
 {
     ImageData * data = new ImageData();
     data->m_src = element.firstChild().attribute(G_NodeHtml.SRC);
+    data->m_srcImage = data->m_src;
+    if(!data->m_srcImage.isEmpty()){
+        data->m_srcImageId = element.firstChild().id();
+    }
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
@@ -443,6 +458,8 @@ void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *no
             GumboNodeWrapper image = childImage.at(0);
             if(image.clazz().contains("img")){
                 data->m_srcImage = image.attribute(G_NodeHtml.SRC);
+                if(data->m_srcImageId.isEmpty())
+                    data->m_srcImageId = image.id();
             }
         }
     }

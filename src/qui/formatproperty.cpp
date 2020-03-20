@@ -162,6 +162,19 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
         case Html::RTABLE:{
+        QString m_widthTable;
+        QString m_heightTable;
+        if((node->m_type == Html::RTABLE) && !node->m_data->m_srcImageId.isEmpty()){
+                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
+                for(int i=0;i<cellSegment.rules.size();i++){
+                    if(cellSegment.rules.at(i).name == "width")
+                        m_widthTable = cellSegment.rules.at(i).value;
+                    else if(cellSegment.rules.at(i).name == "height")
+                        m_heightTable = cellSegment.rules.at(i).value;
+                }
+                m_widthTable = QString::number(removePxUnit(m_widthTable));
+                m_heightTable = QString::number(removePxUnit(m_heightTable));
+            }
             MAttribute * hvisible = new MAttribute();
             hvisible->setAttributeName("horizontalHeaderVisible");
             hvisible->setAttributeBool("false");
@@ -171,6 +184,17 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             vvisible->setAttributeName("verticalHeaderVisible");
             vvisible->setAttributeBool("false");
             domWidget->addAttrinute(vvisible);
+
+            MAttribute * hSectionSize = new MAttribute();
+            hSectionSize->setAttributeName("horizontalHeaderDefaultSectionSize");
+            hSectionSize->setPropNumber(m_widthTable);
+            domWidget->addAttrinute(hSectionSize);
+
+            MAttribute * vhSectionSize = new MAttribute();
+            vhSectionSize->setAttributeName("verticalHeaderDefaultSectionSize");
+            vhSectionSize->setPropNumber(m_heightTable);
+            domWidget->addAttrinute(vhSectionSize);
+
 
             QString imageSrc = node->m_data->m_srcImage;
             if(!imageSrc.isEmpty())
@@ -596,16 +620,52 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         if(!node->m_data->m_srcImageId.isEmpty()){
             QString m_width;
             QString m_height;
+            QString m_imgX;
             CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
             for(int i=0;i<cellSegment.rules.size();i++){
                 if(cellSegment.rules.at(i).name == "width")
                     m_width = cellSegment.rules.at(i).value;
                 else if(cellSegment.rules.at(i).name == "height")
                     m_height = cellSegment.rules.at(i).value;
+                else if(cellSegment.rules.at(i).name == "left")
+                    m_imgX = cellSegment.rules.at(i).value;
             }
-            rect.setWidth(m_width.remove("px").toInt());
-            rect.setHeight(m_height.remove("px").toInt());
+            if(!node->m_data->m_panelDataLab.isEmpty() && !node->m_data->m_panelTextId.isEmpty()
+                    && (node->m_data->m_panelDataLab.contains(QStringLiteral("复选"))
+                        ||node->m_data->m_panelDataLab.contains(QStringLiteral("单选")))){
+                QString textWidth;
+                QString textheight;
+                QString textX;
+                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_panelTextId);
+                for(int i=0;i<cellSegment.rules.size();i++){
+                    if(cellSegment.rules.at(i).name == "width")
+                        textWidth = cellSegment.rules.at(i).value;
+                    else if(cellSegment.rules.at(i).name == "height")
+                        textheight = cellSegment.rules.at(i).value;
+                    else if(cellSegment.rules.at(i).name == "left")
+                        textX = cellSegment.rules.at(i).value;
+                }
+                rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
+                rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
+            }
+            else{
+                rect.setWidth(removePxUnit(m_width));
+                rect.setHeight(removePxUnit(m_height));
+            }
         }
+    }
+    else if((node->m_type == Html::RIMAGE) && !node->m_data->m_srcImageId.isEmpty()){
+        CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
+        QString m_width;
+        QString m_height;
+        for(int i=0;i<cellSegment.rules.size();i++){
+            if(cellSegment.rules.at(i).name == "width")
+                m_width = cellSegment.rules.at(i).value;
+            else if(cellSegment.rules.at(i).name == "height")
+                m_height = cellSegment.rules.at(i).value;
+        }
+            rect.setWidth(removePxUnit(m_width));
+            rect.setHeight(removePxUnit(m_height));
     }
     return rect;
 }
