@@ -27,6 +27,9 @@ public:
     void setAttributeBool(QString value);
     QString propBool()const {return m_propString;}
 
+    void setPropNumber(QString value);
+    QString propNumber()const {return m_propString;}
+
 private:
     QString m_attrName;
     bool m_bHasAttrName;
