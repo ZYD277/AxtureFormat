@@ -47,7 +47,8 @@ SOURCES += main.cpp\
     viewdelegate.cpp \
     viewmodel.cpp \
     util/threadpool.cpp \
-    switchtask.cpp
+    switchtask.cpp \
+    logoutputer.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -83,10 +84,12 @@ HEADERS  += widget.h \
     viewmodel.h \
     util/threadpool.h \
     switchtask.h \
-    util/windumpfile.h
+    util/windumpfile.h \
+    logoutputer.h
 
 FORMS    += widget.ui \
-    clientoperate.ui
+    clientoperate.ui \
+    logoutputer.ui
 
 RC_ICONS = logo.ico
 

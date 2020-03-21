@@ -15,8 +15,8 @@
 #include <QMutex>
 
 #include "head.h"
-
 #include "global.h"
+#include "logoutputer.h"
 
 #define MAXTHREAD 4
 
@@ -58,6 +58,8 @@ private slots:
     void chooseQtVersion(int);
     void chooseOutputPath(int);
     void controlWidget(bool state);
+
+    void showLogWindow();
 
 private:
     enum LogLevel{
@@ -119,6 +121,8 @@ private:
     QPixmap m_normalPix;
     QPixmap m_activePix;
     bool m_b_mouseActive;           /*!< 鼠标是否激活监控区域 */
+
+    LogOutputer * m_logger;
 };
 #endif // CLIENTOPERATE_H
 

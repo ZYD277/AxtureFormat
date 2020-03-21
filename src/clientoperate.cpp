@@ -16,6 +16,7 @@
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QPropertyAnimation>
 
 #include "util/rutil.h"
 #include "util/threadpool.h"
@@ -175,6 +176,9 @@ bool ClientOperate::eventFilter(QObject *watched, QEvent *event)
 void ClientOperate::initView()
 {
     setFixedSize(480,680);
+    setFocusPolicy(Qt::ClickFocus);
+    ui->stackedWidget->setCurrentIndex(0);
+
     ui->dropArea->installEventFilter(this);
     ui->dropArea->setAcceptDrops(true);
 
@@ -229,7 +233,10 @@ void ClientOperate::initView()
     connect(ui->clearList,SIGNAL(pressed()),this,SLOT(clearAxureTable()));
     connect(ui->selectDirBtn,SIGNAL(pressed()),this,SLOT(chooseUserFilePath()));
     connect(ui->startChangeBtn,SIGNAL(clicked(bool)),this,SLOT(startSwitchFiles()));
-    //    connect(ui->clearLog,&QPushButton::pressed,[&](){ui->textBrowser->clear();});
+    connect(ui->viewRecord,SIGNAL(pressed()),this,SLOT(showLogWindow()));
+
+    m_logger = new LogOutputer(this);
+    m_logger->hide();
 }
 
 /**
@@ -447,7 +454,7 @@ void ClientOperate::appendLog(ClientOperate::LogLevel level, QString record)
         default:break;
     }
 
-    //    ui->textBrowser->append(QString("<font color=\"%1\">" + RUtil::getTimeStamp()+":"+record + "</font>").arg(textColor));
+    m_logger->appendLog(QString("<font color=\"%1\">" + RUtil::getTimeStamp("hh:mm:ss")+":"+record + "</font>").arg(textColor));
 }
 
 /**
@@ -515,6 +522,19 @@ void ClientOperate::controlWidget(bool state)
     ui->selectDirBtn->setEnabled(state);
     ui->tableView->setEnabled(state);
     ui->startChangeBtn->setEnabled(state);
+}
+
+void ClientOperate::showLogWindow()
+{
+    QSize logSize(this->rect().width() / 3, this->rect().height());
+
+    QPropertyAnimation *animation = new QPropertyAnimation(m_logger,"geometry");
+    animation->setKeyValueAt(0,QRect(QPoint(rect().width(),rect().height() - logSize.height()),logSize));
+    animation->setKeyValueAt(1,QRect(QPoint(rect().width() - logSize.width(),rect().height() - logSize.height()),logSize));
+    animation->setDuration(400);
+    animation->setEasingCurve(QEasingCurve::OutQuad);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    m_logger->show();
 }
 
 /**
