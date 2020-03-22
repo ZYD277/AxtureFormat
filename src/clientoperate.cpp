@@ -200,7 +200,7 @@ void ClientOperate::showTableContextMenu(QPoint point)
     Q_UNUSED(point);
 
     QModelIndex modelIndex = ui->tableView->indexAt(point);
-    if(!modelIndex.isValid() && modelIndex.row() >= 0 && modelIndex.row() < m_pageList.size())
+    if(!modelIndex.isValid() || modelIndex.row() < 0 && modelIndex.row() >= m_pageList.size())
         return;
 
     AxurePage page = m_pageList.at(modelIndex.row());
