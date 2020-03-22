@@ -44,11 +44,12 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event);
 
 private slots:
+    void showTableContextMenu(QPoint point);
     void openAxureProject();
     void clearAxureTable();
     void chooseUserFilePath();
 
-    void viewFile(QString htmlFilePath);
+    void viewFile(QString filePath);
     void deletFileData(QString pageId);
     void switchLineHtmlFile(QString pageId);
 
@@ -60,6 +61,8 @@ private slots:
     void controlWidget(bool state);
 
     void showLogWindow();
+
+    void openHtml(bool flag);
 
 private:
     enum LogLevel{
@@ -118,6 +121,7 @@ private:
 
     AxturePages m_pageList;
 
+    QPixmap m_waterMark;            /*!< 水印 */
     QPixmap m_normalPix;
     QPixmap m_activePix;
     bool m_b_mouseActive;           /*!< 鼠标是否激活监控区域 */

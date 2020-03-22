@@ -33,10 +33,12 @@ struct AxurePage{
     QString baseJsFilePath;
     QString baseCssFilePath;        /*!< axture通用样式文件 */
 
+    QString axureProjectPath;       /*!< axure工程目录 */
     QString htmlFilePath;           /*!< 页面html绝对路径 */
     QString jsFilePath;             /*!< 当前html页面依赖的js文件路径 */
     QString cssFilePath;            /*!< 当前html页面依赖的css文件路径 */
     QString htmlFileName;
+    QString outputDir;              /*!< 当前页面导出的路径 */
     ProcessBarData processData;
 };
 
@@ -48,6 +50,7 @@ typedef QList<AxurePage> AxturePages;
 struct SwitchProgress{
     QString pageId;             /*!< 页面Id */
     QString pageName;
+    QString outputDir;
     ProcessBarData progress;
 };
 

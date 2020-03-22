@@ -43,6 +43,10 @@ ClientOperate::ClientOperate(QWidget *parent) :
         m_activePix = m_activePix.scaled(IMG_FIXED_WIDTH,IMG_FIXED_WIDTH);
     }
 
+    if(m_waterMark.load(":/icon/image/watermark.png")){
+        m_waterMark = m_waterMark.scaled(24,24);
+    }
+
     initView();
 }
 
@@ -169,8 +173,66 @@ bool ClientOperate::eventFilter(QObject *watched, QEvent *event)
             }
             default:break;
         }
+    }else if(watched == ui->widget_2){
+        switch(event->type()){
+            case QEvent::Paint:{
+                QPainter  painter(ui->widget_2);
+                painter.setRenderHints(QPainter::SmoothPixmapTransform,true);
+                QRect availRect =  ui->widget_2->rect();
+
+                painter.drawPixmap(QRect(QPoint((availRect.width() - m_waterMark.width())/2,availRect.height() - m_waterMark.height() * 1.5),m_waterMark.size())
+                                   ,m_waterMark);
+
+            }
+            default:break;
+        }
     }
+
+
     return QWidget::eventFilter(watched,event);
+}
+
+/*!
+ * @brief 显示表格右键操作菜单
+ */
+void ClientOperate::showTableContextMenu(QPoint point)
+{
+    Q_UNUSED(point);
+
+    QModelIndex modelIndex = ui->tableView->indexAt(point);
+    if(!modelIndex.isValid() && modelIndex.row() >= 0 && modelIndex.row() < m_pageList.size())
+        return;
+
+    AxurePage page = m_pageList.at(modelIndex.row());
+
+    QMenu * menu = new QMenu(ui->tableView);
+
+    QAction * openHtmlAction = new QAction();
+    openHtmlAction->setData(page.htmlFilePath);
+    openHtmlAction->setIcon(QIcon(":/icon/image/html.png"));
+    openHtmlAction->setText(QStringLiteral("打开"));
+    connect(openHtmlAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
+    menu->addAction(openHtmlAction);
+
+    QAction * openAxureAction = new QAction();
+    openAxureAction->setData(page.axureProjectPath);
+    openAxureAction->setIcon(QIcon(":/icon/image/project.png"));
+    openAxureAction->setText(QStringLiteral("打开Axure工程"));
+    connect(openAxureAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
+    menu->addAction(openAxureAction);
+
+    if(page.outputDir.size() > 0){
+        menu->addSeparator();
+        QAction * openOutputAction = new QAction();
+        openOutputAction->setData(page.outputDir);
+        openOutputAction->setIcon(QIcon(":/icon/image/qt.png"));
+        openOutputAction->setText(QStringLiteral("查看转换文件"));
+        connect(openOutputAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
+        menu->addAction(openOutputAction);
+    }
+
+    menu->exec(QCursor::pos());
+    menu->deleteLater();
 }
 
 void ClientOperate::initView()
@@ -179,6 +241,7 @@ void ClientOperate::initView()
     setFocusPolicy(Qt::ClickFocus);
     ui->stackedWidget->setCurrentIndex(0);
 
+    ui->widget_2->installEventFilter(this);
     ui->dropArea->installEventFilter(this);
     ui->dropArea->setAcceptDrops(true);
 
@@ -193,6 +256,8 @@ void ClientOperate::initView()
 
     ui->tableView->setModel(m_model);
     ui->tableView->setItemDelegate(m_viewDelegate);
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableView,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(showTableContextMenu(QPoint)));
 
     //设置指定列宽度
     ui->tableView->horizontalHeader()->setSectionResizeMode(T_Index, QHeaderView::Fixed);
@@ -330,7 +395,7 @@ void ClientOperate::showWarnings(QString content)
 void ClientOperate::generateTask(AxurePage &page)
 {
     QString outName = "/" + QFileInfo(page.htmlFilePath).path().split("/").last() + "_qt";
-    QString outDir = ui->createOutDirRadioBtn->isChecked() ?ui->createOutDirLedit->text() + outName:QFileInfo(page.htmlFilePath).path() + "_qt";
+    QString outDir = ui->createOutDirRadioBtn->isChecked() ? ui->createOutDirLedit->text() + outName:QFileInfo(page.htmlFilePath).path() + "_qt";
     SwitchTask * task = new SwitchTask;
     connect(task,SIGNAL(updateProgress(SwitchProgress)),this,SLOT(updateProgress(SwitchProgress)),Qt::QueuedConnection);
     m_pool->enqueue([&](SwitchTask * switchTask,AxurePage & pp,QString outPath){
@@ -383,6 +448,7 @@ void ClientOperate::parseAxureProject(QString projectPath)
             if(!isRepeatedFile(fileInfo.filePath())){
                 AxurePage page;
 
+                page.axureProjectPath = projectPath;
                 page.baseJsFilePath = jsCssPair.first;
                 page.baseCssFilePath = jsCssPair.second;
 
@@ -414,7 +480,7 @@ void ClientOperate::switchMainWidget()
 {
     ui->stackedWidget->setCurrentIndex(1);
     QRect screen = RUtil::screenGeometry();
-    QSize initWindowSize(990,740);
+    QSize initWindowSize(1000,740);
     setFixedSize(initWindowSize);
     setGeometry(QRect(QPoint((screen.width() - initWindowSize.width())/2,(screen.height() - initWindowSize.height())/2),initWindowSize));
 }
@@ -537,6 +603,15 @@ void ClientOperate::showLogWindow()
     m_logger->show();
 }
 
+void ClientOperate::openHtml(bool flag)
+{
+    Q_UNUSED(flag);
+    QAction * action = dynamic_cast<QAction *>(QObject::sender());
+    if(action){
+        viewFile(action->data().toString());
+    }
+}
+
 /**
  * @brief 清空用户表格
  */
@@ -563,16 +638,25 @@ void ClientOperate::chooseUserFilePath()
 
 /*!
  * @brief 调用本地浏览器查看文件
- * @param[in] htmlFilePath 待查看的html文件
+ * @param[in] filePath 待打开文件路径，可能是html文件，也可是文件夹
  */
-void ClientOperate::viewFile(QString htmlFilePath)
+void ClientOperate::viewFile(QString filePath)
 {
-    QStringList arguments;
-    arguments << "/c" << htmlFilePath;
-    QProcess g_process;
-    g_process.start("cmd.exe",arguments);
-    g_process.waitForStarted();
-    g_process.waitForFinished();
+    if(filePath.size() == 0)
+        return;
+
+    QFileInfo fileInfo(filePath);
+    if(fileInfo.isDir()){
+        filePath.replace("/","\\");
+        QProcess::startDetached("explorer " + filePath);
+    }else{
+        QStringList arguments;
+        arguments << "/c" << filePath;
+        QProcess g_process;
+        g_process.start("cmd.exe",arguments);
+        g_process.waitForStarted();
+        g_process.waitForFinished();
+    }
 }
 
 /**
@@ -606,6 +690,7 @@ void ClientOperate::updateProgress(SwitchProgress proj)
         AxurePage & page = m_pageList[i];
         if(proj.pageId == page.id){
             page.processData = proj.progress;
+            page.outputDir = proj.outputDir;
             break;
         }
     }

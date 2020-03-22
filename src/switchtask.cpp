@@ -27,6 +27,7 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
 
     Progress tproj = P_CssParse;
     bool error = false;
+    QString errorMsg = QStringLiteral("转换失败");
 
     do{
         CSS::CssParser cssParser;
@@ -41,10 +42,10 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                 updataProcessBar(tproj,error,QStringLiteral("Html解析成功"));
 
                 QString htmlName = QFileInfo(page.htmlFilePath).baseName();
-                QString pageDir = outputDir + QDir::separator() + htmlName;
+                m_outputDir = outputDir + QDir::separator() + htmlName;
 
-                if(RUtil::createDir(outputDir) && RUtil::createDir(pageDir)){
-                    QString pageUiName = pageDir + QDir::separator() + htmlName  +".ui";
+                if(RUtil::createDir(outputDir) && RUtil::createDir(m_outputDir)){
+                    QString pageUiName = m_outputDir + QDir::separator() + htmlName  +".ui";
                     m_qtOutput.save(m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName);
 
                     tproj = P_CopyFile;
@@ -56,7 +57,7 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                     QString baseImagePath = dir.path() + QDir::separator() + "images" + QDir::separator();
                     QString srcImagePath = baseImagePath + QDir::separator() + htmlName;
                     QDir srcImageDir(srcImagePath);
-                    QString dstImagePath = pageDir + QDir::separator() + "images";
+                    QString dstImagePath = m_outputDir + QDir::separator() + "images";
                     if(RUtil::createDir(dstImagePath)){
                         //根据图片引用的资源链接去拷贝
                         QStringList resourcesLinks = m_qtOutput.getOriginalResouces();
@@ -75,14 +76,22 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
 
                         tproj = P_Finish;
                         updataProcessBar(tproj,error,QStringLiteral("转换结束"));
+                        return;
+                    }else{
+                        errorMsg = QStringLiteral("创建图片导出目录失败");
                     }
-                    return;
+                }else{
+                    errorMsg = QStringLiteral("创建导出目录失败");
                 }
+            }else{
+                errorMsg = QStringLiteral("解析Html失败");
             }
+        }else{
+            errorMsg = QStringLiteral("解析CSS样式失败");
         }
     }while(0);
 
-    updataProcessBar(tproj,true,QStringLiteral("转换失败"));
+    updataProcessBar(tproj,true,errorMsg);
 }
 
 void SwitchTask::updataProcessBar(Progress curentProcess, bool hasError,QString description)
@@ -91,6 +100,7 @@ void SwitchTask::updataProcessBar(Progress curentProcess, bool hasError,QString 
 
     prog.pageName = m_page.htmlFileName;
     prog.pageId = m_page.id;
+    prog.outputDir = m_outputDir;
     prog.progress.error = hasError;
 
     int proj = (int)curentProcess/(float)P_Finish * 100;

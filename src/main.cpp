@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QTextCodec>
+#include <QFile>
 
 #include "clientoperate.h"
 #include "util/windumpfile.h"
@@ -16,10 +17,13 @@ int main(int argc, char *argv[])
 
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ApplicationCrashHandler);
 
-#if QT_VERSION > 0x050000
+    QFile styleSheet(":/style/stylesheet.txt");
+    if(styleSheet.open(QFile::ReadOnly)){
+        a.setStyleSheet(styleSheet.readAll());
+    }
+
     QTextCodec * codec = QTextCodec::codecForName("utf-8");
     QTextCodec::setCodecForLocale(codec);
-#endif
 
     ClientOperate w;
     w.show();

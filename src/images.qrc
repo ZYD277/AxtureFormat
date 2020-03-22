@@ -6,5 +6,12 @@
         <file>image/active.png</file>
         <file>image/normal.png</file>
         <file>image/clear.png</file>
+        <file>image/html.png</file>
+        <file>image/qt.png</file>
+        <file>image/project.png</file>
+        <file>image/watermark.png</file>
+    </qresource>
+    <qresource prefix="/style">
+        <file>stylesheet.txt</file>
     </qresource>
 </RCC>

@@ -25,6 +25,8 @@ QWidget *ViewDelegate::createEditor(QWidget * parent, const QStyleOptionViewItem
 
 void ViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    QItemDelegate::paint(painter,option,index);
+
     if(index.column() == T_Open || index.column() == T_Delete || index.column() == T_Switch)
     {
         QString pixPath;
@@ -41,55 +43,60 @@ void ViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     }
     else if(index.column() == T_Progress)
     {
-        bool error = index.data(Qt::UserRole + T_OccurrError).toBool();
-        if(error)
+        //绘制初始背景
         {
-            painter->setBrush(QBrush(QColor(0xff,0,0)));
-            QColor t_red(0xff,0,0);
-            QPen t_pen(t_red);
-            painter->setPen(t_pen);
+            painter->save();
+            painter->setPen(Qt::NoPen);
+            painter->drawRect(option.rect);
+            painter->restore();
         }
 
-        QStyleOptionProgressBar bar;
-        bar.maximum = 100;
-        bar.minimum = 0;
-        bar.progress = index.data(Qt::DisplayRole).toInt();
-        bar.rect = option.rect;
-        bar.state = QStyle::State_Enabled;
-        bar.textVisible = true;
-        bar.text = index.data(Qt::UserRole + T_Description).toString();
-        bar.textAlignment = Qt::AlignCenter;
-        painter->fillRect(option.rect,Qt::yellow);
+        int progress = index.data(Qt::UserRole + T_Progress).toInt();
 
-        QProgressBar pbar;
+        if(progress > 0){
+            bool error = index.data(Qt::UserRole + T_OccurrError).toBool();
 
-        QApplication::style()->drawControl(QStyle::CE_ProgressBar,&bar,painter,&pbar);
-    }
-    else
-    {
-        QItemDelegate::paint(painter,option,index);
+            painter->save();
+            painter->setPen(Qt::NoPen);
+            if(error){
+                painter->setBrush(QColor("#ED683C"));
+            }else{
+                painter->setBrush(QColor("#22F06C"));
+
+            }
+            painter->drawRect(QRectF(option.rect.topLeft(),QSizeF(option.rect.width() / (double)100 * progress,option.rect.height())));
+            painter->restore();
+        }
+
+        painter->drawText(option.rect,Qt::AlignCenter,index.data(Qt::UserRole + T_Description).toString());
     }
 }
 
 bool ViewDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
 {
-    QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-    if(event->type() == QEvent::MouseButtonPress && option.rect.contains(mouseEvent->pos())){
-        switch(index.column()){
-            case T_Open:{
-                emit viewFile(index.data(Qt::UserRole+T_Open).toString());
-                break;
+    switch(event->type()){
+        case QEvent::MouseButtonPress:{
+            QMouseEvent * mouseEvent = static_cast<QMouseEvent*>(event);
+            if(mouseEvent && mouseEvent->button() == Qt::LeftButton && option.rect.contains(mouseEvent->pos())){
+                switch(index.column()){
+                    case T_Open:{
+                        emit viewFile(index.data(Qt::UserRole + T_Open).toString());
+                        break;
+                    }
+                    case T_Delete:{
+                        emit deleteFile(index.data(Qt::UserRole + T_Delete).toString());
+                        break;
+                    }
+                    case T_Switch:{
+                        emit switchSingleFile(index.data(Qt::UserRole + T_Switch).toString());
+                        break;
+                    }
+                    default:break;
+                }
             }
-            case T_Delete:{
-                emit deleteFile(index.data(Qt::UserRole + T_Delete).toString());
-                break;
-            }
-            case T_Switch:{
-                emit switchSingleFile(index.data(Qt::UserRole + T_Switch).toString());
-                break;
-            }
-            default:break;
+            break;
         }
+        default:break;
     }
     return QItemDelegate::editorEvent(event,model,option,index);
 }

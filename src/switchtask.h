@@ -28,7 +28,6 @@ public:
 signals:
     void updateProgress(SwitchProgress prog);
 
-
 private:
     enum Progress{
         P_CssParse = 1,
@@ -44,6 +43,7 @@ private:
     Html::HtmlParser m_htmlParser;
     RQt::QtOutput m_qtOutput;
 
+    QString m_outputDir;        /*!< 生成ui文件的路径 */
     AxurePage m_page;
 };
 

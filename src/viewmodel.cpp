@@ -43,22 +43,36 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
                 switch(static_cast<TColumn>(column)){
                     case T_Index: return row + 1;break;
                     case T_FileName: return axurePage.htmlFileName;break;
-                    case T_Progress: return axurePage.processData.m_progress;break;
                     default:break;
                 }
                 break;
             }
             case Qt::ToolTipRole:{
                 switch(static_cast<TColumn>(column)){
-                    case T_Open: return QStringLiteral("打开原文件");break;
+                    case T_Open: {
+                        if(axurePage.processData.m_progress < 100)
+                            return QStringLiteral("查看原文件");
+                        else
+                            return QStringLiteral("查看转换文件");
+                        break;
+                    }
                     case T_Delete: return QStringLiteral("删除记录");break;
                     case T_Switch: return QStringLiteral("单条转换");break;
                     default:break;
                 }
                 break;
             }
+            case Qt::UserRole + T_Progress:{
+                return axurePage.processData.m_progress;
+                break;
+            }
             case Qt::UserRole + T_Open:{
-                return axurePage.htmlFilePath;
+                //NOTE 20200322 若未转换则打开html，若转换成功，则打开转换的文件夹
+                if(axurePage.processData.m_progress < 100){
+                    return axurePage.htmlFilePath;
+                }else{
+                    return axurePage.outputDir;
+                }
                 break;
             }
             case Qt::UserRole + T_Delete:
