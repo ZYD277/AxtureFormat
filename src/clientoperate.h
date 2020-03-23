@@ -10,9 +10,10 @@
 #ifndef CLIENTOPERATE_H
 #define CLIENTOPERATE_H
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QButtonGroup>
 #include <QMutex>
+#include <QSettings>
 
 #include "head.h"
 #include "global.h"
@@ -29,7 +30,7 @@ namespace Ui {
 class ClientOperate;
 }
 
-class ClientOperate : public QWidget
+class ClientOperate : public QMainWindow
 {
     Q_OBJECT
 
@@ -64,6 +65,9 @@ private slots:
 
     void openHtml(bool flag);
 
+    void clearRecentProjs(bool flag);
+    void showRecentProject(bool flag);
+
 private:
     enum LogLevel{
         LogNormal,
@@ -89,6 +93,8 @@ private:
     QString chooseAxureProject();
     void parseAxureProject(QString projectPath);
     void switchMainWidget();
+
+    void saveConfigFile();
 
 private:
     enum QtVersion{
@@ -127,6 +133,12 @@ private:
     bool m_b_mouseActive;           /*!< 鼠标是否激活监控区域 */
 
     LogOutputer * m_logger;
+
+    QSettings * m_settings;
+    int m_maxRecentSize;
+    QMenu * m_recentMenu;
+    QStringList m_recentProjects;
+    QList<QAction *> m_recentActions;
 };
 #endif // CLIENTOPERATE_H
 

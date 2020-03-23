@@ -17,6 +17,8 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QPropertyAnimation>
+#include <QMenu>
+#include <QAction>
 
 #include "util/rutil.h"
 #include "util/threadpool.h"
@@ -27,7 +29,7 @@
 #define IMG_FIXED_WIDTH 120
 
 ClientOperate::ClientOperate(QWidget *parent) :
-    QWidget(parent),cssBaseFileName("styles.css"),jsBaseFileName("document.js"),jsSinglePageFileName("data.js"),
+    QMainWindow(parent),cssBaseFileName("styles.css"),jsBaseFileName("document.js"),jsSinglePageFileName("data.js"),
     ui(new Ui::ClientOperate),m_versionButtGroup(nullptr),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr),
     m_pool(new ThreadPool(5)),m_b_mouseActive(false)
 {
@@ -237,9 +239,56 @@ void ClientOperate::showTableContextMenu(QPoint point)
 
 void ClientOperate::initView()
 {
-    setFixedSize(480,680);
+    setBaseSize(480,680);
     setFocusPolicy(Qt::ClickFocus);
     ui->stackedWidget->setCurrentIndex(0);
+
+    m_settings = new QSettings("config.ini",QSettings::IniFormat);
+
+    static int fixedSize = 10;
+    if(!m_settings->contains("maxrecent")){
+        m_settings->setValue("maxrecent",fixedSize);
+    }
+    int tmp = m_settings->value("maxrecent",fixedSize).toInt();
+    m_maxRecentSize = tmp <= 0 ? fixedSize : (tmp > fixedSize ? fixedSize: tmp);
+
+    int recentCount =  m_settings->beginReadArray("recent");
+    for(int i = 0; i < recentCount && i < m_maxRecentSize; i++){
+        m_settings->setArrayIndex(i);
+        m_recentProjects<<m_settings->value("name").toString();
+    }
+    m_settings->endArray();
+
+    QMenuBar * mbar = menuBar();
+    QMenu * fileMenu = new QMenu(QStringLiteral("文件(&F)"));
+
+    m_recentMenu = new QMenu(QStringLiteral("最近打开的项目(&R)"));
+    if(m_recentProjects.size() > 0){
+        for(QString projPath:m_recentProjects){
+            QAction * action = new QAction(projPath);
+            action->setData(projPath);
+            connect(action,SIGNAL(triggered(bool)),this,SLOT(showRecentProject(bool)));
+            m_recentMenu->addAction(action);
+            m_recentActions.append(action);
+        }
+        m_recentMenu->addSeparator();
+
+        QAction * clearAction = new QAction(QStringLiteral("清除菜单"));
+        connect(clearAction,SIGNAL(triggered(bool)),this,SLOT(clearRecentProjs(bool)));
+        m_recentMenu->addAction(clearAction);
+    }
+
+    fileMenu->addMenu(m_recentMenu);
+
+    QAction * quitAction = new QAction(QStringLiteral("退出(&X)"));
+    connect(quitAction,&QAction::triggered,[&](bool flag){
+        this->close();
+    });
+
+    fileMenu->addSeparator();
+    fileMenu->addAction(quitAction);
+
+    mbar->addMenu(fileMenu);
 
     ui->widget_2->installEventFilter(this);
     ui->dropArea->installEventFilter(this);
@@ -437,6 +486,35 @@ void ClientOperate::parseAxureProject(QString projectPath)
             return;
         }
 
+        if(!m_recentProjects.contains(projectPath)){
+            m_recentProjects.prepend(projectPath);
+
+            QAction * action = new QAction(projectPath);
+            action->setData(projectPath);
+            connect(action,SIGNAL(triggered(bool)),this,SLOT(showRecentProject(bool)));
+
+            if(m_recentActions.size() == 0){
+                m_recentMenu->addAction(action);
+                m_recentMenu->addSeparator();
+
+                QAction * clearAction = new QAction(QStringLiteral("清除菜单"));
+                connect(clearAction,SIGNAL(triggered(bool)),this,SLOT(clearRecentProjs(bool)));
+                m_recentMenu->addAction(clearAction);
+            }else{
+                m_recentMenu->insertAction(m_recentActions.first(),action);
+            }
+
+            if(m_recentProjects.size() > m_maxRecentSize){
+                m_recentProjects.removeLast();
+                m_recentMenu->removeAction(m_recentActions.last());
+                m_recentActions.removeLast();
+            }
+
+            m_recentActions.prepend(action);
+
+            saveConfigFile();
+        }
+
         appendLog(LogNormal,QStringLiteral("检测通用样式."));
         QPair<QString,QString> jsCssPair = getJsCssFile(basePath,false);
 
@@ -479,10 +557,19 @@ void ClientOperate::parseAxureProject(QString projectPath)
 void ClientOperate::switchMainWidget()
 {
     ui->stackedWidget->setCurrentIndex(1);
-    QRect screen = RUtil::screenGeometry();
-    QSize initWindowSize(1000,740);
-    setFixedSize(initWindowSize);
-    setGeometry(QRect(QPoint((screen.width() - initWindowSize.width())/2,(screen.height() - initWindowSize.height())/2),initWindowSize));
+//    QSize screen = RUtil::screenSize(0);
+//    QSize initWindowSize(1000,740);
+    //    setGeometry(QRect(QPoint((screen.width() - initWindowSize.width())/2,(screen.height() - initWindowSize.height())/2),initWindowSize));
+}
+
+void ClientOperate::saveConfigFile()
+{
+    m_settings->beginWriteArray("recent",m_recentProjects.size());
+    for(int i = 0; i < m_recentProjects.size(); i++){
+        m_settings->setArrayIndex(i);
+        m_settings->setValue("name",m_recentProjects.at(i));
+    }
+    m_settings->endArray();
 }
 
 /**
@@ -609,6 +696,27 @@ void ClientOperate::openHtml(bool flag)
     QAction * action = dynamic_cast<QAction *>(QObject::sender());
     if(action){
         viewFile(action->data().toString());
+    }
+}
+
+void ClientOperate::clearRecentProjs(bool flag)
+{
+    Q_UNUSED(flag);
+    m_recentMenu->clear();
+    m_recentProjects.clear();
+    m_recentActions.clear();
+
+    saveConfigFile();
+}
+
+void ClientOperate::showRecentProject(bool flag)
+{
+    Q_UNUSED(flag);
+    QAction * action = dynamic_cast<QAction *>(QObject::sender());
+    if(action){
+        QString recentProj = action->data().toString();
+        parseAxureProject(recentProj);
+        ui->stackedWidget->setCurrentIndex(1);
     }
 }
 
