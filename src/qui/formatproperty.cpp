@@ -617,6 +617,9 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.moveTop(rect.y() - parentRect.y());
     }
     if(node->m_type == Html::RDYNAMIC_PANEL && rect.width()<1){
+        qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+               <<node->m_data->m_srcImageId<<node->m_id
+               <<"\n";
         if(!node->m_data->m_srcImageId.isEmpty()){
             QString m_width;
             QString m_height;
@@ -666,6 +669,20 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         }
             rect.setWidth(removePxUnit(m_width));
             rect.setHeight(removePxUnit(m_height));
+    }
+    else if((node->m_type == Html::RLABEL)&&(!node->m_data->m_srcImageId.isEmpty()))
+    {
+        CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
+        QString m_width;
+        QString m_height;
+        for(int i=0;i<cellSegment.rules.size();i++){
+            if(cellSegment.rules.at(i).name == "width")
+                m_width = cellSegment.rules.at(i).value;
+            else if(cellSegment.rules.at(i).name == "height")
+                m_height = cellSegment.rules.at(i).value;
+        }
+        rect.setWidth(removePxUnit(m_width));
+        rect.setHeight(removePxUnit(m_height));
     }
     return rect;
 }

@@ -176,7 +176,9 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 return RRADIO_BUTTON;
             else if(classInfo.contains("text_field"))
                 return RTEXT_FIELD;
-            else if((classInfo.contains("label") || classInfo.contains("text")) && (!classInfo.contains("text_area")))
+            else if((classInfo.contains("label") || classInfo.contains("text")||
+                     classInfo.contains("ellipse")||classInfo.contains("paragraph"))
+                    && (!classInfo.contains("text_area")))
                 return RLABEL;
             else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
@@ -263,23 +265,23 @@ void GumboParseMethod::establishRelation(DomNode *parentNode, DomNode *childNode
 void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node)
 {
     switch(type){
-        case RBUTTON:parseButtonNodeData(element,node);break;
-        case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
-        case RDYNAMIC_PANEL:parserDynamicPanelNodeData(element,node);break;
-        case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
-        case RIMAGE:parseImageNodeData(element,node);break;
-        case RTABLE:parseTableNodeData(element,node);break;
-        case RGROUP:parseGroupNodeData(element,node);break;
-        case RLABEL:parseLabelNodeData(element,node);break;
-        case RCHECKBOX:parseCheckBoxNodeData(element,node);break;
-        case RLIST_BOX:
-        case RDROPLIST:parseListNodeData(element,node);break;
-        case RTEXT_AREA:parseTextAreaNodeData(element,node);break;
-        case RINLINE_FRAME:parseInlineFrameNodeData(element,node);break;
-        case RBOX:parseBoxNodeData(element,node);break;
-        case RLINE:parseLineNodeData(element,node);break;
-        case RTREE:parseTreeNodeData(element,node);break;
-        default:break;
+    case RBUTTON:parseButtonNodeData(element,node);break;
+    case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
+    case RDYNAMIC_PANEL:parserDynamicPanelNodeData(element,node);break;
+    case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
+    case RIMAGE:parseImageNodeData(element,node);break;
+    case RTABLE:parseTableNodeData(element,node);break;
+    case RGROUP:parseGroupNodeData(element,node);break;
+    case RLABEL:parseLabelNodeData(element,node);break;
+    case RCHECKBOX:parseCheckBoxNodeData(element,node);break;
+    case RLIST_BOX:
+    case RDROPLIST:parseListNodeData(element,node);break;
+    case RTEXT_AREA:parseTextAreaNodeData(element,node);break;
+    case RINLINE_FRAME:parseInlineFrameNodeData(element,node);break;
+    case RBOX:parseBoxNodeData(element,node);break;
+    case RLINE:parseLineNodeData(element,node);break;
+    case RTREE:parseTreeNodeData(element,node);break;
+    default:break;
     }
 }
 
@@ -367,8 +369,14 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
+    qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+           <<node->m_data->m_panelDataLab
+           <<"\n";
     if(element.hasAttribute("data-label")){
         data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
+        qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+               <<data->m_panelDataLab<<node->m_data->m_panelDataLab
+               <<"\n";
     }
     GumboNodeWrapperList childs = element.children();
     for(int i = 0; i < childs.size(); i++){
@@ -539,11 +547,16 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
 {
     BaseData * data = new BaseData();
     data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
+    if(!(data->m_srcImage.isEmpty()))
+    {
+        data->m_srcImageId = element.firstChild().id();
+    }
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
+
 }
 
 

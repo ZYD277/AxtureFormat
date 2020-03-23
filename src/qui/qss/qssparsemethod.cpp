@@ -21,8 +21,34 @@ QSSParseMethod::QSSParseMethod()
 void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss,SelectorTypeMap selectorType)
 {
     m_globalCss = globalCss;
-    m_pageCss = pageCss;
+    //    m_pageCss = pageCss;
     m_selectorType = selectorType;
+    for(int i = 0; i < m_selectorType.size(); i++){
+        auto iter = pageCss.begin();
+        while(iter != pageCss.end()){
+            QString name = iter.key();
+            CSS::CssSegment seg = iter.value();
+            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
+                name = m_selectorType.keys().at(i);
+            }
+            m_pageCss.insert(name,seg);
+            iter++;
+        }
+    }
+
+    CSS::CssMap pageCssSelect;
+    pageCssSelect = m_pageCss;
+    for(int i = 0; i < m_selectorType.size(); i++){
+        auto iter = pageCssSelect.begin();
+        while(iter != pageCssSelect.end()){
+            QString name = iter.key();
+            CSS::CssSegment seg = iter.value();
+            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
+                m_pageCss.remove(m_selectorType.keys().at(i));
+            }
+            iter++;
+        }
+    }
 }
 
 bool QSSParseMethod::startSave(RTextFile *file)
@@ -42,10 +68,10 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
             QStringList rulesName;
             rulesName<<"position"<<"left"<<"top"<<"width"<<"height"
-                     <<"-moz-box-shadow"<<"-webkit-box-shadow"
-                     <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
-                     <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
-                     <<"visibility";
+                    <<"-moz-box-shadow"<<"-webkit-box-shadow"
+                   <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
+                  <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
+                 <<"visibility";
             m_ruleSize = seg.rules.size();
 
             for(int i=0;i<seg.rules.size();i++){
@@ -66,13 +92,13 @@ bool QSSParseMethod::startSave(RTextFile *file)
             for(int i=0;i<m_selectorType.size();i++){
                 if(m_selectorType.keys().at(i).contains("_div_")
                         &&(m_selectorType.values().at(i) == Html::RTREE
-                        ||m_selectorType.values().at(i) == Html::RTABLE)
+                           ||m_selectorType.values().at(i) == Html::RTABLE)
                         &&m_ruleSize != 0){
                     QStringList selectorNames = m_selectorType.keys().at(i).split("_div_");
                     QString selectorName = seg.selectorName;
                     if(selectorNames.size()>1){
                         if((selectorNames.at(0)+"_div" == seg.selectorName&&m_selectorType.values().at(i) == Html::RTREE)
-                            ||(selectorNames.at(0) == seg.selectorName&&m_selectorType.values().at(i) == Html::RTABLE))
+                                ||(selectorNames.at(0) == seg.selectorName&&m_selectorType.values().at(i) == Html::RTABLE))
                             selectorName ="#" + selectorNames.at(1) + "::item";
                         else if(seg.selectorName.contains(selectorNames.at(0)+":"))
                             selectorName ="#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
