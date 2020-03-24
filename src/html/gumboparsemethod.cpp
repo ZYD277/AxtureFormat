@@ -370,13 +370,10 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     node->m_data = data;
 
     qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-           <<node->m_data->m_panelDataLab
+           <<node->m_data->m_srcImage
            <<"\n";
     if(element.hasAttribute("data-label")){
         data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
-        qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-               <<data->m_panelDataLab<<node->m_data->m_panelDataLab
-               <<"\n";
     }
     GumboNodeWrapperList childs = element.children();
     for(int i = 0; i < childs.size(); i++){
@@ -389,6 +386,8 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             nodeChild->m_style = child.style();
 
             GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
+            GumboNodeWrapperList firstFloorGroupChileds = child.firstChild().firstChild().children();
+
             GumboNodeWrapper textChild = child.firstChild().firstChild().secondChild();
 
             GumboNodeWrapper panleChild = child.firstChild();
@@ -400,10 +399,44 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
                     break;
                 }
             }
-            if(data->m_srcImageId.isEmpty()&&(imageChild.clazz().contains("im")
-                                              ||imageChild.id().contains("div")
-                                              ||imageChild.clazz().contains(QStringLiteral("_图片"))))
-                data->m_srcImageId = imageChild.id();
+            if(data->m_srcImageId.isEmpty())
+            {
+                if((imageChild.clazz().contains("im"))
+                        ||(imageChild.id().contains("div"))
+                        ||(imageChild.clazz().contains(QStringLiteral("_图片"))))
+                {
+                    data->m_srcImageId = imageChild.id();
+                }
+                std::for_each(firstFloorGroupChileds.begin(),firstFloorGroupChileds.end(),
+                              [&](GumboNodeWrapper firstFloorGroupChiled){
+                   if(firstFloorGroupChiled.hasAttribute("data-label"))
+                   {
+                       QString firstDataLabelText = firstFloorGroupChiled.attribute(QStringLiteral("data-label"));
+                       if(firstDataLabelText.contains(QStringLiteral("背景")))
+                       {
+                           if(firstFloorGroupChiled.firstChild().clazz().contains("img"))
+                               data->m_srcImageId = firstFloorGroupChiled.firstChild().id();
+                       }
+                       if(firstDataLabelText.contains(QStringLiteral("二级菜单")))
+                       {
+                           GumboNodeWrapperList secondFloorGroupChileds = firstFloorGroupChiled.firstChild().children();
+                           std::for_each(secondFloorGroupChileds.begin(),secondFloorGroupChileds.end(),
+                                         [&](GumboNodeWrapper secondFloorGroupChiled){
+                              if(secondFloorGroupChiled.hasAttribute("data-label"))
+                              {
+                                  QString secondDataLabelText = secondFloorGroupChiled.attribute(QStringLiteral("data-label"));
+                                  if(secondDataLabelText.contains(QStringLiteral("背景")))
+                                  {
+                                      if(secondFloorGroupChiled.firstChild().clazz().contains("img"))
+                                          data->m_secondSrcImageId = secondFloorGroupChiled.firstChild().id();
+                                  }
+                              }
+                           });
+                       }
+                   }
+                });
+
+            }
             if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
                                                    ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
                 if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
@@ -414,7 +447,6 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
 
             if(imageChild.firstChild().clazz().contains("img"))
                 data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
-
             establishRelation(node,nodeChild);
             parseDiv(child.firstChild(),nodeChild);
         }

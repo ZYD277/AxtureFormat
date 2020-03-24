@@ -85,6 +85,7 @@ struct BaseData{
     QString m_inlineStyle;  /*!< 内嵌的样式信息 */
     QString m_srcImage;     /*!< 背景图片信息*/
     QString m_srcImageId;
+    QString m_secondSrcImageId;
     QString m_panelDataLab;
     QString m_panelTextId;
     bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */

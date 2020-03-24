@@ -617,9 +617,6 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.moveTop(rect.y() - parentRect.y());
     }
     if(node->m_type == Html::RDYNAMIC_PANEL && rect.width()<1){
-        qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-               <<node->m_data->m_srcImageId<<node->m_id
-               <<"\n";
         if(!node->m_data->m_srcImageId.isEmpty()){
             QString m_width;
             QString m_height;
@@ -632,6 +629,22 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                     m_height = cellSegment.rules.at(i).value;
                 else if(cellSegment.rules.at(i).name == "left")
                     m_imgX = cellSegment.rules.at(i).value;
+            }
+            rect.setWidth(removePxUnit(m_width));
+            rect.setHeight(removePxUnit(m_height));
+            if(!node->m_data->m_secondSrcImageId.isEmpty())
+            {
+                QString m_secondImageWidth;
+                QString m_secondImageHeight;
+                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_secondSrcImageId);
+                std::for_each(cellSegment.rules.begin(),cellSegment.rules.end(),[&](CSS::CssRule imageCssRule){
+                    if(imageCssRule.name == "width")
+                        m_secondImageWidth = imageCssRule.value;
+                    if(imageCssRule.name == "height")
+                        m_secondImageHeight = imageCssRule.value;
+                });
+                rect.setWidth(removePxUnit(m_width)+removePxUnit(m_secondImageWidth));
+                rect.setHeight(removePxUnit(m_height));
             }
             if(!node->m_data->m_panelDataLab.isEmpty() && !node->m_data->m_panelTextId.isEmpty()
                     && (node->m_data->m_panelDataLab.contains(QStringLiteral("复选"))
@@ -651,13 +664,9 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                 rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
                 rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
             }
-            else{
-                rect.setWidth(removePxUnit(m_width));
-                rect.setHeight(removePxUnit(m_height));
-            }
         }
     }
-    else if((node->m_type == Html::RIMAGE) && !node->m_data->m_srcImageId.isEmpty()){
+    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)) && (!node->m_data->m_srcImageId.isEmpty())){
         CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
         QString m_width;
         QString m_height;
@@ -669,20 +678,6 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         }
             rect.setWidth(removePxUnit(m_width));
             rect.setHeight(removePxUnit(m_height));
-    }
-    else if((node->m_type == Html::RLABEL)&&(!node->m_data->m_srcImageId.isEmpty()))
-    {
-        CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-        QString m_width;
-        QString m_height;
-        for(int i=0;i<cellSegment.rules.size();i++){
-            if(cellSegment.rules.at(i).name == "width")
-                m_width = cellSegment.rules.at(i).value;
-            else if(cellSegment.rules.at(i).name == "height")
-                m_height = cellSegment.rules.at(i).value;
-        }
-        rect.setWidth(removePxUnit(m_width));
-        rect.setHeight(removePxUnit(m_height));
     }
     return rect;
 }
