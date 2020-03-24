@@ -21,34 +21,37 @@ QSSParseMethod::QSSParseMethod()
 void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss,SelectorTypeMap selectorType)
 {
     m_globalCss = globalCss;
-    //    m_pageCss = pageCss;
+    m_pageCss = pageCss;
     m_selectorType = selectorType;
-    for(int i = 0; i < m_selectorType.size(); i++){
-        auto iter = pageCss.begin();
-        while(iter != pageCss.end()){
-            QString name = iter.key();
-            CSS::CssSegment seg = iter.value();
-            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
-                name = m_selectorType.keys().at(i);
-            }
-            m_pageCss.insert(name,seg);
-            iter++;
-        }
-    }
-
-    CSS::CssMap pageCssSelect;
-    pageCssSelect = m_pageCss;
-    for(int i = 0; i < m_selectorType.size(); i++){
-        auto iter = pageCssSelect.begin();
-        while(iter != pageCssSelect.end()){
-            QString name = iter.key();
-            CSS::CssSegment seg = iter.value();
-            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
-                m_pageCss.remove(m_selectorType.keys().at(i));
-            }
-            iter++;
-        }
-    }
+//    int j = 0;
+//    for(int i = 0; i < m_selectorType.size(); i++){
+//        auto iter = pageCss.begin();
+//        while(iter != pageCss.end()){
+//            QString name = iter.key();
+//            CSS::CssSegment seg = iter.value();
+//            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
+//                name = m_selectorType.keys().at(i);
+//                qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+//                       <<j<<name
+//                       <<"\n";
+//            }
+//            m_pageCss.insert(name,seg);
+//            iter++;
+//        }
+//    }
+//    CSS::CssMap pageCssSelect;
+//    pageCssSelect = m_pageCss;
+//    for(int i = 0; i < m_selectorType.size(); i++){
+//        auto iter = pageCssSelect.begin();
+//        while(iter != pageCssSelect.end()){
+//            QString name = iter.key();
+////            CSS::CssSegment seg = iter.value();
+//            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
+//                m_pageCss.remove(m_selectorType.keys().at(i));
+//            }
+//            iter++;
+//        }
+//    }
 }
 
 bool QSSParseMethod::startSave(RTextFile *file)
@@ -57,6 +60,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
     QString newLine = "\r";
 
+    int a = 0;
     auto generateCss = [&](CSS::CssMap& cssMap){
         auto iter = cssMap.begin();
         while(iter != cssMap.end()){
@@ -138,7 +142,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
                     int fontCount = seg.rules.size();
                     foreach(const CSS::CssRule & rule,seg.rules){
-                        if(rule.name != "font-size")
+                        if( .name != "font-size")
                             fontCount--;
                         int j;
                         for(j=0;j<rulesName.size();j++)

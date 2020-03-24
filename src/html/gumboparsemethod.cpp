@@ -106,9 +106,11 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             else if(ttype == RLABEL||ttype == RBOX){
                 if(!(childEle.firstChild().clazz().contains("text")
                      ||childEle.firstChild().clazz().contains("img")
-                     ||childEle.firstChild().clazz().contains("ellipse")
+                     //                     ||childEle.firstChild().clazz().contains("ellipse")
                      ||childEle.firstChild().clazz().isEmpty()))
+                {
                     parseDiv(childEle,parentNode);
+                }
             }
         }else{
             parseDiv(childEle,parentNode);
@@ -179,7 +181,9 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             else if((classInfo.contains("label") || classInfo.contains("text")||
                      classInfo.contains("ellipse")||classInfo.contains("paragraph"))
                     && (!classInfo.contains("text_area")))
+            {
                 return RLABEL;
+            }
             else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
             else if(classInfo.contains("button") || classInfo.contains("primary_button"))
@@ -369,9 +373,6 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
-    qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-           <<node->m_data->m_srcImage
-           <<"\n";
     if(element.hasAttribute("data-label")){
         data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
     }
@@ -386,6 +387,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             nodeChild->m_style = child.style();
 
             GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
+
             GumboNodeWrapperList firstFloorGroupChileds = child.firstChild().firstChild().children();
 
             GumboNodeWrapper textChild = child.firstChild().firstChild().secondChild();
