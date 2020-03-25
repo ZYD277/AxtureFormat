@@ -501,7 +501,9 @@ void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *no
             if(image.clazz().contains("img")){
                 data->m_srcImage = image.attribute(G_NodeHtml.SRC);
                 if(data->m_srcImageId.isEmpty())
+                {
                     data->m_srcImageId = image.id();
+                }
             }
         }
     }

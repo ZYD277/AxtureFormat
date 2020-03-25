@@ -209,7 +209,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                     auto fresult = std::find_if(cellSegment.rules.begin(),cellSegment.rules.end(),[&](const CSS::CssRule & rule ){
                         return rule.name.toLower() == "width";
                     });
-
                     if(fresult != cellSegment.rules.end()){
                         cWidth = removePxUnit(fresult->value);
                     }

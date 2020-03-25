@@ -29,6 +29,8 @@ public:
 
     bool  startSave(RTextFile * file) override;
 
+    QString getQssGraduatedColour(QString value);
+
 private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
