@@ -355,6 +355,7 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     node->m_data = data;
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
 }
 
 void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node)
@@ -396,16 +397,17 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             GumboNodeWrapperList panleChilds= panleChild.children();
             for(int j = 0; j < panleChilds.size(); j++){
                 GumboNodeWrapper panleChildChild = panleChilds.at(j);
-                if(panleChildChild.clazz().contains("image")){
+                if(panleChildChild.clazz().contains("ax_default ")){
                     data->m_srcImageId = panleChildChild.id();
                     break;
                 }
             }
             if(data->m_srcImageId.isEmpty())
             {
-                if((imageChild.clazz().contains("im"))
-                        ||(imageChild.id().contains("div"))
-                        ||(imageChild.clazz().contains(QStringLiteral("_图片"))))
+//                if((imageChild.clazz().contains("im"))
+//                        ||(imageChild.id().contains("div"))
+//                        ||(imageChild.clazz().contains(QStringLiteral("_图片"))))
+                if(!imageChild.clazz().isEmpty())
                 {
                     data->m_srcImageId = imageChild.id();
                 }
@@ -435,18 +437,21 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
                               }
                            });
                        }
+
                    }
                 });
-
-            }
-            if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
-                                                   ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
-                if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
-                    if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
-                        data->m_panelTextId = textChild.id();
+//                if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
+//                                                       ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
+//                    if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
+//                        if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
+//                            data->m_panelTextId = textChild.id();
+//                    }
+//                }
+                if(!textChild.clazz().isEmpty())
+                {
+                    data->m_panelTextId = textChild.id();
                 }
             }
-
             if(imageChild.firstChild().clazz().contains("img"))
                 data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
             establishRelation(node,nodeChild);
@@ -521,6 +526,7 @@ void GumboParseMethod::parseTableCellNodeData(GumboNodeWrapper &element, DomNode
 void GumboParseMethod::parseLineNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     BaseData * data = new BaseData();
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     node->m_data = data;
@@ -587,7 +593,18 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
     {
         data->m_srcImageId = element.firstChild().id();
     }
-    data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
+
+    GumboNodeWrapperList subChilds = element.secondChild().children();
+    QString textStr;
+
+    std::for_each(subChilds.begin(),subChilds.end(),[&](GumboNodeWrapper subChild){
+        if(!subChild.firstChild().firstChild().text().isEmpty())
+        {
+            textStr += subChild.firstChild().firstChild().text();
+        }
+    });
+
+    data->m_text = textStr;
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);

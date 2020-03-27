@@ -23,18 +23,18 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
     m_globalCss = globalCss;
     m_pageCss = pageCss;
     m_selectorType = selectorType;
-//    for(int i = 0; i < m_selectorType.size(); i++){
-//        auto iter = pageCss.begin();
-//        while(iter != pageCss.end()){
-//            QString name = iter.key();
-//            CSS::CssSegment seg = iter.value();
-//            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
-//                name = m_selectorType.keys().at(i);
-//            }
-//            m_pageCss.insert(name,seg);
-//            iter++;
-//        }
-//    }
+    //    for(int i = 0; i < m_selectorType.size(); i++){
+    //        auto iter = pageCss.begin();
+    //        while(iter != pageCss.end()){
+    //            QString name = iter.key();
+    //            CSS::CssSegment seg = iter.value();
+    //            if(name.contains(m_selectorType.keys().at(i))&&(name.contains("_div")||name.contains("_input"))){
+    //                name = m_selectorType.keys().at(i);
+    //            }
+    //            m_pageCss.insert(name,seg);
+    //            iter++;
+    //        }
+    //    }
     CSS::CssMap pageCssSelect;
     pageCssSelect = m_pageCss;
     for(int i = 0; i < m_selectorType.size(); i++){
@@ -221,85 +221,85 @@ bool QSSParseMethod::startSave(RTextFile *file)
  */
 QString QSSParseMethod::getQssGraduatedColour(QString value)
 {
-   QStringList list = value.split(" ");
-   QStringList m_rgbList;
-   QString t_rgb;
+    QStringList list = value.split(" ");
+    QStringList m_rgbList;
+    QString t_rgb;
 
-   QStringList rangeList;
-   QString rangel;
+    QStringList rangeList;
+    QString rangel;
 
-   QString gradientDirection;
-   std::for_each(list.begin(),list.end(),[&](QString graduatedInfo){
-       if(graduatedInfo.contains("gradient"))
-       {
-           if(graduatedInfo.contains(","))
-           {
-               graduatedInfo = graduatedInfo.remove(QChar(','),Qt::CaseInsensitive);
-               QStringList t_filtration = graduatedInfo.split("(");
-               std::for_each(t_filtration.begin(),t_filtration.end(),[&](QString filtrationDirection){
-                   if(filtrationDirection.contains("deg"))
-                   {
-                      gradientDirection =  filtrationDirection;
-                   }
-               });
-           }
-       }
-       else if(graduatedInfo.contains("%"))
-       {
-           if(graduatedInfo.contains(")"))
-           {
-               graduatedInfo.remove(QChar(')'),Qt::CaseInsensitive);
-           }
-           rangel = rangel + graduatedInfo;
-       }
-       else
-       {
-           if(graduatedInfo.contains(")"))
-           {
-               t_rgb = t_rgb + graduatedInfo;
-               m_rgbList.append(t_rgb);
-               t_rgb.clear();
-           }
-           else
-               t_rgb = t_rgb + graduatedInfo;
-       }
-   });
-   rangeList = rangel.split(",");
+    QString gradientDirection;
+    std::for_each(list.begin(),list.end(),[&](QString graduatedInfo){
+        if(graduatedInfo.contains("gradient"))
+        {
+            if(graduatedInfo.contains(","))
+            {
+                graduatedInfo = graduatedInfo.remove(QChar(','),Qt::CaseInsensitive);
+                QStringList t_filtration = graduatedInfo.split("(");
+                std::for_each(t_filtration.begin(),t_filtration.end(),[&](QString filtrationDirection){
+                    if(filtrationDirection.contains("deg"))
+                    {
+                        gradientDirection =  filtrationDirection;
+                    }
+                });
+            }
+        }
+        else if(graduatedInfo.contains("%"))
+        {
+            if(graduatedInfo.contains(")"))
+            {
+                graduatedInfo.remove(QChar(')'),Qt::CaseInsensitive);
+            }
+            rangel = rangel + graduatedInfo;
+        }
+        else
+        {
+            if(graduatedInfo.contains(")"))
+            {
+                t_rgb = t_rgb + graduatedInfo;
+                m_rgbList.append(t_rgb);
+                t_rgb.clear();
+            }
+            else
+                t_rgb = t_rgb + graduatedInfo;
+        }
+    });
+    rangeList = rangel.split(",");
 
-   QStringList rangeFloats;
-   std::for_each(rangeList.begin(),rangeList.end(),[&](QString graduatedRange){
-       if(graduatedRange.contains("%"))
-       {
-           float rangeFloat = (graduatedRange.left(graduatedRange.indexOf("%")).toInt())/float(100);
-           rangeFloats.append(QString::number(rangeFloat));
-       }
-   });
-   QString graduatedInfo;
-   if(rangeFloats.size() == m_rgbList.size())
-   {
-       for(int i = 0;i<rangeFloats.size();i++)
-       {
-           QString t_stopFloat = rangeFloats.at(i);
-           QString t_rgbInfo = m_rgbList.at(i);
-           QString t_graduatedInfo = QString(" stop:%1 %2,").arg(t_stopFloat).arg(t_rgbInfo);
-           graduatedInfo += t_graduatedInfo;
-       }
-   }
+    QStringList rangeFloats;
+    std::for_each(rangeList.begin(),rangeList.end(),[&](QString graduatedRange){
+        if(graduatedRange.contains("%"))
+        {
+            float rangeFloat = (graduatedRange.left(graduatedRange.indexOf("%")).toInt())/float(100);
+            rangeFloats.append(QString::number(rangeFloat));
+        }
+    });
+    QString graduatedInfo;
+    if(rangeFloats.size() == m_rgbList.size())
+    {
+        for(int i = 0;i<rangeFloats.size();i++)
+        {
+            QString t_stopFloat = rangeFloats.at(i);
+            QString t_rgbInfo = m_rgbList.at(i);
+            QString t_graduatedInfo = QString(" stop:%1 %2,").arg(t_stopFloat).arg(t_rgbInfo);
+            graduatedInfo += t_graduatedInfo;
+        }
+    }
 
-  int xDirection;
-  int yDirection;
-  if((gradientDirection == "90deg")||(gradientDirection == "270deg"))
-  {
-      xDirection = 1;
-      yDirection = 0;
-  }
-  else if((gradientDirection == "180deg")||(gradientDirection == "0deg"))
-  {
-      xDirection = 0;
-      yDirection = 1;
-  }
-  value = QString(" qlineargradient(spread:pad, x1:0, y1:0, x2:%1, y2:%2, %3)").arg(QString::number(xDirection))
-          .arg(QString::number(yDirection)).arg(graduatedInfo);
-  return value;
+    int xDirection;
+    int yDirection;
+    if((gradientDirection == "90deg")||(gradientDirection == "270deg"))
+    {
+        xDirection = 1;
+        yDirection = 0;
+    }
+    else if((gradientDirection == "180deg")||(gradientDirection == "0deg"))
+    {
+        xDirection = 0;
+        yDirection = 1;
+    }
+    value = QString(" qlineargradient(spread:pad, x1:0, y1:0, x2:%1, y2:%2, %3)").arg(QString::number(xDirection))
+            .arg(QString::number(yDirection)).arg(graduatedInfo);
+    return value;
 }
 } //namespace RQt

@@ -95,6 +95,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
     domWidget->setAttributeClass(getTypeName(node->m_type));
     domWidget->setAttributeName(node->m_id);
 
+    qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+           <<node->m_id<<node->m_type
+           <<"\n";
     StyleMap cssMap = extractCssRule(node);
 
     MProperty * rectProp = new MProperty();
@@ -159,6 +162,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             domWidget->addProperty(lineWidthProp);
             domWidget->addProperty(directProp);
 
+            if(!node->m_data->m_srcImage.isEmpty())
+            {
+                 createImageProp(domWidget,node->m_data->m_srcImage);
+            }
             break;
         }
         case Html::RTABLE:{
@@ -428,12 +435,18 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             createTextProp(domWidget,imgData->m_text);
 
+            MProperty * prop = new MProperty();
+            prop->setAttributeName("alignment");
+            prop->setPropSet("Qt::AlignCenter");
+            domWidget->addProperty(prop);
+
+            MProperty *wordWrap = new MProperty();
+            wordWrap->setAttributeName("wordWrap");
+            wordWrap->setPropBool("true");
+            domWidget->addProperty(wordWrap);
+
             if(imgData->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,imgData->m_toolTip);
-
-//            MProperty * alignProp = new MProperty();
-//            alignProp->setAttributeName("alignment");
-
             break;
         }
 
@@ -445,6 +458,11 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             prop->setAttributeName("alignment");
             prop->setPropSet("Qt::AlignCenter");
             domWidget->addProperty(prop);
+
+            MProperty *wordWrap = new MProperty();
+            wordWrap->setAttributeName("wordWrap");
+            wordWrap->setPropBool("true");
+            domWidget->addProperty(wordWrap);
 
             QString imageSrc = node->m_data->m_srcImage;
             if(!imageSrc.isEmpty())
@@ -472,6 +490,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RBUTTON:{
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            QString imageSrc = node->m_data->m_srcImage;
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
             createTextProp(domWidget,node->m_data->m_text);
 
             if(node->m_data->m_toolTip.size() > 0)
@@ -645,9 +667,8 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                 rect.setWidth(removePxUnit(m_width)+removePxUnit(m_secondImageWidth));
                 rect.setHeight(removePxUnit(m_height));
             }
-            if(!node->m_data->m_panelDataLab.isEmpty() && !node->m_data->m_panelTextId.isEmpty()
-                    && (node->m_data->m_panelDataLab.contains(QStringLiteral("复选"))
-                        ||node->m_data->m_panelDataLab.contains(QStringLiteral("单选")))){
+            if(!node->m_data->m_panelTextId.isEmpty())
+            {
                 QString textWidth;
                 QString textheight;
                 QString textX;
@@ -660,8 +681,22 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                     else if(cellSegment.rules.at(i).name == "left")
                         textX = cellSegment.rules.at(i).value;
                 }
-                rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
-                rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
+                if((node->m_data->m_panelDataLab.contains(QStringLiteral("复选")))
+                        ||(node->m_data->m_panelDataLab.contains(QStringLiteral("单选")))){
+                    rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
+                    rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
+                }
+                else
+                {
+                   QRect textRect = rect;
+                   textRect.setWidth(removePxUnit(textWidth));
+                   textRect.setHeight(removePxUnit(textheight));
+
+                   if(!rect.contains(textRect,false))
+                   {
+                       rect = textRect;
+                   }
+                }
             }
         }
     }
