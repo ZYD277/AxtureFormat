@@ -95,9 +95,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
     domWidget->setAttributeClass(getTypeName(node->m_type));
     domWidget->setAttributeName(node->m_id);
 
-    qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-           <<node->m_id<<node->m_type
-           <<"\n";
     StyleMap cssMap = extractCssRule(node);
 
     MProperty * rectProp = new MProperty();

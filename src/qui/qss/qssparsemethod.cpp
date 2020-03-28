@@ -69,7 +69,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
                     <<"-moz-box-shadow"<<"-webkit-box-shadow"
                    <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
                   <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
-                 <<"visibility";
+                 <<"visibility"<<"z-index"<<"touch-action"<<"overflow"<<"word-wrap";
             m_ruleSize = seg.rules.size();
 
             for(int i=0;i<seg.rules.size();i++){

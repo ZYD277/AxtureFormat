@@ -106,7 +106,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             else if(ttype == RLABEL||ttype == RBOX){
                 if(!(childEle.firstChild().clazz().contains("text")
                      ||childEle.firstChild().clazz().contains("img")
-                     //                     ||childEle.firstChild().clazz().contains("ellipse")
+                     ||childEle.firstChild().clazz().contains("ellipse")
                      ||childEle.firstChild().clazz().isEmpty()))
                 {
                     parseDiv(childEle,parentNode);
