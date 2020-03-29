@@ -1,6 +1,9 @@
 ﻿#include "viewmodel.h"
 
 #include <QSize>
+#include <QRegExp>
+#include <QMessageBox>
+#include <QDebug>
 
 ViewModel::ViewModel()
 {
@@ -43,6 +46,7 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
                 switch(static_cast<TColumn>(column)){
                     case T_Index: return row + 1;break;
                     case T_FileName: return axurePage.htmlFileName;break;
+                    case T_ClassName:return axurePage.switchClassName;break;
                     default:break;
                 }
                 break;
@@ -108,19 +112,27 @@ Qt::ItemFlags ViewModel::flags(const QModelIndex &index) const
         return QAbstractItemModel::flags(index);
 
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
-    if(index.column() == T_Progress)
-    {
-        flags |= Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    if(index.column() == T_ClassName){
+        flags |= Qt::ItemIsEditable;
     }
-    else if((index.column() == T_Open)||index.column() == T_Delete)
-    {
-        flags |= Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable;
-    }
-    else if(index.column() == T_Switch)
-    {
-        flags |= Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-    }
+
     return flags;
+}
+
+bool ViewModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if(index.isValid() && role == Qt::EditRole){
+        if(index.column() >= 0 && index.column() < m_moudelList.size()){
+            QRegExp classValidator("^[a-zA-Z]\\w+$");
+            if(classValidator.exactMatch(value.toString())){
+                emit updateItemClassName(index.row(),value.toString());
+                return true;
+            }else{
+                emit updateItemError();
+            }
+        }
+    }
+    return false;
 }
 
 QVariant ViewModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -133,6 +145,8 @@ QVariant ViewModel::headerData(int section, Qt::Orientation orientation, int rol
                 return QStringLiteral("编号");
             case T_FileName:
                 return QStringLiteral("文件名称");
+            case T_ClassName:
+                return QStringLiteral("转换后类名");
             case T_Progress:
                 return QStringLiteral("转换进度");
             case T_Open:

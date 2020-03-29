@@ -13,7 +13,7 @@ public:
     QtOutput();
     ~QtOutput();
 
-    bool save(DomHtmlPtr ptr, CSS::CssMap globalCss,CSS::CssMap pageCss,QString fullPath);
+    bool save(QString className, QString cssFileName, DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, QString fullPath);
     QStringList getOriginalResouces(){return m_originalResoucesLinks;}
 
 private:

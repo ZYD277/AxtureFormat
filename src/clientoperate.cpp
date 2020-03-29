@@ -295,11 +295,12 @@ void ClientOperate::initView()
     ui->dropArea->setAcceptDrops(true);
 
     m_model = new ViewModel();
+    connect(m_model,SIGNAL(updateItemClassName(int,QString)),this,SLOT(updateItemClassName(int,QString)));
+    connect(m_model,SIGNAL(updateItemError()),this,SLOT(updateItemError()));
     m_viewDelegate = new ViewDelegate();
 
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableView->setFocusPolicy(Qt::NoFocus);
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
@@ -718,6 +719,24 @@ void ClientOperate::showRecentProject(bool flag)
         parseAxureProject(recentProj);
         ui->stackedWidget->setCurrentIndex(1);
     }
+}
+
+/*!
+ * @brief 更新指定行类名
+ * @param[in] row 待更新行
+ * @param[in] newValue 新类名
+ */
+void ClientOperate::updateItemClassName(int row, QString newValue)
+{
+    if(m_pageList.size() > row && row >= 0 && newValue.size() > 0){
+        m_pageList.operator [](row).switchClassName = newValue;
+        updateTableModel();
+    }
+}
+
+void ClientOperate::updateItemError()
+{
+    QMessageBox::warning(this,QStringLiteral("警告"),QStringLiteral("类名不符合命名规则!\n[1]不能含有空白字符;     \n[2]不能以字母或下划线开头.   "),QMessageBox::Yes);
 }
 
 /**

@@ -48,7 +48,8 @@ SOURCES += main.cpp\
     viewmodel.cpp \
     util/threadpool.cpp \
     switchtask.cpp \
-    logoutputer.cpp
+    logoutputer.cpp \
+    template/generateprojectfile.cpp
 
 HEADERS  += widget.h \
     html/htmlparser.h \
@@ -85,7 +86,8 @@ HEADERS  += widget.h \
     util/threadpool.h \
     switchtask.h \
     util/windumpfile.h \
-    logoutputer.h
+    logoutputer.h \
+    template/generateprojectfile.h
 
 FORMS    += widget.ui \
     clientoperate.ui \

@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QApplication>
 #include <QMouseEvent>
+#include <QLineEdit>
 #include <QDebug>
 
 #include "head.h"
@@ -20,7 +21,41 @@ ViewDelegate::~ViewDelegate()
 
 QWidget *ViewDelegate::createEditor(QWidget * parent, const QStyleOptionViewItem & option, const QModelIndex & index) const
 {
+    if(index.column() == T_ClassName){
+        QLineEdit * lineEdit = new QLineEdit(parent);
+        return lineEdit;
+    }
     return QItemDelegate::createEditor(parent,option,index);
+}
+
+void ViewDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+    if(index.column() == T_ClassName){
+        QLineEdit * edit = dynamic_cast<QLineEdit *>(editor);
+        if(edit){
+            edit->setText(index.model()->data(index).toString());
+        }
+    }
+}
+
+void ViewDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+{
+    if(index.column() == T_ClassName){
+        QLineEdit * edit = dynamic_cast<QLineEdit *>(editor);
+        if(edit){
+            model->setData(index,edit->text());
+        }
+    }
+}
+
+void ViewDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    if(index.column() == T_ClassName){
+        QLineEdit * edit = dynamic_cast<QLineEdit *>(editor);
+        if(edit){
+            edit->setGeometry(option.rect);
+        }
+    }
 }
 
 void ViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
