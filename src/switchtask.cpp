@@ -9,6 +9,7 @@
 #include <QDebug>
 
 #include "css/cssparser.h"
+#include "template/generateprojectfile.h"
 #include "util/rutil.h"
 
 SwitchTask::SwitchTask()
@@ -45,8 +46,9 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                 m_outputDir = outputDir + QDir::separator() + htmlName;
 
                 if(RUtil::createDir(outputDir) && RUtil::createDir(m_outputDir)){
-                    QString pageUiName = m_outputDir + QDir::separator() + htmlName  +".ui";
-                    m_qtOutput.save(m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName);
+                    QString pageUiName = m_outputDir + QDir::separator() + page.switchClassName  +".ui";
+                    QString qssFileName = "style.qss";
+                    m_qtOutput.save(page.switchClassName,qssFileName,m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName);
 
                     tproj = P_CopyFile;
                     updataProcessBar(tproj,error,QStringLiteral("转换ui结束"));
@@ -73,6 +75,11 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                             QString dstImageFullPath = dstImagePath + QDir::separator() + finfo.fileName();
                             QFile::copy(finfo.filePath(),dstImageFullPath);
                         });
+
+                        //生成模板代码
+                        GenerateProjectFile outputTemplte;
+                        outputTemplte.setOutputInfo(m_outputDir,page.switchClassName,qssFileName);
+                        outputTemplte.startOutput();
 
                         tproj = P_Finish;
                         updataProcessBar(tproj,error,QStringLiteral("转换结束"));

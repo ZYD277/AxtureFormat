@@ -25,6 +25,7 @@ struct ProcessBarData{
  */
 struct AxurePage{
     AxurePage(){
+        switchClassName = "Widget";
         id = RUtil::UUID();
     }
 
@@ -39,6 +40,7 @@ struct AxurePage{
     QString cssFilePath;            /*!< 当前html页面依赖的css文件路径 */
     QString htmlFileName;
     QString outputDir;              /*!< 当前页面导出的路径 */
+    QString switchClassName;        /*!< 转换后产生ui文件及对应源码的工程类名，默认为Widget，用户可以双击修改 */
     ProcessBarData processData;
 };
 
@@ -60,6 +62,7 @@ struct SwitchProgress{
 enum TColumn{
     T_Index,
     T_FileName,
+    T_ClassName,
     T_Progress,
     T_Open,
     T_Delete,

@@ -1,5 +1,6 @@
 ﻿#include "qtoutput.h"
 
+#include <QDebug>
 #include <QFileInfo>
 #include <QDir>
 #include "qrc/qrcoutput.h"
@@ -7,6 +8,7 @@
 #include "qss/qssparsemethod.h"
 #include "formatproperty.h"
 #include "exportui.h"
+#include "props/mdomwidget.h"
 
 namespace RQt{
 
@@ -22,13 +24,15 @@ QtOutput::~QtOutput()
 
 /*!
  * @brief 1.将html节点保存至指定的xml文件 2.创建对应的资源文件 3.创建样式文件
+ * @param[in] className 生成的UI控件窗口objectname
+ * @param[in] cssFileName qss文件名
  * @param[in] ptr 待转换的html节点
  * @param[in] globalCss 全局的css信息
  * @param[in] pageCss 当前页面的css信息
  * @param[in] fullPath 文件保存全路径
  * @return true:保存成功
  */
-bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, QString fullPath)
+bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, QString fullPath)
 {
     FormatProperty propFormat;
     propFormat.setDataSource(ptr);
@@ -46,7 +50,8 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
         ui.beginWrite(&file);
 
         ui.setAttributeVersion("4.0");
-        ui.setElementClass("Form");
+        ui.setElementClass(className);
+        root->setAttributeName(className);
         ui.setDomWidget(root);
 
         MDomResource * resc = new MDomResource;
@@ -62,12 +67,13 @@ bool QtOutput::save(DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, 
         qss.setCommonStyle(globalCss,pageCss,m_selectorType);
 
         QFileInfo uiPathQss(fullPath);
-        QString qssPath = uiPathQss.path() + QDir::separator() + "qss";
+        QString qssPath = uiPathQss.path() + QDir::separator() + cssFileName;
 
         if(qss.save(qssPath)){
             //[2]
             QrcOutput qrc;
             qrc.addResources("/",propFormat.getResources() + qss.getResources());
+            qrc.addResources("/style",QStringList(cssFileName));
 
             m_originalResoucesLinks = propFormat.getOriginalResources();
 

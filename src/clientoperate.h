@@ -68,6 +68,9 @@ private slots:
     void clearRecentProjs(bool flag);
     void showRecentProject(bool flag);
 
+    void updateItemClassName(int row,QString newValue);
+    void updateItemError();
+
 private:
     enum LogLevel{
         LogNormal,
