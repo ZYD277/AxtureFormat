@@ -664,7 +664,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                 rect.setWidth(removePxUnit(m_width)+removePxUnit(m_secondImageWidth));
                 rect.setHeight(removePxUnit(m_height));
             }
-            if(!node->m_data->m_panelTextId.isEmpty())
+            else if(!node->m_data->m_panelTextId.isEmpty())
             {
                 QString textWidth;
                 QString textheight;
