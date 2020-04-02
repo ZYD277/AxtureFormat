@@ -451,13 +451,6 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
 
                     }
                 });
-                //                if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
-                //                                                       ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
-                //                    if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
-                //                        if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
-                //                            data->m_panelTextId = textChild.id();
-                //                    }
-                //                }
             }
             if(imageChild.firstChild().clazz().contains("img"))
                 data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
@@ -604,7 +597,7 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
     GumboNodeWrapperList subChilds = element.secondChild().children();
     QString textStr;
 
-    //获取定制标签的多行文本
+    //获取标签含有多行文本
     if(subChilds.size() > 1)
     {
         std::for_each(subChilds.begin(),subChilds.end(),[&](GumboNodeWrapper subChild){
