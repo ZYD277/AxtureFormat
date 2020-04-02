@@ -128,9 +128,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 {
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
-        if(element.tagName() == "iframe")
+        if(element.firstChild().tagName() == "iframe")
+        {
             return RINLINE_FRAME;
-
+        }
         QString classInfo = element.clazz();
         if(classInfo == m_classInfo && classInfo == "ax_default"){
             return RGROUP;
@@ -343,13 +344,6 @@ void GumboParseMethod::parseBoxNodeData(GumboNodeWrapper &element,DomNode *node)
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     node->m_data = data;
-
-    if(data->m_text.contains("&nbsp"))
-    {
-        qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-               <<data->m_text
-               <<"\n";
-    }
 }
 
 void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *node)
