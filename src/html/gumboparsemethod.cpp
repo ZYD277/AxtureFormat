@@ -90,7 +90,6 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
-
         if(ttype != RINVALID){
             DomNode * node = new DomNode(ttype);
             node->m_id = childEle.id();
@@ -103,10 +102,10 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             if(ttype == RGROUP){
                 parseDiv(childEle,parentNode);
             }
+            //自制控件子级有组合控件继续解析
             else if(ttype == RLABEL||ttype == RBOX){
                 if(!(childEle.firstChild().clazz().contains("text")
                      ||childEle.firstChild().clazz().contains("img")
-//                     ||childEle.firstChild().clazz().contains("ellipse")
                      ||childEle.firstChild().clazz().isEmpty()))
                 {
                     parseDiv(childEle,parentNode);
@@ -173,7 +172,6 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             //NOTE 匹配顺序按照优先级排列
             if(element.hasAttribute("data-left") && element.hasAttribute("data-left") && element.hasAttribute("data-left"))
                 return RGROUP;
-
             if(classInfo.contains("radio_button"))
                 return RRADIO_BUTTON;
             else if(classInfo.contains("text_field"))
@@ -345,6 +343,13 @@ void GumboParseMethod::parseBoxNodeData(GumboNodeWrapper &element,DomNode *node)
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     node->m_data = data;
+
+    if(data->m_text.contains("&nbsp"))
+    {
+        qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+               <<data->m_text
+               <<"\n";
+    }
 }
 
 void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *node)
@@ -374,6 +379,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
+    //获取定制控件文字描述
     if(element.hasAttribute("data-label")){
         data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
     }
@@ -385,13 +391,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             DomNode * nodeChild = new DomNode(RDYNAMIC_PANEL_PAGE);
             nodeChild->m_id = child.id();
             nodeChild->m_class = child.clazz();
-            nodeChild->m_style = child.style();
-
-            GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
-
-            GumboNodeWrapperList firstFloorGroupChileds = child.firstChild().firstChild().children();
-
-            GumboNodeWrapper textChild = child.firstChild().firstChild().secondChild();
+            nodeChild->m_style = child.style();   
 
             GumboNodeWrapper panleChild = child.firstChild();
             GumboNodeWrapperList panleChilds= panleChild.children();
@@ -401,56 +401,69 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
                     data->m_srcImageId = panleChildChild.id();
                     break;
                 }
+                //获取动态面板的子级动态面板id
+                if(panleChildChild.clazz().contains("ax_default"))
+                {
+                   if(panleChildChild.firstChild().clazz().contains("panel_state"))
+                   {
+                       data->m_sonPanelStateId = panleChildChild.id();
+                   }
+                }
             }
+            //处理自制动态面板几种情况
+            GumboNodeWrapper imageChild  = child.firstChild().firstChild().firstChild();
+            GumboNodeWrapper textChild  = child.firstChild().firstChild().secondChild();
             if(data->m_srcImageId.isEmpty())
             {
-//                if((imageChild.clazz().contains("im"))
-//                        ||(imageChild.id().contains("div"))
-//                        ||(imageChild.clazz().contains(QStringLiteral("_图片"))))
+                //获取自制动态面板下组合的第一个控件id
                 if(!imageChild.clazz().isEmpty())
                 {
                     data->m_srcImageId = imageChild.id();
                 }
-                std::for_each(firstFloorGroupChileds.begin(),firstFloorGroupChileds.end(),
-                              [&](GumboNodeWrapper firstFloorGroupChiled){
-                   if(firstFloorGroupChiled.hasAttribute("data-label"))
-                   {
-                       QString firstDataLabelText = firstFloorGroupChiled.attribute(QStringLiteral("data-label"));
-                       if(firstDataLabelText.contains(QStringLiteral("背景")))
-                       {
-                           if(firstFloorGroupChiled.firstChild().clazz().contains("img"))
-                               data->m_srcImageId = firstFloorGroupChiled.firstChild().id();
-                       }
-                       if(firstDataLabelText.contains(QStringLiteral("二级菜单")))
-                       {
-                           GumboNodeWrapperList secondFloorGroupChileds = firstFloorGroupChiled.firstChild().children();
-                           std::for_each(secondFloorGroupChileds.begin(),secondFloorGroupChileds.end(),
-                                         [&](GumboNodeWrapper secondFloorGroupChiled){
-                              if(secondFloorGroupChiled.hasAttribute("data-label"))
-                              {
-                                  QString secondDataLabelText = secondFloorGroupChiled.attribute(QStringLiteral("data-label"));
-                                  if(secondDataLabelText.contains(QStringLiteral("背景")))
-                                  {
-                                      if(secondFloorGroupChiled.firstChild().clazz().contains("img"))
-                                          data->m_secondSrcImageId = secondFloorGroupChiled.firstChild().id();
-                                  }
-                              }
-                           });
-                       }
-
-                   }
-                });
-//                if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
-//                                                       ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
-//                    if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
-//                        if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
-//                            data->m_panelTextId = textChild.id();
-//                    }
-//                }
+                //获取自制动态面板下组合的第二个控件id（一般只能处理两个控件组合的情况）
                 if(!textChild.clazz().isEmpty())
                 {
                     data->m_panelTextId = textChild.id();
                 }
+
+                //处理自制动态面板下含有二级子菜单，获取一级子菜单和二级子菜单背景id（右垂直菜单）
+                GumboNodeWrapperList firstFloorGroupChileds = child.firstChild().firstChild().children();
+                std::for_each(firstFloorGroupChileds.begin(),firstFloorGroupChileds.end(),
+                              [&](GumboNodeWrapper firstFloorGroupChiled){
+                    if(firstFloorGroupChiled.hasAttribute("data-label"))
+                    {
+                        QString firstDataLabelText = firstFloorGroupChiled.attribute(QStringLiteral("data-label"));
+                        if(firstDataLabelText.contains(QStringLiteral("背景")))
+                        {
+                            if(firstFloorGroupChiled.firstChild().clazz().contains("img"))
+                                data->m_srcImageId = firstFloorGroupChiled.firstChild().id();
+                        }
+                        if(firstDataLabelText.contains(QStringLiteral("二级菜单")))
+                        {
+                            GumboNodeWrapperList secondFloorGroupChileds = firstFloorGroupChiled.firstChild().children();
+                            std::for_each(secondFloorGroupChileds.begin(),secondFloorGroupChileds.end(),
+                                          [&](GumboNodeWrapper secondFloorGroupChiled){
+                                if(secondFloorGroupChiled.hasAttribute("data-label"))
+                                {
+                                    QString secondDataLabelText = secondFloorGroupChiled.attribute(QStringLiteral("data-label"));
+                                    if(secondDataLabelText.contains(QStringLiteral("背景")))
+                                    {
+                                        if(secondFloorGroupChiled.firstChild().clazz().contains("img"))
+                                            data->m_secondSrcImageId = secondFloorGroupChiled.firstChild().id();
+                                    }
+                                }
+                            });
+                        }
+
+                    }
+                });
+                //                if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
+                //                                                       ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
+                //                    if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
+                //                        if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
+                //                            data->m_panelTextId = textChild.id();
+                //                    }
+                //                }
             }
             if(imageChild.firstChild().clazz().contains("img"))
                 data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
@@ -597,19 +610,23 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
     GumboNodeWrapperList subChilds = element.secondChild().children();
     QString textStr;
 
-    std::for_each(subChilds.begin(),subChilds.end(),[&](GumboNodeWrapper subChild){
-        if(!subChild.firstChild().firstChild().text().isEmpty())
-        {
-            textStr += subChild.firstChild().firstChild().text();
-        }
-    });
-
-    data->m_text = textStr;
+    //获取定制标签的多行文本
+    if(subChilds.size() > 1)
+    {
+        std::for_each(subChilds.begin(),subChilds.end(),[&](GumboNodeWrapper subChild){
+            if(!subChild.firstChild().firstChild().text().isEmpty())
+            {
+                textStr += subChild.firstChild().firstChild().text() + QStringLiteral("\n");
+            }
+        });
+        data->m_text = textStr;
+    }
+    else
+        data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
-
 }
 
 

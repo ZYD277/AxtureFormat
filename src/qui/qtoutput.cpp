@@ -69,6 +69,7 @@ bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::C
         QFileInfo uiPathQss(fullPath);
         QString qssPath = uiPathQss.path() + QDir::separator() + cssFileName;
 
+
         if(qss.save(qssPath)){
             //[2]
             QrcOutput qrc;
