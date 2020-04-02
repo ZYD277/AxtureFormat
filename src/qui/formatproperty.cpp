@@ -651,7 +651,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             QString m_height;
             QString m_imgX;
             CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_sonPanelStateId);
-            for(int i=0;i<cellSegment.rules.size();i++){
+            for(int i = 0; i<cellSegment.rules.size(); i++){
                 if(cellSegment.rules.at(i).name == "width")
                     m_width = cellSegment.rules.at(i).value;
                 else if(cellSegment.rules.at(i).name == "height")
@@ -668,7 +668,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             QString m_height;
             QString m_imgX;
             CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-            for(int i=0;i<cellSegment.rules.size();i++){
+            for(int i = 0; i<cellSegment.rules.size(); i++){
                 if(cellSegment.rules.at(i).name == "width")
                     m_width = cellSegment.rules.at(i).value;
                 else if(cellSegment.rules.at(i).name == "height")
