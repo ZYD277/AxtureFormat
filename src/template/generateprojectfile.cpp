@@ -1,4 +1,4 @@
-#include "generateprojectfile.h"
+﻿#include "generateprojectfile.h"
 
 #include <QFile>
 #include <QDir>
