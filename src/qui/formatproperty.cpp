@@ -159,6 +159,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             domWidget->addProperty(lineWidthProp);
             domWidget->addProperty(directProp);
 
+            if(!node->m_data->m_srcImage.isEmpty())
+            {
+                 createImageProp(domWidget,node->m_data->m_srcImage);
+            }
             break;
         }
         case Html::RTABLE:{
@@ -209,7 +213,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                     auto fresult = std::find_if(cellSegment.rules.begin(),cellSegment.rules.end(),[&](const CSS::CssRule & rule ){
                         return rule.name.toLower() == "width";
                     });
-
                     if(fresult != cellSegment.rules.end()){
                         cWidth = removePxUnit(fresult->value);
                     }
@@ -429,12 +432,18 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             createTextProp(domWidget,imgData->m_text);
 
+            MProperty * prop = new MProperty();
+            prop->setAttributeName("alignment");
+            prop->setPropSet("Qt::AlignCenter");
+            domWidget->addProperty(prop);
+
+            MProperty *wordWrap = new MProperty();
+            wordWrap->setAttributeName("wordWrap");
+            wordWrap->setPropBool("true");
+            domWidget->addProperty(wordWrap);
+
             if(imgData->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,imgData->m_toolTip);
-
-//            MProperty * alignProp = new MProperty();
-//            alignProp->setAttributeName("alignment");
-
             break;
         }
 
@@ -446,6 +455,19 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             prop->setAttributeName("alignment");
             prop->setPropSet("Qt::AlignCenter");
             domWidget->addProperty(prop);
+
+            //添加标签的自动换行，处理自定义控件中的竖向文本
+            MProperty *wordWrap = new MProperty();
+            wordWrap->setAttributeName("wordWrap");
+            wordWrap->setPropBool("true");
+            domWidget->addProperty(wordWrap);
+
+            //添加边距，调整标签文本显示
+            QString textSize = QString("-%1").arg(QString::number(node->m_data->m_text.size()));
+            MProperty *marginProp = new MProperty();
+            marginProp->setAttributeName("margin");
+            marginProp->setPropNumber(textSize);
+            domWidget->addProperty(marginProp);
 
             QString imageSrc = node->m_data->m_srcImage;
             if(!imageSrc.isEmpty())
@@ -473,6 +495,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RBUTTON:{
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            QString imageSrc = node->m_data->m_srcImage;
+            if(!imageSrc.isEmpty())
+                createImageProp(domWidget,imageSrc);
             createTextProp(domWidget,node->m_data->m_text);
 
             if(node->m_data->m_toolTip.size() > 0)
@@ -616,13 +642,16 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.moveLeft(rect.x() - parentRect.x());
         rect.moveTop(rect.y() - parentRect.y());
     }
+    //自制动态面板只有位置没有大小
     if(node->m_type == Html::RDYNAMIC_PANEL && rect.width()<1){
-        if(!node->m_data->m_srcImageId.isEmpty()){
+
+        if(!node->m_data->m_sonPanelStateId.isEmpty())
+        {
             QString m_width;
             QString m_height;
             QString m_imgX;
-            CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-            for(int i=0;i<cellSegment.rules.size();i++){
+            CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_sonPanelStateId);
+            for(int i = 0; i<cellSegment.rules.size(); i++){
                 if(cellSegment.rules.at(i).name == "width")
                     m_width = cellSegment.rules.at(i).value;
                 else if(cellSegment.rules.at(i).name == "height")
@@ -630,9 +659,44 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                 else if(cellSegment.rules.at(i).name == "left")
                     m_imgX = cellSegment.rules.at(i).value;
             }
-            if(!node->m_data->m_panelDataLab.isEmpty() && !node->m_data->m_panelTextId.isEmpty()
-                    && (node->m_data->m_panelDataLab.contains(QStringLiteral("复选"))
-                        ||node->m_data->m_panelDataLab.contains(QStringLiteral("单选")))){
+            rect.setWidth(removePxUnit(m_width));
+            rect.setHeight(removePxUnit(m_height));
+        }
+        //获取自制动态面板下第一个组合控件的尺寸位置
+        else if(!node->m_data->m_srcImageId.isEmpty()){
+            QString m_width;
+            QString m_height;
+            QString m_imgX;
+            CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
+            for(int i = 0; i<cellSegment.rules.size(); i++){
+                if(cellSegment.rules.at(i).name == "width")
+                    m_width = cellSegment.rules.at(i).value;
+                else if(cellSegment.rules.at(i).name == "height")
+                    m_height = cellSegment.rules.at(i).value;
+                else if(cellSegment.rules.at(i).name == "left")
+                    m_imgX = cellSegment.rules.at(i).value;
+            }
+            rect.setWidth(removePxUnit(m_width));
+            rect.setHeight(removePxUnit(m_height));
+            //获取二级子菜单背景尺寸位置，结合一级子菜单确定动态动态面板位置尺寸
+            if(!node->m_data->m_secondSrcImageId.isEmpty())
+            {
+                QString m_secondImageWidth;
+                QString m_secondImageHeight;
+                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_secondSrcImageId);
+                std::for_each(cellSegment.rules.begin(),cellSegment.rules.end(),[&](CSS::CssRule imageCssRule){
+                    if(imageCssRule.name == "width")
+                        m_secondImageWidth = imageCssRule.value;
+                    if(imageCssRule.name == "height")
+                        m_secondImageHeight = imageCssRule.value;
+                });
+                rect.setWidth(removePxUnit(m_width)+removePxUnit(m_secondImageWidth));
+                rect.setHeight(removePxUnit(m_height));
+            }
+
+            //获取两种控件组合的情况下，第二个控件位置尺寸
+            else if(!node->m_data->m_panelTextId.isEmpty())
+            {
                 QString textWidth;
                 QString textheight;
                 QString textX;
@@ -645,27 +709,49 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                     else if(cellSegment.rules.at(i).name == "left")
                         textX = cellSegment.rules.at(i).value;
                 }
-                rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
-                rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
-            }
-            else{
-                rect.setWidth(removePxUnit(m_width));
-                rect.setHeight(removePxUnit(m_height));
+
+                //获取自定义复选框，单选框，半选中复选框等特殊自定义控件位置尺寸
+                if((node->m_data->m_panelDataLab.contains(QStringLiteral("复选")))
+                        ||(node->m_data->m_panelDataLab.contains(QStringLiteral("单选")))){
+                    rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
+                    rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
+                }
+                //获取两个组合控件是包含关系时的位置尺寸
+                else
+                {
+                   QRect textRect = rect;
+                   textRect.setWidth(removePxUnit(textWidth));
+                   textRect.setHeight(removePxUnit(textheight));
+
+                   if(!rect.contains(textRect,false))
+                   {
+                       rect = textRect;
+                   }
+                }
             }
         }
     }
-    else if((node->m_type == Html::RIMAGE) && !node->m_data->m_srcImageId.isEmpty()){
+    //修改RIMAGE和RLABEL类型的位置尺寸为背景图片的
+    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)) && (!node->m_data->m_srcImageId.isEmpty())){
         CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
         QString m_width;
         QString m_height;
+        QString m_left;
+        QString m_top;
         for(int i=0;i<cellSegment.rules.size();i++){
             if(cellSegment.rules.at(i).name == "width")
                 m_width = cellSegment.rules.at(i).value;
             else if(cellSegment.rules.at(i).name == "height")
                 m_height = cellSegment.rules.at(i).value;
+            else if(cellSegment.rules.at(i).name == "left")
+                m_left = cellSegment.rules.at(i).value;
+            else if(cellSegment.rules.at(i).name == "top")
+                m_top = cellSegment.rules.at(i).value;
         }
-            rect.setWidth(removePxUnit(m_width));
-            rect.setHeight(removePxUnit(m_height));
+        rect.setLeft(rect.left() + removePxUnit(m_left));
+        rect.setTop(rect.top() + removePxUnit(m_top));
+        rect.setWidth(removePxUnit(m_width));
+        rect.setHeight(removePxUnit(m_height));
     }
     return rect;
 }

@@ -37,6 +37,7 @@ bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::C
     FormatProperty propFormat;
     propFormat.setDataSource(ptr);
     propFormat.setCssMap(globalCss,pageCss);
+
     RDomWidget * root = propFormat.formart();
     if(root){
         QFile file(fullPath);
@@ -62,10 +63,12 @@ bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::C
         m_selectorType = propFormat.getHtmlParsedResult();
         //[3]
         QSSOutput qss;
+
         qss.setCommonStyle(globalCss,pageCss,m_selectorType);
 
         QFileInfo uiPathQss(fullPath);
         QString qssPath = uiPathQss.path() + QDir::separator() + cssFileName;
+
 
         if(qss.save(qssPath)){
             //[2]

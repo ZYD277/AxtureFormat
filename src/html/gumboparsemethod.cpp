@@ -90,7 +90,6 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
-
         if(ttype != RINVALID){
             DomNode * node = new DomNode(ttype);
             node->m_id = childEle.id();
@@ -103,12 +102,14 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             if(ttype == RGROUP){
                 parseDiv(childEle,parentNode);
             }
+            //自制控件子级有组合控件继续解析
             else if(ttype == RLABEL||ttype == RBOX){
                 if(!(childEle.firstChild().clazz().contains("text")
                      ||childEle.firstChild().clazz().contains("img")
-                     ||childEle.firstChild().clazz().contains("ellipse")
                      ||childEle.firstChild().clazz().isEmpty()))
+                {
                     parseDiv(childEle,parentNode);
+                }
             }
         }else{
             parseDiv(childEle,parentNode);
@@ -127,9 +128,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 {
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
-        if(element.tagName() == "iframe")
+        if(element.firstChild().tagName() == "iframe")
+        {
             return RINLINE_FRAME;
-
+        }
         QString classInfo = element.clazz();
         if(classInfo == m_classInfo && classInfo == "ax_default"){
             return RGROUP;
@@ -171,13 +173,16 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             //NOTE 匹配顺序按照优先级排列
             if(element.hasAttribute("data-left") && element.hasAttribute("data-left") && element.hasAttribute("data-left"))
                 return RGROUP;
-
             if(classInfo.contains("radio_button"))
                 return RRADIO_BUTTON;
             else if(classInfo.contains("text_field"))
                 return RTEXT_FIELD;
-            else if((classInfo.contains("label") || classInfo.contains("text")) && (!classInfo.contains("text_area")))
+            else if((classInfo.contains("label") || classInfo.contains("text")||
+                     classInfo.contains("ellipse")||classInfo.contains("paragraph"))
+                    && (!classInfo.contains("text_area")))
+            {
                 return RLABEL;
+            }
             else if(classInfo.contains(QStringLiteral("级标题")))
                 return RLABEL;
             else if(classInfo.contains("button") || classInfo.contains("primary_button"))
@@ -263,23 +268,23 @@ void GumboParseMethod::establishRelation(DomNode *parentNode, DomNode *childNode
 void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node)
 {
     switch(type){
-        case RBUTTON:parseButtonNodeData(element,node);break;
-        case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
-        case RDYNAMIC_PANEL:parserDynamicPanelNodeData(element,node);break;
-        case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
-        case RIMAGE:parseImageNodeData(element,node);break;
-        case RTABLE:parseTableNodeData(element,node);break;
-        case RGROUP:parseGroupNodeData(element,node);break;
-        case RLABEL:parseLabelNodeData(element,node);break;
-        case RCHECKBOX:parseCheckBoxNodeData(element,node);break;
-        case RLIST_BOX:
-        case RDROPLIST:parseListNodeData(element,node);break;
-        case RTEXT_AREA:parseTextAreaNodeData(element,node);break;
-        case RINLINE_FRAME:parseInlineFrameNodeData(element,node);break;
-        case RBOX:parseBoxNodeData(element,node);break;
-        case RLINE:parseLineNodeData(element,node);break;
-        case RTREE:parseTreeNodeData(element,node);break;
-        default:break;
+    case RBUTTON:parseButtonNodeData(element,node);break;
+    case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
+    case RDYNAMIC_PANEL:parserDynamicPanelNodeData(element,node);break;
+    case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
+    case RIMAGE:parseImageNodeData(element,node);break;
+    case RTABLE:parseTableNodeData(element,node);break;
+    case RGROUP:parseGroupNodeData(element,node);break;
+    case RLABEL:parseLabelNodeData(element,node);break;
+    case RCHECKBOX:parseCheckBoxNodeData(element,node);break;
+    case RLIST_BOX:
+    case RDROPLIST:parseListNodeData(element,node);break;
+    case RTEXT_AREA:parseTextAreaNodeData(element,node);break;
+    case RINLINE_FRAME:parseInlineFrameNodeData(element,node);break;
+    case RBOX:parseBoxNodeData(element,node);break;
+    case RLINE:parseLineNodeData(element,node);break;
+    case RTREE:parseTreeNodeData(element,node);break;
+    default:break;
     }
 }
 
@@ -349,6 +354,7 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     node->m_data = data;
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
 }
 
 void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node)
@@ -367,6 +373,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
+    //获取定制控件文字描述
     if(element.hasAttribute("data-label")){
         data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
     }
@@ -378,35 +385,75 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             DomNode * nodeChild = new DomNode(RDYNAMIC_PANEL_PAGE);
             nodeChild->m_id = child.id();
             nodeChild->m_class = child.clazz();
-            nodeChild->m_style = child.style();
-
-            GumboNodeWrapper imageChild = child.firstChild().firstChild().firstChild();
-            GumboNodeWrapper textChild = child.firstChild().firstChild().secondChild();
+            nodeChild->m_style = child.style();   
 
             GumboNodeWrapper panleChild = child.firstChild();
             GumboNodeWrapperList panleChilds= panleChild.children();
             for(int j = 0; j < panleChilds.size(); j++){
                 GumboNodeWrapper panleChildChild = panleChilds.at(j);
-                if(panleChildChild.clazz().contains("image")){
+                if(panleChildChild.clazz().contains("ax_default ")){
                     data->m_srcImageId = panleChildChild.id();
                     break;
                 }
-            }
-            if(data->m_srcImageId.isEmpty()&&(imageChild.clazz().contains("im")
-                                              ||imageChild.id().contains("div")
-                                              ||imageChild.clazz().contains(QStringLiteral("_图片"))))
-                data->m_srcImageId = imageChild.id();
-            if(!data->m_panelDataLab.isEmpty() && (data->m_panelDataLab.contains(QStringLiteral("复选"))
-                                                   ||data->m_panelDataLab.contains(QStringLiteral("单选")))){
-                if(data->m_panelTextId.isEmpty() && textChild.clazz().contains("label")){
-                    if(!textChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty())
-                        data->m_panelTextId = textChild.id();
+                //获取动态面板的子级动态面板id
+                if(panleChildChild.clazz().contains("ax_default"))
+                {
+                   if(panleChildChild.firstChild().clazz().contains("panel_state"))
+                   {
+                       data->m_sonPanelStateId = panleChildChild.id();
+                   }
                 }
             }
+            //处理自制动态面板几种情况
+            GumboNodeWrapper imageChild  = child.firstChild().firstChild().firstChild();
+            GumboNodeWrapper textChild  = child.firstChild().firstChild().secondChild();
+            if(data->m_srcImageId.isEmpty())
+            {
+                //获取自制动态面板下组合的第一个控件id
+                if(!imageChild.clazz().isEmpty())
+                {
+                    data->m_srcImageId = imageChild.id();
+                }
+                //获取自制动态面板下组合的第二个控件id（一般只能处理两个控件组合的情况）
+                if(!textChild.clazz().isEmpty())
+                {
+                    data->m_panelTextId = textChild.id();
+                }
 
+                //处理自制动态面板下含有二级子菜单，获取一级子菜单和二级子菜单背景id（右垂直菜单）
+                GumboNodeWrapperList firstFloorGroupChileds = child.firstChild().firstChild().children();
+                std::for_each(firstFloorGroupChileds.begin(),firstFloorGroupChileds.end(),
+                              [&](GumboNodeWrapper firstFloorGroupChiled){
+                    if(firstFloorGroupChiled.hasAttribute("data-label"))
+                    {
+                        QString firstDataLabelText = firstFloorGroupChiled.attribute(QStringLiteral("data-label"));
+                        if(firstDataLabelText.contains(QStringLiteral("背景")))
+                        {
+                            if(firstFloorGroupChiled.firstChild().clazz().contains("img"))
+                                data->m_srcImageId = firstFloorGroupChiled.firstChild().id();
+                        }
+                        if(firstDataLabelText.contains(QStringLiteral("二级菜单")))
+                        {
+                            GumboNodeWrapperList secondFloorGroupChileds = firstFloorGroupChiled.firstChild().children();
+                            std::for_each(secondFloorGroupChileds.begin(),secondFloorGroupChileds.end(),
+                                          [&](GumboNodeWrapper secondFloorGroupChiled){
+                                if(secondFloorGroupChiled.hasAttribute("data-label"))
+                                {
+                                    QString secondDataLabelText = secondFloorGroupChiled.attribute(QStringLiteral("data-label"));
+                                    if(secondDataLabelText.contains(QStringLiteral("背景")))
+                                    {
+                                        if(secondFloorGroupChiled.firstChild().clazz().contains("img"))
+                                            data->m_secondSrcImageId = secondFloorGroupChiled.firstChild().id();
+                                    }
+                                }
+                            });
+                        }
+
+                    }
+                });
+            }
             if(imageChild.firstChild().clazz().contains("img"))
                 data->m_srcImage = imageChild.firstChild().attribute(G_NodeHtml.SRC);
-
             establishRelation(node,nodeChild);
             parseDiv(child.firstChild(),nodeChild);
         }
@@ -459,7 +506,9 @@ void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *no
             if(image.clazz().contains("img")){
                 data->m_srcImage = image.attribute(G_NodeHtml.SRC);
                 if(data->m_srcImageId.isEmpty())
+                {
                     data->m_srcImageId = image.id();
+                }
             }
         }
     }
@@ -477,6 +526,7 @@ void GumboParseMethod::parseTableCellNodeData(GumboNodeWrapper &element, DomNode
 void GumboParseMethod::parseLineNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     BaseData * data = new BaseData();
+    data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     node->m_data = data;
@@ -539,7 +589,27 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
 {
     BaseData * data = new BaseData();
     data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
-    data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
+    if(!(data->m_srcImage.isEmpty()))
+    {
+        data->m_srcImageId = element.firstChild().id();
+    }
+
+    GumboNodeWrapperList subChilds = element.secondChild().children();
+    QString textStr;
+
+    //获取标签含有多行文本
+    if(subChilds.size() > 1)
+    {
+        std::for_each(subChilds.begin(),subChilds.end(),[&](GumboNodeWrapper subChild){
+            if(!subChild.firstChild().firstChild().text().isEmpty())
+            {
+                textStr += subChild.firstChild().firstChild().text() + QStringLiteral("\n");
+            }
+        });
+        data->m_text = textStr;
+    }
+    else
+        data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_bChecked = element.firstChild().clazz().contains("selected");
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
