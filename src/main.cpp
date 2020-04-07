@@ -1,6 +1,4 @@
-﻿#include "widget.h"
-
-#include <QApplication>
+﻿#include <QApplication>
 #include <QTextCodec>
 #include <QFile>
 

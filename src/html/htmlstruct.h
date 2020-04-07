@@ -84,11 +84,7 @@ struct BaseData{
     QString m_toolTip;      /*!< 工具提示信息，鼠标移入显示 */
     QString m_inlineStyle;  /*!< 内嵌的样式信息 */
     QString m_srcImage;     /*!< 背景图片信息*/
-    QString m_srcImageId;
-    QString m_secondSrcImageId; /*!< 二级子菜单背景id*/
-    QString m_sonPanelStateId;  /*!< 二级动态面板id*/
-    QString m_panelDataLab;
-    QString m_panelTextId;
+    QString m_srcImageId;   /*!< 背景图片控件id */
     bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
     bool m_bDisabled;
     bool m_bReadOnly;       /*!< 只读 */
@@ -110,7 +106,10 @@ struct ImageData : public BaseData{
 struct PanelData : public BaseData{
     ~PanelData(){}
 
-    QString m_data_label;   /*!< 数据标签:Dynamic Panel等标签 */
+    QString m_panelDataLab;             /*!< DynamicPanel中每个panel_state的data-label标签内容 */
+    QString m_secondSrcImageId;         /*!< 二级子菜单背景id*/
+    QString m_sonPanelStateId;          /*!< 二级动态面板id*/
+    QString m_panelTextId;
 };
 
 /*!

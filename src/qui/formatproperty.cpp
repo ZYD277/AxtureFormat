@@ -125,7 +125,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
             QString imageSrc = node->m_data->m_srcImage;
-            if(!imageSrc.isEmpty() && rect.width()<1)
+            if(!imageSrc.isEmpty() && rect.width() < 1)
                 createImageProp(domWidget,imageSrc);
 
             for(int i = 0; i < node->m_childs.size();i++){
@@ -166,11 +166,11 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
         case Html::RTABLE:{
-        QString m_widthTable;
-        QString m_heightTable;
-        if((node->m_type == Html::RTABLE) && !node->m_data->m_srcImageId.isEmpty()){
+            QString m_widthTable;
+            QString m_heightTable;
+            if(!node->m_data->m_srcImageId.isEmpty()){
                 CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-                for(int i=0;i<cellSegment.rules.size();i++){
+                for(int i = 0;i < cellSegment.rules.size(); i++){
                     if(cellSegment.rules.at(i).name == "width")
                         m_widthTable = cellSegment.rules.at(i).value;
                     else if(cellSegment.rules.at(i).name == "height")
@@ -275,7 +275,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
-        case Html::RTREE :{
+        case Html::RTREE:{
             Html::TreeItemData * virtualRoot = dynamic_cast<Html::TreeItemData *>(node->m_data);
             //创建列(axure树只有一列，并且在qt ui中需要将水平表头隐藏)
             MColumn  * column = new MColumn();
@@ -343,33 +343,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RCHECKBOX:{
-        QString m_idText = node->m_id;
-        m_idText = "u" + QString::number(m_idText.remove("u").toInt()+1);
-        QString m_valueText;
-        CSS::Rules m_checkBox = m_pageCss.value(m_idText).rules;
-        for(int i=0;i<m_checkBox.size();i++){
-            QString m_name = m_checkBox.at(i).name;
-            m_valueText = m_checkBox.at(i).value;
-            if(m_name == "left" && m_valueText.contains("px")){
-                m_valueText = m_valueText.remove("px");
-                break;
-            }
-        }
-
-        QString m_idInput = node->m_id;
-        m_idInput = m_idInput + "_input";
-        QString m_valueInput;
-        CSS::Rules m_checkBoxInput = m_pageCss.value(m_idInput).rules;
-        for(int i=0;i<m_checkBoxInput.size();i++){
-            QString m_name = m_checkBoxInput.at(i).name;
-            m_valueInput = m_checkBoxInput.at(i).value;
-            if(m_name == "left" && m_valueInput.contains("px")){
-                m_valueInput = m_valueInput.remove("px");
-                break;
-            }
-        }
-        if(m_valueText < m_valueInput)
-            node->m_data->m_bLeftToRight = false;
+            node->m_data->m_bLeftToRight = judgeLayoutDirection(node->m_id);
 
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
@@ -383,33 +357,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RRADIO_BUTTON:{
-        QString m_idText = node->m_id;
-        m_idText = "u" + QString::number(m_idText.remove("u").toInt()+1);
-        QString m_valueText;
-        CSS::Rules m_checkBox = m_pageCss.value(m_idText).rules;
-        for(int i=0;i<m_checkBox.size();i++){
-            QString m_name = m_checkBox.at(i).name;
-            m_valueText = m_checkBox.at(i).value;
-            if(m_name == "left" && m_valueText.contains("px")){
-                m_valueText = m_valueText.remove("px");
-                break;
-            }
-        }
-
-        QString m_idInput = node->m_id;
-        m_idInput = m_idInput + "_input";
-        QString m_valueInput;
-        CSS::Rules m_checkBoxInput = m_pageCss.value(m_idInput).rules;
-        for(int i=0;i<m_checkBoxInput.size();i++){
-            QString m_name = m_checkBoxInput.at(i).name;
-            m_valueInput = m_checkBoxInput.at(i).value;
-            if(m_name == "left" && m_valueInput.contains("px")){
-                m_valueInput = m_valueInput.remove("px");
-                break;
-            }
-        }
-        if(m_valueText < m_valueInput)
-            node->m_data->m_bLeftToRight = false;
+            node->m_data->m_bLeftToRight = judgeLayoutDirection(node->m_id);
 
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
@@ -642,79 +590,47 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.moveLeft(rect.x() - parentRect.x());
         rect.moveTop(rect.y() - parentRect.y());
     }
-    //自制动态面板只有位置没有大小
-    if(node->m_type == Html::RDYNAMIC_PANEL && rect.width()<1){
 
-        if(!node->m_data->m_sonPanelStateId.isEmpty())
+    //自制动态面板只有位置没有大小
+    if(node->m_type == Html::RDYNAMIC_PANEL && rect.width() < 1)
+    {
+        Html::PanelData * panelData = dynamic_cast<Html::PanelData *>(node->m_data);
+        if(!panelData->m_sonPanelStateId.isEmpty())
         {
-            QString m_width;
-            QString m_height;
-            QString m_imgX;
-            CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_sonPanelStateId);
-            for(int i = 0; i<cellSegment.rules.size(); i++){
-                if(cellSegment.rules.at(i).name == "width")
-                    m_width = cellSegment.rules.at(i).value;
-                else if(cellSegment.rules.at(i).name == "height")
-                    m_height = cellSegment.rules.at(i).value;
-                else if(cellSegment.rules.at(i).name == "left")
-                    m_imgX = cellSegment.rules.at(i).value;
-            }
-            rect.setWidth(removePxUnit(m_width));
-            rect.setHeight(removePxUnit(m_height));
+            QString twidth = getCssStyle(panelData->m_sonPanelStateId,"width");
+            QString theight = getCssStyle(panelData->m_sonPanelStateId,"height");
+
+            rect.setWidth(removePxUnit(twidth));
+            rect.setHeight(removePxUnit(theight));
         }
         //获取自制动态面板下第一个组合控件的尺寸位置
-        else if(!node->m_data->m_srcImageId.isEmpty()){
-            QString m_width;
-            QString m_height;
-            QString m_imgX;
-            CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-            for(int i = 0; i<cellSegment.rules.size(); i++){
-                if(cellSegment.rules.at(i).name == "width")
-                    m_width = cellSegment.rules.at(i).value;
-                else if(cellSegment.rules.at(i).name == "height")
-                    m_height = cellSegment.rules.at(i).value;
-                else if(cellSegment.rules.at(i).name == "left")
-                    m_imgX = cellSegment.rules.at(i).value;
-            }
-            rect.setWidth(removePxUnit(m_width));
-            rect.setHeight(removePxUnit(m_height));
+        else if(!panelData->m_srcImageId.isEmpty()){
+            QString twidth = getCssStyle(panelData->m_srcImageId,"width");
+            QString theight = getCssStyle(panelData->m_srcImageId,"height");
+            QString timgx = getCssStyle(panelData->m_srcImageId,"left");
+
+            rect.setWidth(removePxUnit(twidth));
+            rect.setHeight(removePxUnit(theight));
             //获取二级子菜单背景尺寸位置，结合一级子菜单确定动态动态面板位置尺寸
-            if(!node->m_data->m_secondSrcImageId.isEmpty())
+            if(!panelData->m_secondSrcImageId.isEmpty())
             {
-                QString m_secondImageWidth;
-                QString m_secondImageHeight;
-                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_secondSrcImageId);
-                std::for_each(cellSegment.rules.begin(),cellSegment.rules.end(),[&](CSS::CssRule imageCssRule){
-                    if(imageCssRule.name == "width")
-                        m_secondImageWidth = imageCssRule.value;
-                    if(imageCssRule.name == "height")
-                        m_secondImageHeight = imageCssRule.value;
-                });
-                rect.setWidth(removePxUnit(m_width)+removePxUnit(m_secondImageWidth));
-                rect.setHeight(removePxUnit(m_height));
+                QString tsecondImageWidth = getCssStyle(panelData->m_secondSrcImageId,"width");
+
+                rect.setWidth(removePxUnit(twidth)+removePxUnit(tsecondImageWidth));
+                rect.setHeight(removePxUnit(theight));
             }
 
             //获取两种控件组合的情况下，第二个控件位置尺寸
-            else if(!node->m_data->m_panelTextId.isEmpty())
+            else if(!panelData->m_panelTextId.isEmpty())
             {
-                QString textWidth;
-                QString textheight;
-                QString textX;
-                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_panelTextId);
-                for(int i=0;i<cellSegment.rules.size();i++){
-                    if(cellSegment.rules.at(i).name == "width")
-                        textWidth = cellSegment.rules.at(i).value;
-                    else if(cellSegment.rules.at(i).name == "height")
-                        textheight = cellSegment.rules.at(i).value;
-                    else if(cellSegment.rules.at(i).name == "left")
-                        textX = cellSegment.rules.at(i).value;
-                }
+                QString textWidth = getCssStyle(panelData->m_panelTextId,"width");
+                QString textheight = getCssStyle(panelData->m_panelTextId,"height");
+                QString textX = getCssStyle(panelData->m_panelTextId,"left");
 
                 //获取自定义复选框，单选框，半选中复选框等特殊自定义控件位置尺寸
-                if((node->m_data->m_panelDataLab.contains(QStringLiteral("复选")))
-                        ||(node->m_data->m_panelDataLab.contains(QStringLiteral("单选")))){
-                    rect.setWidth((removePxUnit(m_imgX) > removePxUnit(textX)) ? (removePxUnit(m_width)+removePxUnit(m_imgX)) : (removePxUnit(textWidth)+removePxUnit(textX)));
-                    rect.setHeight((removePxUnit(m_height) > removePxUnit(textheight)) ? removePxUnit(m_height) : removePxUnit(textheight));
+                if((panelData->m_panelDataLab.contains(QStringLiteral("复选"))) ||(panelData->m_panelDataLab.contains(QStringLiteral("单选")))){
+                    rect.setWidth((removePxUnit(timgx) > removePxUnit(textX)) ? (removePxUnit(twidth) + removePxUnit(timgx)) : (removePxUnit(textWidth) + removePxUnit(textX)));
+                    rect.setHeight((removePxUnit(theight) > removePxUnit(textheight)) ? removePxUnit(theight) : removePxUnit(textheight));
                 }
                 //获取两个组合控件是包含关系时的位置尺寸
                 else
@@ -723,8 +639,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                    textRect.setWidth(removePxUnit(textWidth));
                    textRect.setHeight(removePxUnit(textheight));
 
-                   if(!rect.contains(textRect,false))
-                   {
+                   if(!rect.contains(textRect,false)){
                        rect = textRect;
                    }
                 }
@@ -732,27 +647,19 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         }
     }
     //修改RIMAGE和RLABEL类型的位置尺寸为背景图片的
-    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)) && (!node->m_data->m_srcImageId.isEmpty())){
-        CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-        QString m_width;
-        QString m_height;
-        QString m_left;
-        QString m_top;
-        for(int i=0;i<cellSegment.rules.size();i++){
-            if(cellSegment.rules.at(i).name == "width")
-                m_width = cellSegment.rules.at(i).value;
-            else if(cellSegment.rules.at(i).name == "height")
-                m_height = cellSegment.rules.at(i).value;
-            else if(cellSegment.rules.at(i).name == "left")
-                m_left = cellSegment.rules.at(i).value;
-            else if(cellSegment.rules.at(i).name == "top")
-                m_top = cellSegment.rules.at(i).value;
-        }
-        rect.setLeft(rect.left() + removePxUnit(m_left));
-        rect.setTop(rect.top() + removePxUnit(m_top));
-        rect.setWidth(removePxUnit(m_width));
-        rect.setHeight(removePxUnit(m_height));
+    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)) && (!node->m_data->m_srcImageId.isEmpty()))
+    {
+        QString twidth = getCssStyle(node->m_data->m_srcImageId,"width");
+        QString theight = getCssStyle(node->m_data->m_srcImageId,"height");
+        QString tleft = getCssStyle(node->m_data->m_srcImageId,"left");
+        QString ttop = getCssStyle(node->m_data->m_srcImageId,"top");
+
+        rect.setLeft(rect.left() + removePxUnit(tleft));
+        rect.setTop(rect.top() + removePxUnit(ttop));
+        rect.setWidth(removePxUnit(twidth));
+        rect.setHeight(removePxUnit(theight));
     }
+
     return rect;
 }
 
@@ -858,6 +765,61 @@ void FormatProperty::createTreeNode(MItem * parentItem,Html::TreeItemData * text
     for(int j = 0 ; j < textData->m_childItems.size(); j++){
         createTreeNode(item,textData->m_childItems.at(j));
     }
+}
+
+/*!
+ * @brief 判断控件布局方向
+ * @param[in] selectorId 控件选择器Id
+ * @return true:从左至右布局，false:从右至左布局
+ */
+bool FormatProperty::judgeLayoutDirection(QString selectorId)
+{
+    //WARNING 不同Axure版本生成checkBox的格式存在一定的差异
+    QString textId;
+    QString tmpTextId = selectorId + "_text";
+    if(m_pageCss.contains(tmpTextId)){
+        textId = tmpTextId;
+    }else{
+        textId = "u" + QString::number(selectorId.remove("u").toInt() + 1);
+    }
+
+    //获取checkbox中id为X_text的样式属性，用其与当前控件的left属性比较，判断方向
+    QString textLeftVal = getCssStyle(textId,"left");
+
+    if(textLeftVal.toLower().contains("px")){
+        textLeftVal = textLeftVal.toLower().remove("px");
+    }
+
+    QString inputId = selectorId + "_input";
+    QString inputLeftVal = getCssStyle(inputId,"left");
+
+    if(inputLeftVal.toLower().contains("px")){
+        inputLeftVal = inputLeftVal.toLower().remove("px");
+    }
+
+    if(textLeftVal.toInt() < inputLeftVal.toInt())
+         return false;
+
+    return true;
+}
+
+/*!
+ * @brief 获取指定选择器的指定属性
+ * @param[in] selectorName 选择器名
+ * @param[in] propName 属性名
+ * @return 若存在属性则返回，否则返回空
+ */
+QString FormatProperty::getCssStyle(QString selectorName, QString propName)
+{
+    CSS::Rules rs = m_pageCss.value(selectorName).rules;
+
+    for(int i = 0;i < rs.size(); i++){
+        if(rs.at(i).name == propName){
+            return rs.at(i).value;
+        }
+    }
+
+    return QString();
 }
 
 } //namespace RQt

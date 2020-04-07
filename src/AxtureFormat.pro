@@ -14,7 +14,6 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        widget.cpp \
     html/htmlparser.cpp \
     util/fileutils.cpp \
     util/rsingleton.cpp \
@@ -51,7 +50,7 @@ SOURCES += main.cpp\
     logoutputer.cpp \
     template/generateprojectfile.cpp
 
-HEADERS  += widget.h \
+HEADERS  += \
     html/htmlparser.h \
     util/fileutils.h \
     util/rsingleton.h \
@@ -89,7 +88,7 @@ HEADERS  += widget.h \
     logoutputer.h \
     template/generateprojectfile.h
 
-FORMS    += widget.ui \
+FORMS    += \
     clientoperate.ui \
     logoutputer.ui
 

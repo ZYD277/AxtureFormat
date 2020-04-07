@@ -56,6 +56,9 @@ private:
 
     void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
 
+    bool judgeLayoutDirection(QString selectorId);
+    QString getCssStyle(QString selectorName,QString propName);
+
 private:
     DomHtmlPtr m_dataSrc;
     CSS::CssMap m_globalCss;
