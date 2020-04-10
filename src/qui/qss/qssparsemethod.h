@@ -32,6 +32,9 @@ public:
     QString getQssGraduatedColour(QString value);
 
 private:
+    CSS::Rules filterDuplicateData(CSS::Rules rules);
+
+private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
     SelectorTypeMap m_selectorType;

@@ -790,7 +790,17 @@ bool FormatProperty::judgeLayoutDirection(QString selectorId)
         textLeftVal = textLeftVal.toLower().remove("px");
     }
 
-    QString inputId = selectorId + "_input";
+    //Axure9.0.0版本以选择框的背景id为准，而不是input
+    QString inputId;
+    QString tmpImgId = selectorId + "_img";
+    if(m_pageCss.contains(tmpImgId))
+    {
+        inputId = tmpImgId;
+    }
+    else
+    {
+        inputId = selectorId + "_input";
+    }
     QString inputLeftVal = getCssStyle(inputId,"left");
 
     if(inputLeftVal.toLower().contains("px")){

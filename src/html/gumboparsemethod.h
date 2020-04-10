@@ -44,7 +44,6 @@ private:
 
     //解析特定控件
     void parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node);
-    void parseCheckBoxNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parserDynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node);
