@@ -393,7 +393,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             for(int j = 0; j < panelChilds.size(); j++)
             {
                 GumboNodeWrapper panelChild = panelChilds.at(j);
-                QStringList clazzList = panelChild.clazz().split("\\s+");
+                QStringList clazzList = panelChild.clazz().split(QRegExp("\\s+"));
                 //class属性包含多个
                 if(panelChild.clazz().contains("ax_default") && clazzList.size() > 1){
                     data->m_srcImageId = panelChild.id();
