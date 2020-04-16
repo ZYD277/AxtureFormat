@@ -30,7 +30,7 @@
 
 ClientOperate::ClientOperate(QWidget *parent) :
     QMainWindow(parent),cssBaseFileName("styles.css"),jsBaseFileName("document.js"),jsSinglePageFileName("data.js"),
-    ui(new Ui::ClientOperate),m_versionButtGroup(nullptr),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr),
+    ui(new Ui::ClientOperate),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr),
     m_pool(new ThreadPool(5)),m_b_mouseActive(false)
 {
     ui->setupUi(this);
@@ -322,14 +322,6 @@ void ClientOperate::initView()
     connect(m_viewDelegate,SIGNAL(deleteFile(QString)),this,SLOT(deletFileData(QString)));
     connect(m_viewDelegate,SIGNAL(switchSingleFile(QString)),this,SLOT(switchLineHtmlFile(QString)));
 
-    ui->axureVerision->setView(new QListView());
-
-    m_versionButtGroup = new QButtonGroup(this);
-    m_versionButtGroup->addButton(ui->qt4RadioBtn,Qt4);
-    m_versionButtGroup->addButton(ui->qt5RadioBtn,Qt5);
-    m_versionButtGroup->setExclusive(true);
-    ui->qt4RadioBtn->setChecked(true);
-
     m_dirPathButtGroup = new QButtonGroup(this);
     m_dirPathButtGroup->addButton(ui->sourceeDirRadioBtn,Path_Current);
     m_dirPathButtGroup->addButton(ui->createOutDirRadioBtn,Path_SelfDefine);
@@ -339,7 +331,6 @@ void ClientOperate::initView()
     ui->createOutDirLedit->setEnabled(false);
     ui->selectDirBtn->setEnabled(false);
 
-    connect(m_versionButtGroup, SIGNAL(buttonClicked(int)),this,SLOT(chooseQtVersion(int)));
     connect(m_dirPathButtGroup, SIGNAL(buttonClicked(int)),this,SLOT(chooseOutputPath(int)));
 
     connect(ui->openAxPrjBtn,SIGNAL(pressed()),this,SLOT(openAxureProject()));
@@ -350,23 +341,6 @@ void ClientOperate::initView()
 
     m_logger = new LogOutputer(this);
     m_logger->hide();
-}
-
-/**
- * @brief 获取qt版本
- */
-void ClientOperate::chooseQtVersion(int)
-{
-    QtVersion version = static_cast<QtVersion>(m_versionButtGroup->checkedId());
-    switch(version)
-    {
-        case Qt4:
-            break;
-        case Qt5:
-            break;
-        default:
-            break;
-    }
 }
 
 /**
@@ -665,9 +639,6 @@ void ClientOperate::controlWidget(bool state)
 {
     ui->openAxPrjBtn->setEnabled(state);
     ui->clearList->setEnabled(state);
-    ui->axureVerision->setEnabled(state);
-    ui->qt4RadioBtn->setEnabled(state);
-    ui->qt5RadioBtn->setEnabled(state);
     ui->sourceeDirRadioBtn->setEnabled(state);
     ui->createOutDirRadioBtn->setEnabled(state);
     ui->createOutDirLedit->setEnabled(state);
