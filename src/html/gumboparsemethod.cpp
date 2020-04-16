@@ -99,6 +99,11 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             parseNodeData(childEle,ttype,node);
             establishRelation(parentNode,node);
 
+            if((ttype == RLABEL||ttype == RIMAGE)&&(divNode.clazz().contains("ax_default_hidden"))&&(i == 0))
+            {
+                parentNode = node;
+            }
+
             if(ttype == RGROUP){
                 parseDiv(childEle,parentNode);
             }
@@ -145,7 +150,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 if((classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3") || classInfo.contains("label"))){
                     return RBUTTON;
                 }
-            }else{
+            }
+            else{
                 if(classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label")){
                     return RLABEL;
                 }

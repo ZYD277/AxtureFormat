@@ -49,14 +49,14 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
             {
                 CSS::CssSegment srcSeg = findSrc.value();
                 CSS::CssSegment otherSeg = findOther.value();
-                seg.rules = seg.rules + srcSeg.rules + otherSeg.rules;
+                seg.rules = srcSeg.rules + seg.rules + otherSeg.rules;
 
                 seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
             }
             else if((findSrc != pageCss.end())||(findOther != pageCss.end()))
             {
                 CSS::CssSegment tmpSeg = findSrc != pageCss.end() ? findSrc.value() : findOther.value();
-                seg.rules = seg.rules + tmpSeg.rules;
+                seg.rules = tmpSeg.rules + seg.rules;
 
                 seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
             }

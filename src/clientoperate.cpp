@@ -189,8 +189,6 @@ bool ClientOperate::eventFilter(QObject *watched, QEvent *event)
             default:break;
         }
     }
-
-
     return QWidget::eventFilter(watched,event);
 }
 

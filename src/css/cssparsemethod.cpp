@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QRegExp>
 #include <QStack>
+#include <QFileInfo>
+#include <QDir>
 
 namespace CSS{
 
@@ -58,7 +60,32 @@ bool CssParseMethod::parseFile(RTextFile *file)
 {
     CssSegment segment;
 
-    QString cssDataStr = file->readAll();
+    QString fileDir  = file->fileName().remove("/styles.css");
+    QDir t_getDir(fileDir);
+    if(!t_getDir.exists())
+    {
+        return false;
+    }
+    t_getDir.setFilter(QDir::Files);//文件
+    QFileInfoList t_list = t_getDir.entryInfoList();//获取文件信息列表
+
+    QString cssDataStr;
+    if(t_list.size() >  2)
+    {
+        for(int i=0;i<t_list.size();i++)
+        {
+            QFileInfo t_fileInfo = t_list.at(i);
+            if(t_fileInfo.fileName().contains(".css"))
+            {
+                QFile cssFile(t_fileInfo.filePath());
+                if(cssFile.open(QFile::ReadOnly)){
+                    cssDataStr += cssFile.readAll();
+                }
+            }
+        }
+    }
+    else
+        cssDataStr = file->readAll();
 
     QString key;
     int t_leftBraPos = 0;         /*!< 左大括号当前位置*/
