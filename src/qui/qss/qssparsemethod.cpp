@@ -30,6 +30,7 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
     while(iter != pageCss.end()){
         QString name = iter.key();
         CSS::CssSegment seg = iter.value();
+
         if(name.contains("_div")||name.contains("_input"))
         {
             QString otherName;
@@ -149,17 +150,20 @@ bool QSSParseMethod::startSave(RTextFile *file)
                     m_ruleSize--;
                 }
             }
+
+            /*!< 对tree和table的样式通过获取其子节点的添加*/
             QStringList qssList = m_selectorType.keys();
             QStringList divList = qssList.filter("_div_");
             for(int i = 0;i < divList.size(); i++){
                 if(divList.at(i).contains(iter.key())){
-                    if(qssList.size()>qssList.indexOf(divList.at(i))){
+                    if(qssList.size() > qssList.indexOf(divList.at(i))){
                         if((m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE
                             ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABLE)
                                 &&m_ruleSize != 0){
+                            /*!< 设计的子节点和主节点的查找*/
                             QStringList selectorNames = divList.at(i).split("_div_");
                             QString selectorName = seg.selectorName;
-                            if(selectorNames.size()>1){
+                            if(selectorNames.size() > 1){
                                 if((selectorNames.at(0)+"_div" == seg.selectorName)
                                         ||(selectorNames.at(0) == seg.selectorName))
                                 {
@@ -194,11 +198,11 @@ bool QSSParseMethod::startSave(RTextFile *file)
             QString nowkey = iter.key();
             if(nowkey.contains(":checked")||nowkey.contains(":disabled")
                     ||nowkey.contains(":hover")||nowkey.contains(":pressed")){
-
                 QStringList nowkeyList = nowkey.split(":");
                 if(nowkeyList.size() > 0)
                     nowkey = nowkeyList.at(0);
             }
+
             if((m_selectorType.keys().contains(nowkey)
                 ||seg.selectorName == "base")&&m_ruleSize!=0)
             {
@@ -213,6 +217,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
                     seg.selectorName = seg.selectorName.remove("_input");
                 stream<<seg.selectorName<<" {"<<newLine;
 
+                /*!< 控件在样式文件的图片信息*/
                 int fontCount = seg.rules.size();
                 foreach(const CSS::CssRule & rule,seg.rules){
                     if(rule.name != "font-size")
@@ -235,23 +240,24 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                 stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
                             }
                         }
-                        else
-                        {
-                            //处理控件的简单渐变背景
-                            if(rule.value.contains("gradient"))
-                            {
+                        else{
+                            /*!< 处理控件的简单渐变背景*/
+                            if(rule.value.contains("gradient")){
                                 stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
                             }
-                            else
+                            else{
                                 stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                            }
                         }
                     }
                 }
+
+                /*!< 获取标题的默认大小*/
                 if(fontCount == 0){
-                    for(int i=0;i<divList.size();i++){
+                    for(int i = 0; i < divList.size(); i++){
                         if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RLABEL){
                             QStringList selectorNames = divList.at(i).split("_div_");
-                            if(selectorNames.size()>1){
+                            if(selectorNames.size() > 1){
                                 if(selectorNames.at(0) == seg.selectorName){
                                     stream<<"\t"<<"font-size:"<<selectorNames.at(1)<<";"<<newLine;
                                     break;
@@ -262,13 +268,15 @@ bool QSSParseMethod::startSave(RTextFile *file)
                 }
                 stream<<"}"<<newLine<<newLine;
             }
+
+            /*!< 对下拉框下拉状态的样式处理*/
             if(qssList.contains(seg.selectorName) && m_ruleSize != 0){
                 if(m_selectorType.values().at(qssList.indexOf(seg.selectorName)) == Html::RDROPLIST){
                     seg.selectorName ="#" + seg.selectorName + " QAbstractItemView";
                     stream<<seg.selectorName<<" {"<<newLine;
                     foreach(const CSS::CssRule & rule,seg.rules){
                         int j;
-                        for(j=0;j<rulesName.size();j++)
+                        for(j = 0; j < rulesName.size(); j++)
                             if(rule.name == rulesName.at(j))
                                 break;
                         if(j == rulesName.size())
