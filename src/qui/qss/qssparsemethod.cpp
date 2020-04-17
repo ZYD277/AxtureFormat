@@ -25,23 +25,84 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
     m_globalCss = globalCss;
     m_selectorType = selectorType;
 
+    //整合控件用到的所有样式，并过滤其中重复的属性
     auto iter = pageCss.begin();
     while(iter != pageCss.end()){
         QString name = iter.key();
         CSS::CssSegment seg = iter.value();
-        if(name.contains("_div"))
-            name.remove("_div");
-        else if(name.contains("_input")){
-            name.remove("_input");
-            auto srcSeg = pageCss.find(name);
-            if(srcSeg != pageCss.end()){
-                if(seg.rules.size() < srcSeg.value().rules.size())
-                    seg = srcSeg.value();
+
+        if(name.contains("_div")||name.contains("_input"))
+        {
+            QString otherName;
+            if(name.contains("_div"))
+            {
+                name.remove("_div");
+                otherName = name + "_input";
+            }
+            else
+            {
+                name.remove("_input");
+                otherName = name + "_div";
+            }
+            auto findSrc = pageCss.find(name);
+            auto findOther = pageCss.find(otherName);
+            if((findSrc != pageCss.end())&&(findOther != pageCss.end()))
+            {
+                CSS::CssSegment srcSeg = findSrc.value();
+                CSS::CssSegment otherSeg = findOther.value();
+                seg.rules = srcSeg.rules + seg.rules + otherSeg.rules;
+
+                seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
+            }
+            else if((findSrc != pageCss.end())||(findOther != pageCss.end()))
+            {
+                CSS::CssSegment tmpSeg = findSrc != pageCss.end() ? findSrc.value() : findOther.value();
+                seg.rules = tmpSeg.rules + seg.rules;
+
+                seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
             }
         }
         m_pageCss.insert(name,seg);
         iter++;
     }
+
+    //处理像table这样特殊控件的样式重复问题
+    for(int i = 0; i < m_selectorType.size(); i++)
+    {
+        QString tmpKey = m_selectorType.keys().at(i);
+        if(tmpKey.contains("_div_"))
+        {
+            QStringList selectorNames = tmpKey.split("_div_");
+            if(selectorNames.size() > 1)
+            {
+                QString tmpName = selectorNames.at(1);
+                m_pageCss.remove(tmpName);
+            }
+        }
+    }
+}
+
+/**
+ * @brief 过滤重复样式
+ * @param rules待处理数据表
+ * @return 返回处理完的数据
+ */
+CSS::Rules QSSParseMethod::filterDuplicateData(CSS::Rules rules)
+{
+    QMap<QString,QString> tmpRules;
+    std::for_each(rules.begin(),rules.end(),[&](CSS::CssRule cssRule){
+        tmpRules.insert(cssRule.name,cssRule.value);
+    });
+
+    rules.clear();
+    for(int i = 0; i < tmpRules.size(); i++)
+    {
+        CSS::CssRule cssRule;
+        cssRule.name = tmpRules.keys().at(i);
+        cssRule.value = tmpRules.values().at(i);
+        rules.append(cssRule);
+    }
+    return rules;
 }
 
 bool QSSParseMethod::startSave(RTextFile *file)
@@ -59,7 +120,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
             FormatProperty formatProperty;
             selectorType = formatProperty.getHtmlParsedResult();
 
-            /*!< 去除QSS中无用样式属性*/
+            /*!< 去除Qss中无用属性*/
             QStringList rulesName;
             rulesName<<"position"<<"left"<<"top"<<"width"<<"height"
                     <<"-moz-box-shadow"<<"-webkit-box-shadow"
@@ -67,10 +128,12 @@ bool QSSParseMethod::startSave(RTextFile *file)
                   <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
                  <<"visibility"<<"z-index"<<"touch-action"<<"overflow"
                 <<"word-wrap"<<"-ms-transform"<<"transform"<<"-webkit-transform"
-               <<"-moz-transform"<<"-webkit-overflow-scrolling";
+               <<"-moz-transform"<<"-webkit-overflow-scrolling"
+              <<"letter-spacing"<<"resize"<<"display";
+
             m_ruleSize = seg.rules.size();
 
-            for(int i = 0;i < seg.rules.size(); i++){
+            for(int i = 0; i < seg.rules.size(); i++){
                 m_name = seg.rules.at(i).name;
                 m_value = seg.rules.at(i).value;
 
@@ -80,7 +143,8 @@ bool QSSParseMethod::startSave(RTextFile *file)
                 }
 
                 /*!< m_ruleSize计算剩余属性数量*/
-                if(rulesName.contains(m_name)){
+                if(rulesName.contains(m_name))
+                {
                     m_name.clear();
                     m_value.clear();
                     m_ruleSize--;
@@ -101,8 +165,13 @@ bool QSSParseMethod::startSave(RTextFile *file)
                             QString selectorName = seg.selectorName;
                             if(selectorNames.size() > 1){
                                 if((selectorNames.at(0)+"_div" == seg.selectorName)
-                                        ||(selectorNames.at(0) == seg.selectorName)){
-                                    selectorName ="#" + selectorNames.at(1) + "::item";
+                                        ||(selectorNames.at(0) == seg.selectorName))
+                                {
+                                    selectorName ="#" + selectorNames.at(1);
+                                    if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE)
+                                    {
+                                        selectorName ="#" + selectorNames.at(1) + "::item";
+                                    }
                                 }
                                 else if(seg.selectorName.contains(selectorNames.at(0)+":"))
                                     selectorName ="#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
@@ -125,7 +194,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
                 }
             }
 
-            /*!< 针对鼠标出发信号的样式处理修改*/
+            /*!< 针对鼠标触发信号的样式处理修改*/
             QString nowkey = iter.key();
             if(nowkey.contains(":checked")||nowkey.contains(":disabled")
                     ||nowkey.contains(":hover")||nowkey.contains(":pressed")){
@@ -133,7 +202,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
                 if(nowkeyList.size() > 0)
                     nowkey = nowkeyList.at(0);
             }
-            /*!< 将各个控件的样式信息写入QSS文件*/
+
             if((m_selectorType.keys().contains(nowkey)
                 ||seg.selectorName == "base")&&m_ruleSize!=0)
             {

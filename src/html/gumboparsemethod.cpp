@@ -99,6 +99,11 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             parseNodeData(childEle,ttype,node);
             establishRelation(parentNode,node);
 
+            if((ttype == RLABEL||ttype == RIMAGE)&&(divNode.clazz().contains("ax_default_hidden"))&&(i == 0))
+            {
+                parentNode = node;
+            }
+
             if(ttype == RGROUP){
                 parseDiv(childEle,parentNode);
             }
@@ -145,7 +150,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 if((classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3") || classInfo.contains("label"))){
                     return RBUTTON;
                 }
-            }else{
+            }
+            else{
                 if(classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label")){
                     return RLABEL;
                 }
@@ -268,6 +274,7 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
 {
     switch(type){
         case RBUTTON:parseButtonNodeData(element,node);break;
+        case RCHECKBOX:
         case RRADIO_BUTTON:parseRadioButtonNodeData(element,node);break;
         case RDYNAMIC_PANEL:parserDynamicPanelNodeData(element,node);break;
         case RTEXT_FIELD:parseTextFieldNodeData(element,node);break;
@@ -275,7 +282,6 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         case RTABLE:parseTableNodeData(element,node);break;
         case RGROUP:parseGroupNodeData(element,node);break;
         case RLABEL:parseLabelNodeData(element,node);break;
-        case RCHECKBOX:parseCheckBoxNodeData(element,node);break;
         case RLIST_BOX:
         case RDROPLIST:parseListNodeData(element,node);break;
         case RTEXT_AREA:parseTextAreaNodeData(element,node);break;
@@ -287,21 +293,24 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     }
 }
 
-void GumboParseMethod::parseCheckBoxNodeData(GumboNodeWrapper &element,DomNode *node)
-{
-    BaseData * data = new BaseData();
-    data->m_text = element.firstChild().firstChild().firstChild().firstChild().firstChild().text();
-    data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
-    data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
-    data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
-    node->m_data = data;
-}
-
 void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     ListData *data = new ListData();
 
-    GumboNodeWrapperList chids = element.firstChild().children();
+    GumboNodeWrapperList chids;
+    //Axure8
+    if(element.firstChild().id().contains("_input"))
+    {
+        chids = element.firstChild().children();
+        data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
+    }
+    //Axure9.0.0
+    else if(element.secondChild().id().contains("_input"))
+    {
+        chids  = element.secondChild().children();
+        data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
+    }
+
     for(int i = 0;i < chids.size();i++)
     {
         GumboNodeWrapper chid = chids.at(i);
@@ -310,7 +319,6 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
         }
         data->m_itemList.append(chid.attribute("value"));
     }
-    data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
@@ -319,10 +327,23 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
 void GumboParseMethod::parseTextAreaNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     BaseData *data = new BaseData();
-    data->m_text = element.firstChild().firstChild().text();
-    data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
+
+    //Axure8
+    if(element.firstChild().id().contains("_input"))
+    {
+        data->m_text = element.firstChild().firstChild().text();
+        data->m_bReadOnly = element.firstChild().hasAttribute(G_NodeHtml.READONLY);
+        data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
+    }
+    //Axure9.0.0
+    else if(element.secondChild().id().contains("_input"))
+    {
+        data->m_text = element.secondChild().firstChild().text();
+        data->m_bReadOnly = element.secondChild().hasAttribute(G_NodeHtml.READONLY);
+        data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
+    }
+
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
-    data->m_bReadOnly = element.secondChild().hasAttribute(G_NodeHtml.READONLY);
     node->m_data = data;
 }
 
@@ -359,7 +380,13 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
 void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     BaseData * data = new BaseData();
-    data->m_text = element.firstChild().firstChild().firstChild().firstChild().firstChild().text();
+    //Axure8
+    if(element.firstChild().firstChild().clazz().contains("text"))
+        data->m_text = element.firstChild().firstChild().firstChild().firstChild().firstChild().text();
+    //Axure9.0.0
+    else if(element.firstChild().secondChild().clazz().contains("text"))
+        data->m_text = element.firstChild().secondChild().firstChild().firstChild().firstChild().text();
+
     data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
     data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
@@ -473,9 +500,21 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
 void GumboParseMethod::parseTextFieldNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     TextFieldData * data = new TextFieldData();
-    data->m_bReadOnly = element.firstChild().hasAttribute(G_NodeHtml.READONLY);
-    data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
-    data->m_text = element.firstChild().attribute(G_NodeHtml.VALUE);
+    //Axure8
+    if(element.firstChild().id().contains("_input"))
+    {
+        data->m_text = element.firstChild().attribute(G_NodeHtml.VALUE);
+        data->m_bReadOnly = element.firstChild().hasAttribute(G_NodeHtml.READONLY);
+        data->m_bDisabled = element.firstChild().hasAttribute(G_NodeHtml.DISABLED);
+    }
+    //Axure9.0.0
+    else if(element.secondChild().id().contains("_input"))
+    {
+        data->m_text = element.secondChild().attribute(G_NodeHtml.VALUE);
+        data->m_bReadOnly = element.secondChild().hasAttribute(G_NodeHtml.READONLY);
+        data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
+    }
+
     data->m_type = element.firstChild().attribute(G_NodeHtml.TYPE);
     if(element.firstChild().hasAttribute(G_NodeHtml.MAX_LEN))
         data->m_maxLength = element.firstChild().attribute(G_NodeHtml.MAX_LEN).toInt();

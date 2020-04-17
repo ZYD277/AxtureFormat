@@ -19,8 +19,6 @@
 #include "global.h"
 #include "logoutputer.h"
 
-#define MAXTHREAD 4
-
 class ViewModel;
 class ViewDelegate;
 
@@ -57,7 +55,6 @@ private slots:
     void startSwitchFiles();
     void updateProgress(SwitchProgress proj);
 
-    void chooseQtVersion(int);
     void chooseOutputPath(int);
     void controlWidget(bool state);
 
@@ -116,7 +113,6 @@ private:
     QMutex m_progressMutex;
     ThreadPool * m_pool;
 
-    QButtonGroup* m_versionButtGroup;
     QButtonGroup* m_dirPathButtGroup;
 
     ViewModel* m_model;
