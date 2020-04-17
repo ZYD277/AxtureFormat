@@ -99,8 +99,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             parseNodeData(childEle,ttype,node);
             establishRelation(parentNode,node);
 
-            if((ttype == RLABEL||ttype == RIMAGE)&&(divNode.clazz().contains("ax_default_hidden"))&&(i == 0))
-            {
+            if(i == 0 && (ttype == RLABEL || ttype == RIMAGE) && divNode.clazz().contains("ax_default_hidden")){
                 parentNode = node;
             }
 

@@ -112,7 +112,20 @@ bool QSSParseMethod::startSave(RTextFile *file)
     QString newLine = "\r";
 
     auto generateCss = [&](CSS::CssMap& cssMap){
+
+        //qss中无用属性
+        QStringList deprecatedRulesName;
+        deprecatedRulesName<<"position"<<"left"<<"top"<<"width"<<"height"
+                <<"-moz-box-shadow"<<"-webkit-box-shadow"
+               <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
+              <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
+             <<"visibility"<<"z-index"<<"touch-action"<<"overflow"
+            <<"word-wrap"<<"-ms-transform"<<"transform"<<"-webkit-transform"
+           <<"-moz-transform"<<"-webkit-overflow-scrolling"
+          <<"letter-spacing"<<"resize"<<"display";
+
         auto iter = cssMap.begin();
+
         while(iter != cssMap.end()){
             CSS::CssSegment & seg = iter.value();
 
@@ -120,33 +133,20 @@ bool QSSParseMethod::startSave(RTextFile *file)
             FormatProperty formatProperty;
             selectorType = formatProperty.getHtmlParsedResult();
 
-            /*!< 去除Qss中无用属性*/
-            QStringList rulesName;
-            rulesName<<"position"<<"left"<<"top"<<"width"<<"height"
-                    <<"-moz-box-shadow"<<"-webkit-box-shadow"
-                   <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
-                  <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
-                 <<"visibility"<<"z-index"<<"touch-action"<<"overflow"
-                <<"word-wrap"<<"-ms-transform"<<"transform"<<"-webkit-transform"
-               <<"-moz-transform"<<"-webkit-overflow-scrolling"
-              <<"letter-spacing"<<"resize"<<"display";
-
             m_ruleSize = seg.rules.size();
 
             for(int i = 0; i < seg.rules.size(); i++){
-                m_name = seg.rules.at(i).name;
-                m_value = seg.rules.at(i).value;
+                QString ruleName = seg.rules.at(i).name;
+                QString ruleValue = seg.rules.at(i).value;
 
-                if(m_name == "border-color" && m_value == "transparent"){
-                    m_name = "border";
-                    m_value = "none";
+                if(ruleName == "border-color" && ruleValue == "transparent"){
+                    ruleName = "border";
+                    ruleValue = "none";
                 }
 
                 /*!< m_ruleSize计算剩余属性数量*/
-                if(rulesName.contains(m_name))
+                if(deprecatedRulesName.contains(ruleName))
                 {
-                    m_name.clear();
-                    m_value.clear();
                     m_ruleSize--;
                 }
             }
@@ -154,37 +154,40 @@ bool QSSParseMethod::startSave(RTextFile *file)
             /*!< 对tree和table的样式通过获取其子节点的添加*/
             QStringList qssList = m_selectorType.keys();
             QStringList divList = qssList.filter("_div_");
-            for(int i = 0;i < divList.size(); i++){
-                if(divList.at(i).contains(iter.key())){
-                    if(qssList.size() > qssList.indexOf(divList.at(i))){
-                        if((m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE
-                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABLE)
-                                &&m_ruleSize != 0){
+
+            for(int i = 0;i < divList.size(); i++)
+            {
+                if(divList.at(i).contains(iter.key()))
+                {
+                    if(qssList.size() > qssList.indexOf(divList.at(i)))
+                    {
+                        if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE
+                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABLE)){
+
                             /*!< 设计的子节点和主节点的查找*/
                             QStringList selectorNames = divList.at(i).split("_div_");
                             QString selectorName = seg.selectorName;
+
                             if(selectorNames.size() > 1){
-                                if((selectorNames.at(0)+"_div" == seg.selectorName)
-                                        ||(selectorNames.at(0) == seg.selectorName))
+                                if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName))
                                 {
                                     selectorName ="#" + selectorNames.at(1);
                                     if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE)
                                     {
                                         selectorName ="#" + selectorNames.at(1) + "::item";
                                     }
-                                }
-                                else if(seg.selectorName.contains(selectorNames.at(0)+":"))
+                                }else if(seg.selectorName.contains(selectorNames.at(0)+":")){
                                     selectorName ="#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
-                                else
+                                }else{
                                     break;
+                                }
+
                                 stream<<selectorName<<" {"<<newLine;
+
                                 foreach(const CSS::CssRule & rule,seg.rules){
-                                    int j;
-                                    for(j = 0;j < rulesName.size(); j++)
-                                        if(rule.name == rulesName.at(j))
-                                            break;
-                                    if(j == rulesName.size())
+                                    if(!deprecatedRulesName.contains(rule.name)){
                                         stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                                    }
                                 }
                                 stream<<"}"<<newLine<<newLine;
                             }
@@ -196,25 +199,25 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
             /*!< 针对鼠标触发信号的样式处理修改*/
             QString nowkey = iter.key();
-            if(nowkey.contains(":checked")||nowkey.contains(":disabled")
-                    ||nowkey.contains(":hover")||nowkey.contains(":pressed")){
+            if(nowkey.contains(":checked") || nowkey.contains(":disabled") || nowkey.contains(":hover") || nowkey.contains(":pressed")){
                 QStringList nowkeyList = nowkey.split(":");
                 if(nowkeyList.size() > 0)
                     nowkey = nowkeyList.at(0);
             }
 
-            if((m_selectorType.keys().contains(nowkey)
-                ||seg.selectorName == "base")&&m_ruleSize!=0)
+            if(m_ruleSize != 0 && (m_selectorType.keys().contains(nowkey) || seg.selectorName == "base"))
             {
                 if(seg.type == CSS::Clazz){
                     stream<<".";
                 }else if(seg.type == CSS::Id || seg.type == CSS::DynamicType){
                     stream<<"#";
                 }
+
                 if(seg.selectorName.contains("_div"))
                     seg.selectorName = seg.selectorName.remove("_div");
                 else if(seg.selectorName.contains("_input"))
                     seg.selectorName = seg.selectorName.remove("_input");
+
                 stream<<seg.selectorName<<" {"<<newLine;
 
                 /*!< 控件在样式文件的图片信息*/
@@ -222,39 +225,39 @@ bool QSSParseMethod::startSave(RTextFile *file)
                 foreach(const CSS::CssRule & rule,seg.rules){
                     if(rule.name != "font-size")
                         fontCount--;
-                    int j;
-                    for(j=0;j<rulesName.size();j++)
-                        if(rule.name == rulesName.at(j))
-                            break;
-                    if(j == rulesName.size()){
-                        if(rule.name == "background-image" && rule.value != "none"){
-                            QStringList imageValues = rule.value.split("/");
-                            if(imageValues.size() > 0){
-                                QString imageValue = imageValues.at(imageValues.size()-1);
-                                QString imageSrc = "images/"+imageValue;
-                                imageSrc = imageSrc.remove("')");
-                                imageValue = "url(:/images/"+imageValue;
-                                imageValue = imageValue.remove("'");
-                                if(!m_resources.contains(imageSrc))
-                                    m_resources.append(imageSrc);
-                                stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
-                            }
+
+                    if(deprecatedRulesName.contains(rule.name))
+                        break;
+
+                    if(rule.name == "background-image" && rule.value != "none"){
+                        QStringList imageValues = rule.value.split("/");
+                        if(imageValues.size() > 0){
+                            QString imageValue = imageValues.at(imageValues.size() - 1);
+                            QString imageSrc = "images/"+imageValue;
+                            imageSrc = imageSrc.remove("')");
+                            imageValue = "url(:/images/"+imageValue;
+                            imageValue = imageValue.remove("'");
+                            if(!m_resources.contains(imageSrc))
+                                m_resources.append(imageSrc);
+
+                            stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
+                        }
+                    }else{
+                        /*!< 处理控件的简单渐变背景*/
+                        if(rule.value.contains("gradient")){
+                            stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
                         }
                         else{
-                            /*!< 处理控件的简单渐变背景*/
-                            if(rule.value.contains("gradient")){
-                                stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
-                            }
-                            else{
-                                stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
-                            }
+                            stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
                         }
                     }
                 }
 
                 /*!< 获取标题的默认大小*/
-                if(fontCount == 0){
-                    for(int i = 0; i < divList.size(); i++){
+                if(fontCount == 0)
+                {
+                    for(int i = 0; i < divList.size(); i++)
+                    {
                         if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RLABEL){
                             QStringList selectorNames = divList.at(i).split("_div_");
                             if(selectorNames.size() > 1){
@@ -270,17 +273,15 @@ bool QSSParseMethod::startSave(RTextFile *file)
             }
 
             /*!< 对下拉框下拉状态的样式处理*/
-            if(qssList.contains(seg.selectorName) && m_ruleSize != 0){
+            if(m_ruleSize != 0 && qssList.contains(seg.selectorName)){
                 if(m_selectorType.values().at(qssList.indexOf(seg.selectorName)) == Html::RDROPLIST){
                     seg.selectorName ="#" + seg.selectorName + " QAbstractItemView";
                     stream<<seg.selectorName<<" {"<<newLine;
-                    foreach(const CSS::CssRule & rule,seg.rules){
-                        int j;
-                        for(j = 0; j < rulesName.size(); j++)
-                            if(rule.name == rulesName.at(j))
-                                break;
-                        if(j == rulesName.size())
+                    foreach(const CSS::CssRule & rule,seg.rules)
+                    {
+                        if(!deprecatedRulesName.contains(rule.name)){
                             stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                        }
                     }
                     stream<<"}"<<newLine<<newLine;
                 }
@@ -288,6 +289,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
             iter++;
         }
     };
+
     generateCss(m_globalCss);
 
     generateCss(m_pageCss);

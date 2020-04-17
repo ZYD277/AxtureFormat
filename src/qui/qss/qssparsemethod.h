@@ -40,7 +40,6 @@ private:
     SelectorTypeMap m_selectorType;
     QStringList m_resources;
 
-    QString m_name;
     QString m_value;
     int m_ruleSize;
 };

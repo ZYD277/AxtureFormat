@@ -793,12 +793,9 @@ bool FormatProperty::judgeLayoutDirection(QString selectorId)
     //Axure9.0.0版本以选择框的背景id为准，而不是input
     QString inputId;
     QString tmpImgId = selectorId + "_img";
-    if(m_pageCss.contains(tmpImgId))
-    {
+    if(m_pageCss.contains(tmpImgId)){
         inputId = tmpImgId;
-    }
-    else
-    {
+    }else{
         inputId = selectorId + "_input";
     }
     QString inputLeftVal = getCssStyle(inputId,"left");
