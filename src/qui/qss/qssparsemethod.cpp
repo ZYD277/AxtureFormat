@@ -226,29 +226,28 @@ bool QSSParseMethod::startSave(RTextFile *file)
                     if(rule.name != "font-size")
                         fontCount--;
 
-                    if(deprecatedRulesName.contains(rule.name))
-                        break;
+                    if(!deprecatedRulesName.contains(rule.name)){
+                        if(rule.name == "background-image" && rule.value != "none"){
+                            QStringList imageValues = rule.value.split("/");
+                            if(imageValues.size() > 0){
+                                QString imageValue = imageValues.at(imageValues.size() - 1);
+                                QString imageSrc = "images/"+imageValue;
+                                imageSrc = imageSrc.remove("')");
+                                imageValue = "url(:/images/"+imageValue;
+                                imageValue = imageValue.remove("'");
+                                if(!m_resources.contains(imageSrc))
+                                    m_resources.append(imageSrc);
 
-                    if(rule.name == "background-image" && rule.value != "none"){
-                        QStringList imageValues = rule.value.split("/");
-                        if(imageValues.size() > 0){
-                            QString imageValue = imageValues.at(imageValues.size() - 1);
-                            QString imageSrc = "images/"+imageValue;
-                            imageSrc = imageSrc.remove("')");
-                            imageValue = "url(:/images/"+imageValue;
-                            imageValue = imageValue.remove("'");
-                            if(!m_resources.contains(imageSrc))
-                                m_resources.append(imageSrc);
-
-                            stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
-                        }
-                    }else{
-                        /*!< 处理控件的简单渐变背景*/
-                        if(rule.value.contains("gradient")){
-                            stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
-                        }
-                        else{
-                            stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                                stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
+                            }
+                        }else{
+                            /*!< 处理控件的简单渐变背景*/
+                            if(rule.value.contains("gradient")){
+                                stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
+                            }
+                            else{
+                                stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                            }
                         }
                     }
                 }
