@@ -8,7 +8,9 @@ NodeHtml G_NodeHtml;
 
 GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
 {
-
+//    m_custControl.insert(RBUTTON,QStringLiteral("按钮"));
+    m_custControl.insert(RRADIO_BUTTON,QStringLiteral("单选按钮"));
+    m_custControl.insert(RCHECKBOX,QStringLiteral("复选框"));
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -144,16 +146,23 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 
         //解析定制化控件(部分官方控件会包含data-label属性，需要过滤)
         if(element.hasAttribute("data-label")){
+            m_classInfo.clear();
             QString dataLabel = element.attribute("data-label");
-            if(dataLabel.contains(QStringLiteral("按钮"))){
+
+            if(dataLabel.contains(QStringLiteral("按钮")) && !dataLabel.contains(QStringLiteral("单选按钮"))){
                 if((classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3") || classInfo.contains("label"))){
                     return RBUTTON;
                 }
             }
-            else{
-                if(classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label")){
+
+            auto iter = m_custControl.begin();
+            while(iter != m_custControl.end()){
+
+                if(dataLabel.contains(iter.value()))
+                    return iter.key();
+                else if(classInfo.contains("box_1")||classInfo.contains("box_2")||classInfo.contains("box_3")||classInfo.contains("label"))
                     return RLABEL;
-                }
+                ++iter;
             }
         }
 
@@ -385,6 +394,17 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
     //Axure9.0.0
     else if(element.firstChild().secondChild().clazz().contains("text"))
         data->m_text = element.firstChild().secondChild().firstChild().firstChild().firstChild().text();
+    //定制化单选按钮
+    else if(element.firstChild().firstChild().firstChild().secondChild().secondChild().clazz().contains("text")){
+        data->m_text = element.firstChild().firstChild().firstChild().secondChild().secondChild().firstChild().firstChild().firstChild().text();
+        data->m_textId = element.firstChild().firstChild().firstChild().secondChild().id();
+    }
+    else if(element.firstChild().firstChild().firstChild().firstChild().secondChild().clazz().contains("text")){
+        data->m_text = element.firstChild().firstChild().firstChild().firstChild().secondChild().firstChild().firstChild().firstChild().text();
+        data->m_textId = element.firstChild().firstChild().firstChild().firstChild().id();
+    }
+    data->m_widths = element.firstChild().firstChild().firstChild().attribute("data-width").toInt();
+    data->m_heights = element.firstChild().firstChild().firstChild().attribute("data-height").toInt();
 
     data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
     data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);

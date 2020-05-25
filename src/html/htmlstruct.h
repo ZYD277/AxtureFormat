@@ -85,11 +85,18 @@ struct BaseData{
     QString m_inlineStyle;  /*!< 内嵌的样式信息 */
     QString m_srcImage;     /*!< 背景图片信息*/
     QString m_srcImageId;   /*!< 背景图片控件id */
+
+    int m_widths;
+    int m_heights;
+    QString m_textId;
+
     bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
     bool m_bDisabled;
     bool m_bReadOnly;       /*!< 只读 */
     bool m_bLeftToRight;    /*!< 布局默认从左至右 */
 };
+
+typedef QMap<NodeType,QString> CustControl;
 
 /*!
  * @brief 图像数据
