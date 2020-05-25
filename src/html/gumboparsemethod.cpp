@@ -11,6 +11,8 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
 //    m_custControl.insert(RBUTTON,QStringLiteral("按钮"));
     m_custControl.insert(RRADIO_BUTTON,QStringLiteral("单选按钮"));
     m_custControl.insert(RCHECKBOX,QStringLiteral("复选框"));
+     m_custControl.insert(RTREE,QStringLiteral("折叠信息"));
+    m_custControl.insert(RDROPLIST,QStringLiteral("下拉列表框"));
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -327,6 +329,10 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
         }
         data->m_itemList.append(chid.attribute("value"));
     }
+    if(element.clazz() == "ax_default"){
+        node->m_id = element.firstChild().id();
+        data->m_textId = element.secondChild().firstChild().id();
+    }
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 
@@ -612,6 +618,10 @@ void GumboParseMethod::parseTreeNodeData(GumboNodeWrapper &element, DomNode *nod
     GumboNodeWrapperList topLevelChilds = element.firstChild().children();
     for(int i = 0; i < topLevelChilds.size(); i++){
         parseSubTreeDataNodeData(topLevelChilds.at(i),virtualRoot);
+    }
+
+    if(element.clazz() == "ax_default"){
+        node->m_id = element.firstChild().id();
     }
 
     node->m_data = virtualRoot;

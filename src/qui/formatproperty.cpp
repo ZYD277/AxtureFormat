@@ -669,13 +669,18 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             }
             else
             {
-//                QString textId = node->m_id + "_state0";
-//                rect.setWidth(removePxUnit(getCssStyle(textId,"width")));
-//                rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
                 QString textId = node->m_data->m_textId;
                 rect.setWidth(removePxUnit(getCssStyle(textId,"width")) + 20);
                 rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
             }
+        }
+    }
+    else if(node->m_type == Html::RDROPLIST)
+    {
+        if(rect.width() == 0 || rect.height() == 0){
+            QString textId = node->m_data->m_textId;
+            rect.setWidth(removePxUnit(getCssStyle(textId,"width")));
+            rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
         }
     }
 
