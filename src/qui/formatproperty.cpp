@@ -660,6 +660,30 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.setHeight(removePxUnit(theight));
     }
 
+    else if(node->m_type == Html::RRADIO_BUTTON || node->m_type == Html::RCHECKBOX)
+    {
+        if(rect.width() == 0 || rect.height() == 0){
+            if(node->m_data->m_widths != 0 && node->m_data->m_heights != 0){
+                rect.setWidth(node->m_data->m_widths);
+                rect.setHeight(node->m_data->m_heights);
+            }
+            else
+            {
+                QString textId = node->m_data->m_textId;
+                rect.setWidth(removePxUnit(getCssStyle(textId,"width")) + 20);
+                rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
+            }
+        }
+    }
+    else if(node->m_type == Html::RDROPLIST)
+    {
+        if(rect.width() == 0 || rect.height() == 0){
+            QString textId = node->m_data->m_textId;
+            rect.setWidth(removePxUnit(getCssStyle(textId,"width")));
+            rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
+        }
+    }
+
     return rect;
 }
 

@@ -6,6 +6,7 @@
 #include "html/htmlstruct.h"
 
 #include <QTime>
+#include <QRgb>
 
 namespace RQt{
 
@@ -142,6 +143,18 @@ bool QSSParseMethod::startSave(RTextFile *file)
                 if(ruleName == "border-color" && ruleValue == "transparent"){
                     ruleName = "border";
                     ruleValue = "none";
+                }
+                else if(ruleValue.contains("rgba") && ruleName.contains("color")){
+                    int index1 = ruleValue.lastIndexOf(" ");
+                    int index2 = ruleValue.lastIndexOf(")");
+                    QString t_ruleValue;
+                    QString tmp = ruleValue.right(index2-index1);
+                    QString tp = tmp.left( tmp.lastIndexOf(")"));
+                    if(tp.toDouble() >= 0 && tp.toDouble() <= 1){
+                        int b = tp.toDouble() * 255;
+                        t_ruleValue = ruleValue.left(ruleValue.size() - (index2-index1)) + QString::number(b) + ")";
+                    }
+                    ruleValue = t_ruleValue;
                 }
 
                 /*!< m_ruleSize计算剩余属性数量*/

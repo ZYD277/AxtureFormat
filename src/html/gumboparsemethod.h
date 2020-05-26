@@ -71,6 +71,7 @@ private:
     QString m_classInfo;
     QString m_treeDatas;
     QStringList m_panlIdList;
+    CustControl m_custControl;
 };
 
 } //namespace Html
