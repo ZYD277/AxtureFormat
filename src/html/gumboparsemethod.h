@@ -61,7 +61,11 @@ private:
     void parseSubTreeDataNodeData(GumboNodeWrapper element, TreeItemData *parentNode);
 
     void parseGroupNodeData(GumboNodeWrapper &element, DomNode *node);
-    void parseLabelNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseLabelNodeData(GumboNodeWrapper &element, DomNode *node);    
+    void parseSpinBoxNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseScrollBarNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseProgreesBarNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode *node);
 
 private:
     DomHtmlPtr m_htmlResultPtr;

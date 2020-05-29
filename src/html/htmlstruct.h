@@ -61,7 +61,14 @@ enum NodeType{
     RDROPLIST,              /*!< 下拉框 */
     RBOX,                   /*!< 矩形 */
     RINLINE_FRAME,          /*!< 内联窗口 */
-    RTREE                   /*!< 树形控件*/
+    RTREE,                  /*!< 树形控件*/
+    RSPINBOX,               /*!< 加减输入框*/
+    RSCROLLBAR,             /*!<  滚动条*/
+    RPROGRESSBAR,           /*!< 进度条*/
+    RTABWIDGET,             /*!< tabwidget*/
+    RTABWIDGET_PAGE,        /*!< tab页 */
+    RMENUBUTTON,            /*!< 菜单选项触发按钮 */
+    RUNMENUBUTTON          /*!< 菜单选项无触发按钮 */
 };
 
 /*!
@@ -80,11 +87,15 @@ struct BaseData{
     BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true){}
     virtual ~BaseData(){}
 
-    QString m_text;         /*!< 控件显示内容 */
-    QString m_toolTip;      /*!< 工具提示信息，鼠标移入显示 */
-    QString m_inlineStyle;  /*!< 内嵌的样式信息 */
-    QString m_srcImage;     /*!< 背景图片信息*/
-    QString m_srcImageId;   /*!< 背景图片控件id */
+    QString m_text;             /*!< 控件显示内容 */
+    QString m_toolTip;          /*!< 工具提示信息，鼠标移入显示 */
+    QString m_inlineStyle;      /*!< 内嵌的样式信息 */
+    QString m_srcImage;         /*!< 背景图片信息*/
+    QString m_srcImageId;       /*!< 背景图片控件id */
+    QString m_checkedImage;     /*!< 选中背景图 */
+    QString m_unCheckedImage;   /*!< 未选中背景图 */
+
+    QString m_widgetSizeId;     /*!< 自制控件大小id */
 
     int m_widths;
     int m_heights;
@@ -105,6 +116,30 @@ struct ImageData : public BaseData{
     ~ImageData(){}
 
     QString m_src;          /*!< 图片链接:img节点特有 */
+};
+
+/*!
+ * @brief 滚动条数据
+ */
+struct ScrollBarData : public BaseData{
+    ~ScrollBarData(){}
+
+    QString m_scrollBarId;          /*!< 滚动条 */
+    QString m_scrollSlotId;         /*!< 滚动槽 */
+    QString m_subLine;
+    QString m_upArrow;
+    QString m_addLine;
+    QString m_downArrow;
+};
+
+/*!
+ * @brief 进度条
+ */
+struct ProgressBarData : public BaseData{
+    ~ProgressBarData(){}
+
+    QString m_progressBarId;          /*!< 进度条 */
+    QString m_ProgressSlotId;         /*!< 进度槽 */
 };
 
 /*!
@@ -169,6 +204,8 @@ struct GroupData : public BaseData{
     int m_top;
     int m_width;
     int m_height;
+    QString m_spinBoxId;     /*!< 加减输入框id */
+    QString m_sinBoxTextId;  /*!< 加减输入框的文字id */
 };
 
 /*!
@@ -190,6 +227,9 @@ struct ListData : public BaseData{
 
     QStringList m_itemList;     /*!< 选项集合 */
     QString m_selectedValue;    /*!< 默认选择项 */
+    QString m_arrowImageSrc;    /*!< 下拉箭头的默认背景 */
+    QString m_arrowImageOn;     /*!< 下拉箭头的打开背景 */
+    QString m_backGroundId;     /*!< 自制下拉框背景id */
 };
 
 /*!
