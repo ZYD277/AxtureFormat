@@ -30,6 +30,9 @@ public:
     void setPropNumber(QString value);
     QString propNumber()const {return m_propString;}
 
+    void setPropString(QString value);
+    QString propString()const {return m_propString;}
+
 private:
     QString m_attrName;
     bool m_bHasAttrName;

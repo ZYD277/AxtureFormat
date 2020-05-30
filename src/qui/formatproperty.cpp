@@ -59,8 +59,11 @@ QString FormatProperty::getTypeName(Html::NodeType type)
 {
     switch(type){
         case Html::RCONTAINER:
+        case Html::RTABWIDGET_PAGE:
         case Html::RDYNAMIC_PANEL_PAGE:
         case Html::RGROUP:return QString("QWidget");break;
+        case Html::RMENUBUTTON:
+        case Html::RUNMENUBUTTON:
         case Html::RBUTTON:return QString("QPushButton");break;
         case Html::RDYNAMIC_PANEL:return QString("QStackedWidget");break;
         case Html::RTEXT_FIELD:return QString("QLineEdit");break;
@@ -76,6 +79,10 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RINLINE_FRAME:
         case Html::RBOX:return QString("QLabel");break;
         case Html::RTREE:return QString("QTreeWidget");break;
+        case Html::RSPINBOX:return QString("QSpinBox");break;
+        case Html::RSCROLLBAR:return QString("QScrollBar");break;
+        case Html::RPROGRESSBAR:return QString("QProgressBar");break;
+        case Html::RTABWIDGET:return QString("QTabWidget");break;
 
         default:return QString();break;
     }
@@ -350,6 +357,15 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             createTextProp(domWidget,node->m_data->m_text);
             createLayoutDirectionProp(domWidget,node->m_data->m_bLeftToRight);
 
+            if(!node->m_data->m_checkedImage.isEmpty()&&!node->m_data->m_unCheckedImage.isEmpty())
+            {
+                createRadioBtnImageProp(domWidget,node->m_data->m_checkedImage,node->m_data->m_unCheckedImage,"QCheckBox");
+            }
+            if(!node->m_data->m_textId.contains("text")){
+                QString m_textId = node->m_data->m_textId + "_div_" + node->m_id;
+                m_selectorType.insert(m_textId,Html::RCHECKBOX);
+            }
+
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
 
@@ -363,6 +379,15 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
             createLayoutDirectionProp(domWidget,node->m_data->m_bLeftToRight);
+            if(!node->m_data->m_checkedImage.isEmpty()&&!node->m_data->m_unCheckedImage.isEmpty())
+            {
+                createRadioBtnImageProp(domWidget,node->m_data->m_checkedImage,node->m_data->m_unCheckedImage,"QRadioButton");
+            }
+
+            if(!node->m_data->m_textId.contains("text")){
+                QString m_textId = node->m_data->m_textId + "_div_" + node->m_id;
+                m_selectorType.insert(m_textId,Html::RRADIO_BUTTON);
+            }
 
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
@@ -440,6 +465,18 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
+        case Html::RMENUBUTTON:{
+            createTextProp(domWidget,node->m_data->m_text);
+
+            if(node->m_data->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,node->m_data->m_toolTip);
+            for(int i = node->m_childs.size()-1; i >=0 ; i--)
+            {
+                createDomWidget(domWidget,node->m_childs.at(i),rect);
+            }
+            break;
+        }
+        case Html::RUNMENUBUTTON:
         case Html::RBUTTON:{
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
@@ -487,6 +524,27 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             currentRow->setPropNumber(QString::number(t_selectedRow));
             domWidget->addProperty(currentRow);
 
+            if(!listData->m_srcImage.isEmpty()||!listData->m_arrowImageOn.isEmpty()||!listData->m_arrowImageSrc.isEmpty())
+            {
+                createComBoxImageProp(domWidget,listData->m_srcImage,listData->m_arrowImageSrc,listData->m_arrowImageOn);
+            }
+
+            if(!node->m_data->m_textId.isEmpty()){
+                QString m_option = node->m_data->m_textId + "_div_option" + node->m_id;
+                m_selectorType.insert(m_option,Html::RDROPLIST);
+
+            }
+            if(!listData->m_backGroundId.isEmpty())
+            {
+                QString m_back= listData->m_backGroundId + "_div_back" + node->m_id;
+                m_selectorType.insert(m_back,Html::RDROPLIST);
+            }
+            if(!listData->m_widgetSizeId.isEmpty())
+            {
+                QString m_widgetSizeId = listData->m_widgetSizeId + "_div_arrow" + node->m_id;
+                m_selectorType.insert(m_widgetSizeId,Html::RDROPLIST);
+            }
+
             break;
         }
 
@@ -506,6 +564,90 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
+        case Html::RSPINBOX:{
+            Html::GroupData *spinBox = static_cast<Html::GroupData *>(node->m_data);
+            if(!spinBox->m_sinBoxTextId.isEmpty())
+            {
+                QString m_sinBoxTextId = spinBox->m_sinBoxTextId + "_div_text" + node->m_id;
+                m_selectorType.insert(m_sinBoxTextId,Html::RSPINBOX);
+            }
+            if(!spinBox->m_spinBoxId.isEmpty())
+            {
+                QString m_spinbox = spinBox->m_spinBoxId + "_div_spinbox" + node->m_id;
+                m_selectorType.insert(m_spinbox,Html::RSPINBOX);
+            }
+            MProperty * miniMum = new MProperty();
+            miniMum->setAttributeName("minimum");
+            miniMum->setPropNumber("-99");
+            domWidget->addProperty(miniMum);
+             break;
+        }
+        case Html::RSCROLLBAR:{
+            Html::ScrollBarData * scrollbarData = static_cast<Html::ScrollBarData *>(node->m_data);
+            if(!scrollbarData->m_addLine.isEmpty())
+            {
+                QString m_addLine = scrollbarData->m_addLine + "_div_addline" + node->m_id;
+                m_selectorType.insert(m_addLine,Html::RSCROLLBAR);
+            }
+            if(!scrollbarData->m_downArrow.isEmpty())
+            {
+                QString m_downArrow = scrollbarData->m_downArrow + "_div_downarrow" + node->m_id;
+                m_selectorType.insert(m_downArrow,Html::RSCROLLBAR);
+            }
+            if(!scrollbarData->m_upArrow.isEmpty())
+            {
+                QString m_upArrow = scrollbarData->m_upArrow + "_div_uparrow" + node->m_id;
+                m_selectorType.insert(m_upArrow,Html::RSCROLLBAR);
+            }
+            if(!scrollbarData->m_subLine.isEmpty())
+            {
+                QString m_subLine= scrollbarData->m_subLine + "_div_subline" + node->m_id;
+                m_selectorType.insert(m_subLine,Html::RSCROLLBAR);
+            }
+            if(!scrollbarData->m_scrollBarId.isEmpty())
+            {
+                QString m_scrollBar = scrollbarData->m_scrollBarId + "_div_scrollbar" + node->m_id;
+                m_selectorType.insert(m_scrollBar,Html::RSCROLLBAR);
+            }
+            QString scrollBarWidth = getCssStyle(node->m_id,"width");
+            QString scrollBarHight = getCssStyle(node->m_id,"height");
+            bool orientation = (removePxUnit(scrollBarWidth) > removePxUnit(scrollBarHight) ? true : false);
+            createOrientationProp(domWidget,orientation);
+            break;
+        }
+       case Html::RPROGRESSBAR:{
+            Html::ProgressBarData *progressBarData = static_cast<Html::ProgressBarData *>(node->m_data);
+            if(!progressBarData->m_progressBarId.isEmpty())
+            {
+                QString m_textId = progressBarData->m_progressBarId + "_div_bar" + node->m_id;
+                m_selectorType.insert(m_textId,Html::RPROGRESSBAR);
+            }
+            if(!progressBarData->m_ProgressSlotId.isEmpty())
+            {
+                QString m_textId = progressBarData->m_ProgressSlotId + "_div_slot" + node->m_id;
+                m_selectorType.insert(m_textId,Html::RPROGRESSBAR);
+            }
+            break;
+       }
+       case Html::RTABWIDGET:{
+        Html::TabWidgetData *tabData = static_cast<Html::TabWidgetData *>(node->m_data);
+            for(int i = node->m_childs.size()-1; i >=0 ; i--)
+            {
+                createDomWidget(domWidget,node->m_childs.at(i),rect);
+            }
+            createTabWidgetImageProp(domWidget,tabData->m_srcImage,tabData->m_selectedImage,"QTabBar");
+            qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+                   <<tabData->m_srcImage<<tabData->m_selectedImage
+                   <<"\n";
+            break;
+       }
+        case Html::RTABWIDGET_PAGE:{
+            MAttribute * hVisibleAttribute = new MAttribute();
+            hVisibleAttribute->setAttributeName("title");
+            hVisibleAttribute->setPropString(node->m_data->m_text);
+            domWidget->addAttrinute(hVisibleAttribute);
+            break;
+        }
         case Html::RBOX:{
             createEnableProp(domWidget,node->m_data->m_bDisabled);
 
@@ -523,7 +665,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         default:break;
     }
 
-    if(node->m_childs.size() > 0 && node->m_type != Html::RTABLE && node->m_type != Html::RDYNAMIC_PANEL){
+    if(node->m_childs.size() > 0 && node->m_type != Html::RTABLE && node->m_type != Html::RDYNAMIC_PANEL
+            &&node->m_type != Html::RTABWIDGET){
         std::for_each(node->m_childs.begin(),node->m_childs.end(),[&](Html::DomNode * element){
             createDomWidget(domWidget,element,rect);
         });
@@ -678,11 +821,34 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     else if(node->m_type == Html::RDROPLIST)
     {
         if(rect.width() == 0 || rect.height() == 0){
-            QString textId = node->m_data->m_textId;
+            QString textId = node->m_data->m_widgetSizeId;
             rect.setWidth(removePxUnit(getCssStyle(textId,"width")));
             rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
         }
     }
+    else if(node->m_type == Html::RSPINBOX)
+    {
+        Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
+        rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
+    }
+    else if(node->m_type == Html::RTABWIDGET)
+    {
+        int width = 0;
+        int height = 0;
+        for(int i = 0; i < node->m_childs.size(); i++)
+        {
+            rect.setTop(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"top")));
+            rect.setLeft(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"left")));
+            height = removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"height"));
+            width = width + removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"width"));
+        }
+        height = height + removePxUnit(getCssStyle(node->m_data->m_srcImageId,"height"));
+        rect.setHeight(height);
+        rect.setWidth(width);
+    }
+
+    if(rect.left() < 0)
+        rect.setLeft(0);
 
     return rect;
 }
@@ -706,13 +872,76 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
     m_originalResources.append(imagePath);
     if(!m_resources.contains(imageSrc))
         m_resources.append(imageSrc);
-
     if(!imageSrc.isEmpty()){
         MProperty * styleProp = new MProperty();
         styleProp->setAttributeName("styleSheet");
         styleProp->setPropString(QString("border-image:url(:/%1);").arg(imageSrc));
         domWidget->addProperty(styleProp);
     }
+}
+
+void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,QString checkImageSrc,QString unCheckImageSrc,QString widgetName)
+{
+    checkImageSrc = handleImage(checkImageSrc);
+    unCheckImageSrc = handleImage(unCheckImageSrc);
+
+    if(!checkImageSrc.isEmpty()||!unCheckImageSrc.isEmpty()){
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("%1::indicator:checked {image: url(:/%2);}"
+                                         "%3::indicator:unchecked {image: url(:/%4);}")
+                                 .arg(widgetName).arg(checkImageSrc).arg(widgetName).arg(unCheckImageSrc));
+        domWidget->addProperty(styleProp);
+    }
+}
+
+void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget,QString srcImage,QString selectImageSrc,QString widgetName)
+{
+    srcImage = handleImage(srcImage);
+    selectImageSrc = handleImage(selectImageSrc);
+
+    if(!srcImage.isEmpty()||!selectImageSrc.isEmpty()){
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("%1::tab:selected, %2::tab:hover { border-image: url(:/%3);}"
+                                         "%4::tab:!selected, %5::tab:hover {  border-image: url(:/%6);}")
+                                 .arg(widgetName).arg(widgetName).arg(selectImageSrc).arg(widgetName).arg(widgetName)
+                                 .arg(srcImage));
+        domWidget->addProperty(styleProp);
+    }
+}
+
+void FormatProperty::createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage)
+{
+    imageSrc = handleImage(imageSrc);
+    arrowImage = handleImage(arrowImage);
+    unArrowImage = handleImage(unArrowImage);
+
+    if(!imageSrc.isEmpty()||!arrowImage.isEmpty()||!unArrowImage.isEmpty()){
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("QComboBox{border-image:url(:/%1);}"
+                                         "QComboBox QAbstractItemView {border-image: url(:/%2);}"
+                                         "QComboBox::down-arrow {image: url(:/%3);}"
+                                         "QComboBox::down-arrow:focus {image: url(:/%4);}")
+                                 .arg(imageSrc).arg(imageSrc).arg(arrowImage).arg(unArrowImage));
+        domWidget->addProperty(styleProp);
+    }
+}
+
+QString FormatProperty::handleImage(QString imageSrc)
+{
+    QString imagePath = imageSrc;
+    int firstSplitPos = imageSrc.indexOf("/");
+    int secondSplitPos = imageSrc.indexOf("/",firstSplitPos + 1);
+
+    imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
+
+    m_originalResources.append(imagePath);
+    if(!m_resources.contains(imageSrc))
+        m_resources.append(imageSrc);
+
+    return imageSrc;
 }
 
 void FormatProperty::createTextProp(RDomWidget *domWidget, QString text)
@@ -762,6 +991,14 @@ void FormatProperty::createLayoutDirectionProp(RDomWidget *domWidget, bool leftT
     MProperty * layoutProp = new MProperty;
     layoutProp->setAttributeName("layoutDirection");
     layoutProp->setPropEnum(leftToRight?"Qt::LeftToRight":"Qt::RightToLeft");
+    domWidget->addProperty(layoutProp);
+}
+
+void FormatProperty::createOrientationProp(RDomWidget *domWidget, bool leftToRight)
+{
+    MProperty * layoutProp = new MProperty;
+    layoutProp->setAttributeName("orientation");
+    layoutProp->setPropEnum(leftToRight?"Qt::Horizontal":"Qt::Vertical");
     domWidget->addProperty(layoutProp);
 }
 

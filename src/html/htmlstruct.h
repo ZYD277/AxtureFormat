@@ -61,7 +61,14 @@ enum NodeType{
     RDROPLIST,              /*!< 下拉框 */
     RBOX,                   /*!< 矩形 */
     RINLINE_FRAME,          /*!< 内联窗口 */
-    RTREE                   /*!< 树形控件*/
+    RTREE,                  /*!< 树形控件*/
+    RSPINBOX,               /*!< 加减输入框*/
+    RSCROLLBAR,             /*!<  滚动条*/
+    RPROGRESSBAR,           /*!< 进度条*/
+    RTABWIDGET,             /*!< tabwidget*/
+    RTABWIDGET_PAGE,        /*!< tab页 */
+    RMENUBUTTON,            /*!< 菜单选项触发按钮 */
+    RUNMENUBUTTON          /*!< 菜单选项无触发按钮 */
 };
 
 /*!
@@ -74,17 +81,48 @@ struct DomHead{
 };
 
 /*!
+ * @brief ui标准控件名
+ */
+struct QWidgetName{
+    QWidgetName():m_pushBtn("QPushbtton"),m_stackedWidget("QStackedWidget"),m_lineEdit("QLineEdit"),
+        m_radioBtn("QRadioBtton"),m_tableWidget("QTableWidget"),m_label("QLabel"),m_line("QLine"),
+        m_listWidget("QListWidget"),m_textEdit("QTextEdit"),m_checkBox("QCheckBox"),m_comBox("QComBox"),
+        m_treeWidget("QTreeWidget"),m_spinBox("QSpinBox"),m_scrollBar("QScrollBar"),m_progressBar("QProgressBar"),
+        m_tabWidget("QTabWidget"){}
+    QString m_pushBtn;
+    QString m_stackedWidget;        /*!< StackWidget */
+    QString m_lineEdit;             /*!< 单行文本框 */
+    QString m_radioBtn;             /*!< 单选框 */
+    QString m_tableWidget;          /*!< 表格 */
+    QString m_label;                /*!< 文本显示 */
+    QString m_line;                 /*!< 水平/竖直线条*/
+    QString m_listWidget;           /*!< 列表框 */
+    QString m_textEdit;             /*!< 文本框 */
+    QString m_checkBox;             /*!< 复选框 */
+    QString m_comBox;               /*!< 下拉框 */
+    QString m_treeWidget;           /*!< 树形控件*/
+    QString m_spinBox;              /*!< 加减输入框*/
+    QString m_scrollBar;            /*!<  滚动条*/
+    QString m_progressBar;          /*!< 进度条*/
+    QString m_tabWidget;            /*!< tabwidget*/
+};
+
+/*!
  * @brief 控件基础通用属性
  */
 struct BaseData{
     BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true){}
     virtual ~BaseData(){}
 
-    QString m_text;         /*!< 控件显示内容 */
-    QString m_toolTip;      /*!< 工具提示信息，鼠标移入显示 */
-    QString m_inlineStyle;  /*!< 内嵌的样式信息 */
-    QString m_srcImage;     /*!< 背景图片信息*/
-    QString m_srcImageId;   /*!< 背景图片控件id */
+    QString m_text;             /*!< 控件显示内容 */
+    QString m_toolTip;          /*!< 工具提示信息，鼠标移入显示 */
+    QString m_inlineStyle;      /*!< 内嵌的样式信息 */
+    QString m_srcImage;         /*!< 背景图片信息*/
+    QString m_srcImageId;       /*!< 背景图片控件id */
+    QString m_checkedImage;     /*!< 选中背景图 */
+    QString m_unCheckedImage;   /*!< 未选中背景图 */
+
+    QString m_widgetSizeId;     /*!< 自制控件大小id */
 
     int m_widths;
     int m_heights;
@@ -105,6 +143,30 @@ struct ImageData : public BaseData{
     ~ImageData(){}
 
     QString m_src;          /*!< 图片链接:img节点特有 */
+};
+
+/*!
+ * @brief 滚动条数据
+ */
+struct ScrollBarData : public BaseData{
+    ~ScrollBarData(){}
+
+    QString m_scrollBarId;          /*!< 滚动条 */
+    QString m_scrollSlotId;         /*!< 滚动槽 */
+    QString m_subLine;
+    QString m_upArrow;
+    QString m_addLine;
+    QString m_downArrow;
+};
+
+/*!
+ * @brief 进度条
+ */
+struct ProgressBarData : public BaseData{
+    ~ProgressBarData(){}
+
+    QString m_progressBarId;          /*!< 进度条 */
+    QString m_ProgressSlotId;         /*!< 进度槽 */
 };
 
 /*!
@@ -169,6 +231,8 @@ struct GroupData : public BaseData{
     int m_top;
     int m_width;
     int m_height;
+    QString m_spinBoxId;     /*!< 加减输入框id */
+    QString m_sinBoxTextId;  /*!< 加减输入框的文字id */
 };
 
 /*!
@@ -190,6 +254,22 @@ struct ListData : public BaseData{
 
     QStringList m_itemList;     /*!< 选项集合 */
     QString m_selectedValue;    /*!< 默认选择项 */
+    QString m_arrowImageSrc;    /*!< 下拉箭头的默认背景 */
+    QString m_arrowImageOn;     /*!< 下拉箭头的打开背景 */
+    QString m_backGroundId;     /*!< 自制下拉框背景id */
+};
+
+/*!
+ * @brief tab页
+ */
+struct TabWidgetData : public BaseData{
+    TabWidgetData(){}
+
+    QStringList m_pageList;     /*!< 页面合集 */
+    QString m_selectedPage;     /*!< 默认选择页 */
+    QString m_srcImage;         /*!< 背景图片 */
+    QString m_selectedImage;    /*!< 选中背景图片 */
+
 };
 
 /*!

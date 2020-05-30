@@ -22,7 +22,8 @@ void MAttribute::write(QXmlStreamWriter &writer, QString tagName)
         writer.writeTextElement("bool",m_propString);
     else if(m_kind == Number)
         writer.writeTextElement("number",m_propString);
-
+    else if(m_kind == String)
+        writer.writeTextElement("string",m_propString);
     writer.writeEndElement();
 }
 
@@ -38,4 +39,9 @@ void MAttribute::setPropNumber(QString value)
     m_propString = value;
 }
 
+void MAttribute::setPropString(QString value)
+{
+    m_kind = String;
+    m_propString = value;
+}
 } //namespace RQt

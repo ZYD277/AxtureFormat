@@ -47,14 +47,20 @@ private:
     int removePxUnit(QString valueWithUnit);
 
     inline void createImageProp(RDomWidget * domWidget, QString imageSrc);
+    inline void createRadioBtnImageProp(RDomWidget *domWidget, QString checkImageSrc, QString unCheckImageSrc, QString widgetName);
+    inline void createTabWidgetImageProp(RDomWidget *domWidget, QString srcImage, QString selectImageSrc, QString widgetName);
+    inline void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
     inline void createEnableProp(RDomWidget * domWidget, bool disable);
     inline void createCheckedProp(RDomWidget * domWidget,bool checked);
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
+    inline void createOrientationProp(RDomWidget *domWidget, bool leftToRight);
     void createToolTipProp(RDomWidget * domWidget,QString toolTip);
 
     void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
+
+    QString handleImage(QString imageSrc);
 
     bool judgeLayoutDirection(QString selectorId);
     QString getCssStyle(QString selectorName,QString propName);
