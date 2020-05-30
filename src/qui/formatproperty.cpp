@@ -630,19 +630,24 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
        }
        case Html::RTABWIDGET:{
+        Html::TabWidgetData *tabData = static_cast<Html::TabWidgetData *>(node->m_data);
             for(int i = node->m_childs.size()-1; i >=0 ; i--)
             {
                 createDomWidget(domWidget,node->m_childs.at(i),rect);
             }
+            createTabWidgetImageProp(domWidget,tabData->m_srcImage,tabData->m_selectedImage,"QTabBar");
+            qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
+                   <<tabData->m_srcImage<<tabData->m_selectedImage
+                   <<"\n";
             break;
        }
-    case Html::RTABWIDGET_PAGE:{
-        MAttribute * hVisibleAttribute = new MAttribute();
-        hVisibleAttribute->setAttributeName("title");
-        hVisibleAttribute->setPropString(node->m_data->m_text);
-        domWidget->addAttrinute(hVisibleAttribute);
-        break;
-    }
+        case Html::RTABWIDGET_PAGE:{
+            MAttribute * hVisibleAttribute = new MAttribute();
+            hVisibleAttribute->setAttributeName("title");
+            hVisibleAttribute->setPropString(node->m_data->m_text);
+            domWidget->addAttrinute(hVisibleAttribute);
+            break;
+        }
         case Html::RBOX:{
             createEnableProp(domWidget,node->m_data->m_bDisabled);
 
@@ -714,6 +719,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
 {
     QRect rect(removePxUnit(cssMap.value("left")),removePxUnit(cssMap.value("top")),
                removePxUnit(cssMap.value("width")),removePxUnit(cssMap.value("height")));
+
     bool tGeometryExisted = false;
     if(node->m_type == Html::RGROUP){
         Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
@@ -828,15 +834,21 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     else if(node->m_type == Html::RTABWIDGET)
     {
         int width = 0;
+        int height = 0;
         for(int i = 0; i < node->m_childs.size(); i++)
         {
-           rect.setTop(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"top")));
-           rect.setLeft(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"left")));
-           rect.setHeight(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"height")));
-           width = width + removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"width"));
+            rect.setTop(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"top")));
+            rect.setLeft(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"left")));
+            height = removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"height"));
+            width = width + removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"width"));
         }
+        height = height + removePxUnit(getCssStyle(node->m_data->m_srcImageId,"height"));
+        rect.setHeight(height);
         rect.setWidth(width);
     }
+
+    if(rect.left() < 0)
+        rect.setLeft(0);
 
     return rect;
 }
@@ -879,6 +891,22 @@ void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,QString check
         styleProp->setPropString(QString("%1::indicator:checked {image: url(:/%2);}"
                                          "%3::indicator:unchecked {image: url(:/%4);}")
                                  .arg(widgetName).arg(checkImageSrc).arg(widgetName).arg(unCheckImageSrc));
+        domWidget->addProperty(styleProp);
+    }
+}
+
+void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget,QString srcImage,QString selectImageSrc,QString widgetName)
+{
+    srcImage = handleImage(srcImage);
+    selectImageSrc = handleImage(selectImageSrc);
+
+    if(!srcImage.isEmpty()||!selectImageSrc.isEmpty()){
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("%1::tab:selected, %2::tab:hover { border-image: url(:/%3);}"
+                                         "%4::tab:!selected, %5::tab:hover {  border-image: url(:/%6);}")
+                                 .arg(widgetName).arg(widgetName).arg(selectImageSrc).arg(widgetName).arg(widgetName)
+                                 .arg(srcImage));
         domWidget->addProperty(styleProp);
     }
 }

@@ -112,6 +112,8 @@ bool QSSParseMethod::startSave(RTextFile *file)
 
     QString newLine = "\r";
 
+    Html::QWidgetName widgetName;
+
     auto generateCss = [&](CSS::CssMap& cssMap){
 
         //qss中无用属性
@@ -185,10 +187,10 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                 if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName))
                                 {
 
-                                    selectorName ="#" + selectorNames.at(1);
+                                    selectorName = widgetName.m_tableWidget + "#" + selectorNames.at(1);
                                     if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE)
                                     {
-                                        selectorName ="#" + selectorNames.at(1) + "::item";
+                                        selectorName = widgetName.m_treeWidget + "#" + selectorNames.at(1) + "::item";
                                     }
                                 }else if(seg.selectorName.contains(selectorNames.at(0)+":")){
                                     selectorName ="#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
@@ -224,11 +226,11 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                     switch(m_selectorType.values().at(qssList.indexOf(divList.at(i))))
                                     {
                                     case Html::RCHECKBOX:{
-                                        selectorName ="#" + selectorNames.at(1);
+                                        selectorName = widgetName.m_checkBox + "#" + selectorNames.at(1);
                                         break;
                                     }
                                     case Html::RRADIO_BUTTON:{
-                                        selectorName ="#" + selectorNames.at(1);
+                                        selectorName = "#" + selectorNames.at(1);
                                         break;
                                     }
                                     case Html::RDROPLIST:{
@@ -245,7 +247,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         else if(selectorNames.at(1).contains("back"))
                                         {
                                             QString back = selectorNames.at(1);
-                                            selectorName ="#" + back.remove("back");
+                                            selectorName = "#" + back.remove("back");
                                         }
                                         break;
                                     }
@@ -253,12 +255,12 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         if(selectorNames.at(1).contains("spinbox"))
                                         {
                                             QString spinBox = selectorNames.at(1);
-                                            selectorName ="#" + spinBox.remove("spinbox");
+                                            selectorName = widgetName.m_spinBox + "#" + spinBox.remove("spinbox");
                                         }
                                         else if(selectorNames.at(1).contains("text"))
                                         {
                                             QString spinText = selectorNames.at(1);
-                                            selectorName ="#" + spinText.remove("text");
+                                            selectorName = widgetName.m_spinBox + "#" + spinText.remove("text");
                                         }
                                         break;
                                     }
@@ -266,12 +268,12 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         if(selectorNames.at(1).contains("bar"))
                                         {
                                             QString widgetId = selectorNames.at(1);
-                                            selectorName = "#" + widgetId.remove("bar") + "::chunk";
+                                            selectorName = widgetName.m_progressBar +  "#" + widgetId.remove("bar") + "::chunk";
                                         }
                                         else if(selectorNames.at(1).contains("slot"))
                                         {
                                             QString widgetId = selectorNames.at(1);
-                                            selectorName = "#" + widgetId.remove("slot");
+                                            selectorName = widgetName.m_progressBar +  "#" + widgetId.remove("slot");
                                         }
                                         break;
                                     }
@@ -279,27 +281,27 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         if(selectorNames.at(1).contains("addline"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = "#" + t_string.remove("addline") + "::add-line";
+                                            selectorName = widgetName.m_scrollBar +  "#" + t_string.remove("addline") + "::add-line";
                                         }
                                         else if(selectorNames.at(1).contains("downarrow"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = "#" + t_string.remove("downarrow") + "::down-arrow";
+                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("downarrow") + "::down-arrow";
                                         }
                                         else if(selectorNames.at(1).contains("uparrow"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = "#" + t_string.remove("uparrow") + "::up-arrow";
+                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("uparrow") + "::up-arrow";
                                         }
                                         else if(selectorNames.at(1).contains("subline"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = "#" + t_string.remove("subline") + "::sub-line";
+                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("subline") + "::sub-line";
                                         }
                                         else if(selectorNames.at(1).contains("scrollbar"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = "#" + t_string.remove("scrollbar") + "::handle";
+                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("scrollbar") + "::handle";
                                         }
                                         break;
                                     }
@@ -409,7 +411,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
             /*!< 对下拉框下拉状态的样式处理*/
             if(m_ruleSize != 0 && qssList.contains(seg.selectorName)){
                 if(m_selectorType.values().at(qssList.indexOf(seg.selectorName)) == Html::RDROPLIST){
-                    seg.selectorName ="#" + seg.selectorName + " QAbstractItemView";
+                    seg.selectorName = widgetName.m_comBox + "#" + seg.selectorName + " QAbstractItemView";
                     stream<<seg.selectorName<<" {"<<newLine;
                     foreach(const CSS::CssRule & rule,seg.rules)
                     {

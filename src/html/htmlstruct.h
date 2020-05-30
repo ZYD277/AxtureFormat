@@ -81,6 +81,33 @@ struct DomHead{
 };
 
 /*!
+ * @brief ui标准控件名
+ */
+struct QWidgetName{
+    QWidgetName():m_pushBtn("QPushbtton"),m_stackedWidget("QStackedWidget"),m_lineEdit("QLineEdit"),
+        m_radioBtn("QRadioBtton"),m_tableWidget("QTableWidget"),m_label("QLabel"),m_line("QLine"),
+        m_listWidget("QListWidget"),m_textEdit("QTextEdit"),m_checkBox("QCheckBox"),m_comBox("QComBox"),
+        m_treeWidget("QTreeWidget"),m_spinBox("QSpinBox"),m_scrollBar("QScrollBar"),m_progressBar("QProgressBar"),
+        m_tabWidget("QTabWidget"){}
+    QString m_pushBtn;
+    QString m_stackedWidget;        /*!< StackWidget */
+    QString m_lineEdit;             /*!< 单行文本框 */
+    QString m_radioBtn;             /*!< 单选框 */
+    QString m_tableWidget;          /*!< 表格 */
+    QString m_label;                /*!< 文本显示 */
+    QString m_line;                 /*!< 水平/竖直线条*/
+    QString m_listWidget;           /*!< 列表框 */
+    QString m_textEdit;             /*!< 文本框 */
+    QString m_checkBox;             /*!< 复选框 */
+    QString m_comBox;               /*!< 下拉框 */
+    QString m_treeWidget;           /*!< 树形控件*/
+    QString m_spinBox;              /*!< 加减输入框*/
+    QString m_scrollBar;            /*!<  滚动条*/
+    QString m_progressBar;          /*!< 进度条*/
+    QString m_tabWidget;            /*!< tabwidget*/
+};
+
+/*!
  * @brief 控件基础通用属性
  */
 struct BaseData{
@@ -230,6 +257,19 @@ struct ListData : public BaseData{
     QString m_arrowImageSrc;    /*!< 下拉箭头的默认背景 */
     QString m_arrowImageOn;     /*!< 下拉箭头的打开背景 */
     QString m_backGroundId;     /*!< 自制下拉框背景id */
+};
+
+/*!
+ * @brief tab页
+ */
+struct TabWidgetData : public BaseData{
+    TabWidgetData(){}
+
+    QStringList m_pageList;     /*!< 页面合集 */
+    QString m_selectedPage;     /*!< 默认选择页 */
+    QString m_srcImage;         /*!< 背景图片 */
+    QString m_selectedImage;    /*!< 选中背景图片 */
+
 };
 
 /*!

@@ -16,7 +16,9 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(RSPINBOX,QStringLiteral("加减输入框"));
     m_custControl.insert(RSCROLLBAR,QStringLiteral("滚动条"));
     m_custControl.insert(RPROGRESSBAR,QStringLiteral("进度条"));
-    m_custControl.insert(RTABWIDGET,QStringLiteral("选项卡"));
+    m_custControl.insert(RTABWIDGET,QStringLiteral("tab页"));
+//    m_custControl.insert(RTABLE,QStringLiteral("表格"));
+//    m_custControl.insert(RTABWIDGET,QStringLiteral("选项卡"));
     m_custControl.insert(RMENUBUTTON,QStringLiteral("菜单选项（触发选中标识）"));
     m_custControl.insert(RUNMENUBUTTON,QStringLiteral("菜单选项（无标识触发）"));
 //    m_custControl.insert(RTABLE,QStringLiteral("数据表格"));
@@ -142,6 +144,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
  */
 NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapper parentElement)
 {
+
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
         if(element.firstChild().tagName() == "iframe")
@@ -163,7 +166,6 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                     return RBUTTON;
                 }
             }
-
             auto iter = m_custControl.begin();
             while(iter != m_custControl.end()){
                 if(dataLabel.contains(iter.value()))
@@ -199,6 +201,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 
             //NOTE 匹配顺序按照优先级排列
             if(element.hasAttribute("data-left") && element.hasAttribute("data-left") && element.hasAttribute("data-left"))
+                return RGROUP;
+            if(element.attribute("data-label").contains(QStringLiteral("信息区")))
                 return RGROUP;
             if(classInfo.contains("radio_button"))
                 return RRADIO_BUTTON;
@@ -319,24 +323,70 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         default:break;
     }
 }
+
 void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode *node)
 {
-    ListData *data = new ListData();
+//    ListData *data = new ListData();
+//    GumboNodeWrapperList childs = element.children();
+//    for(int i = 0; i < childs.size(); i++)
+//    {
+//        GumboNodeWrapper child = childs.at(i);
+//        if(child.attribute("selectiongroup").contains(QStringLiteral("选项组"))){
+//            BaseData *childData = new BaseData();
+//            childData->m_text = child.secondChild().firstChild().firstChild().firstChild().text();
+//            DomNode * nodeChild = new DomNode(RTABWIDGET_PAGE);
+//            nodeChild->m_id = child.id();
+//            nodeChild->m_class = child.clazz();
+//            nodeChild->m_style = child.style();
+//            nodeChild->m_data = childData;
+//            establishRelation(node,nodeChild);
+//        }
+//    }
+//    node->m_data = data;
+
+    TabWidgetData *data = new TabWidgetData();
     GumboNodeWrapperList childs = element.children();
-    for(int i = 0; i < childs.size(); i++)
-    {
-        GumboNodeWrapper child = childs.at(i);
-        if(child.attribute("selectiongroup").contains(QStringLiteral("选项组"))){
-            BaseData *childData = new BaseData();
-            childData->m_text = child.secondChild().firstChild().firstChild().firstChild().text();
-            DomNode * nodeChild = new DomNode(RTABWIDGET_PAGE);
-            nodeChild->m_id = child.id();
-            nodeChild->m_class = child.clazz();
-            nodeChild->m_style = child.style();
-            nodeChild->m_data = childData;
-            establishRelation(node,nodeChild);
+
+    std::for_each(childs.begin(),childs.end(),[&](GumboNodeWrapper child){
+        if(child.attribute("data-label").contains(QStringLiteral("选项卡")))
+        {
+            GumboNodeWrapperList childPages = child.children();
+            std::for_each(childPages.begin(),childPages.end(),[&](GumboNodeWrapper childPage){
+                if(childPage.attribute("selectiongroup").contains(QStringLiteral("选项组")))
+                {
+                    if(childPage.clazz().contains("selected"))
+                    {
+                        data->m_selectedImage = childPage.firstChild().attribute(G_NodeHtml.SRC);
+                    }
+                    else
+                        data->m_srcImage = childPage.firstChild().attribute(G_NodeHtml.SRC);
+                    QString dataLabel = childPage.attribute("data-label");
+                    BaseData *childData = new BaseData();
+                    childData->m_text = childPage.secondChild().firstChild().firstChild().firstChild().text();
+                    DomNode * nodeChild = new DomNode(RTABWIDGET_PAGE);
+                    nodeChild->m_id = childPage.id();
+                    nodeChild->m_class = childPage.clazz();
+                    nodeChild->m_style = childPage.style();
+                    nodeChild->m_data = childData;
+                    establishRelation(node,nodeChild);
+                    std::for_each(childs.begin(),childs.end(),[&](GumboNodeWrapper child){
+                        if(child.attribute("data-label").contains(QStringLiteral("内容")))
+                        {
+                            GumboNodeWrapperList pageChilds = child.children();
+                            std::for_each(pageChilds.begin(),pageChilds.end(),[&](GumboNodeWrapper pageChild){
+                                if(pageChild.attribute("data-label").contains(dataLabel))
+                                {
+                                    data->m_srcImageId = pageChild.firstChild().firstChild().id();
+                                    parseDiv(pageChild.firstChild(),nodeChild);
+                                }
+                            });
+                        }
+                    });
+                }
+
+            });
         }
-    }
+    });
     node->m_data = data;
 }
 
