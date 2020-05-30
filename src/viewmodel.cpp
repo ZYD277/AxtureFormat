@@ -4,6 +4,7 @@
 #include <QRegExp>
 #include <QMessageBox>
 #include <QDebug>
+#include <QFileInfo>
 
 ViewModel::ViewModel()
 {
@@ -45,6 +46,7 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
 
                 switch(static_cast<TColumn>(column)){
                     case T_Index: return row + 1;break;
+                    case T_ProjectName:return QFileInfo(axurePage.axureProjectPath).baseName();break;
                     case T_FileName: return axurePage.htmlFileName;break;
                     case T_ClassName:return axurePage.switchClassName;break;
                     default:break;
@@ -143,6 +145,8 @@ QVariant ViewModel::headerData(int section, Qt::Orientation orientation, int rol
         {
             case T_Index:
                 return QStringLiteral("编号");
+            case T_ProjectName:
+                return QStringLiteral("Axure工程名称");
             case T_FileName:
                 return QStringLiteral("文件名称");
             case T_ClassName:

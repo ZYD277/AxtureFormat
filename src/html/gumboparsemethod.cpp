@@ -104,6 +104,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
     for(int i = 0; i < childNodeList.size(); i++){
         GumboNodeWrapper childEle = childNodeList.at(i);
         NodeType ttype = getNodeType(childEle,GumboNodeWrapper());
+
         if(ttype != RINVALID){
             DomNode * node = new DomNode(ttype);
             node->m_id = childEle.id();
@@ -147,25 +148,28 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
-        if(element.firstChild().tagName() == "iframe")
-        {
+        if(element.firstChild().tagName() == "iframe"){
             return RINLINE_FRAME;
         }
+
         QString classInfo = element.clazz();
         if(classInfo == m_classInfo && classInfo == "ax_default"){
             return RGROUP;
         }
+
         m_classInfo = classInfo;
 
         //解析定制化控件(部分官方控件会包含data-label属性，需要过滤)
-        if(element.hasAttribute("data-label")){
+        if(element.hasAttribute(G_NodeHtml.DATA_LABEL)){
             m_classInfo.clear();
-            QString dataLabel = element.attribute("data-label");
+
+            QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
             if(dataLabel.contains(QStringLiteral("按钮")) && !dataLabel.contains(QStringLiteral("单选按钮"))){
                 if((classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3") || classInfo.contains("label"))){
                     return RBUTTON;
                 }
             }
+
             auto iter = m_custControl.begin();
             while(iter != m_custControl.end()){
                 if(dataLabel.contains(iter.value()))
@@ -200,10 +204,12 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
         }else{
 
             //NOTE 匹配顺序按照优先级排列
-            if(element.hasAttribute("data-left") && element.hasAttribute("data-left") && element.hasAttribute("data-left"))
+            if(element.hasAttribute(G_NodeHtml.DATA_LEFT) && element.hasAttribute(G_NodeHtml.DATA_LEFT) && element.hasAttribute(G_NodeHtml.DATA_LEFT))
                 return RGROUP;
-            if(element.attribute("data-label").contains(QStringLiteral("信息区")))
+
+            if(element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("信息区")))
                 return RGROUP;
+
             if(classInfo.contains("radio_button"))
                 return RRADIO_BUTTON;
             else if(classInfo.contains("text_field"))
@@ -348,7 +354,7 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
     GumboNodeWrapperList childs = element.children();
 
     std::for_each(childs.begin(),childs.end(),[&](GumboNodeWrapper child){
-        if(child.attribute("data-label").contains(QStringLiteral("选项卡")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("选项卡")))
         {
             GumboNodeWrapperList childPages = child.children();
             std::for_each(childPages.begin(),childPages.end(),[&](GumboNodeWrapper childPage){
@@ -360,7 +366,7 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
                     }
                     else
                         data->m_srcImage = childPage.firstChild().attribute(G_NodeHtml.SRC);
-                    QString dataLabel = childPage.attribute("data-label");
+                    QString dataLabel = childPage.attribute(G_NodeHtml.DATA_LABEL);
                     BaseData *childData = new BaseData();
                     childData->m_text = childPage.secondChild().firstChild().firstChild().firstChild().text();
                     DomNode * nodeChild = new DomNode(RTABWIDGET_PAGE);
@@ -370,11 +376,11 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
                     nodeChild->m_data = childData;
                     establishRelation(node,nodeChild);
                     std::for_each(childs.begin(),childs.end(),[&](GumboNodeWrapper child){
-                        if(child.attribute("data-label").contains(QStringLiteral("内容")))
+                        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("内容")))
                         {
                             GumboNodeWrapperList pageChilds = child.children();
                             std::for_each(pageChilds.begin(),pageChilds.end(),[&](GumboNodeWrapper pageChild){
-                                if(pageChild.attribute("data-label").contains(dataLabel))
+                                if(pageChild.attribute(G_NodeHtml.DATA_LABEL).contains(dataLabel))
                                 {
                                     data->m_srcImageId = pageChild.firstChild().firstChild().id();
                                     parseDiv(pageChild.firstChild(),nodeChild);
@@ -397,11 +403,11 @@ void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNod
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute("data-label").contains(QStringLiteral("进度槽")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("进度槽")))
         {
            data->m_ProgressSlotId = child.id();
         }
-        if(child.attribute("data-label").contains(QStringLiteral("进度条")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("进度条")))
         {
            data->m_progressBarId = child.id();
         }
@@ -417,20 +423,20 @@ void GumboParseMethod::parseScrollBarNodeData(GumboNodeWrapper &element,DomNode 
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute("data-label").contains(QStringLiteral("滚动槽"))){
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("滚动槽"))){
             node->m_id = child.id();
         }
-        if(child.attribute("data-label").contains(QStringLiteral("滚动条")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("滚动条")))
         {
             data->m_scrollBarId = child.firstChild().firstChild().firstChild().id();
 
         }
-        if(child.attribute("data-label").contains(QStringLiteral("下翻")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下翻")))
         {
             data->m_addLine = child.firstChild().id();
             data->m_downArrow = child.secondChild().id();
         }
-        if(child.attribute("data-label").contains(QStringLiteral("上翻")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("上翻")))
         {
             data->m_subLine = child.firstChild().id();
             data->m_upArrow = child.secondChild().id();
@@ -442,22 +448,22 @@ void GumboParseMethod::parseScrollBarNodeData(GumboNodeWrapper &element,DomNode 
 void GumboParseMethod::parseSpinBoxNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     GroupData * data = new GroupData();
-    data->m_left = element.attribute("data-left").toInt();
-    data->m_top = element.attribute("data-top").toInt();
-    data->m_width = element.attribute("data-width").toInt();
-    data->m_height = element.attribute("data-height").toInt();
+    data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
     node->m_data = data;
 
     GumboNodeWrapperList childs = element.children();
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute("data-label").contains(QStringLiteral("输入框")))
+        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("输入框")))
         {
             data->m_spinBoxId = child.firstChild().id();
             data->m_sinBoxTextId = child.secondChild().id();
         }
-        else if(child.attribute("data-label").contains(QStringLiteral("加减箭头")))
+        else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("加减箭头")))
         {
 
         }
@@ -500,13 +506,13 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
         for(int i = 0; i < childs.size(); i++)
         {
             GumboNodeWrapper child = childs.at(i);
-            if(child.attribute("data-label").contains(QStringLiteral("下拉菜单")))
+            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉菜单")))
             {
                  GumboNodeWrapperList childs = child.firstChild().firstChild().children();
                  for(int j = 0; j < childs.size(); j++)
                  {
                      GumboNodeWrapper child = childs.at(j);
-                    if(child.attribute("data-label").contains(QStringLiteral("下拉菜单背景")))
+                    if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉菜单背景")))
                     {
                         data->m_srcImage = child.firstChild().attribute(G_NodeHtml.SRC);
                     }
@@ -517,13 +523,13 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
                     }
                  }
             }
-            if(child.attribute("data-label").contains(QStringLiteral("下拉框部分")))
+            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉框部分")))
             {
                 GumboNodeWrapperList childs = child.children();
                 for(int j = 0; j < childs.size(); j++)
                 {
                     GumboNodeWrapper child = childs.at(j);
-                   if(child.attribute("data-label").contains(QStringLiteral("下拉箭头-默认")))
+                   if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉箭头-默认")))
                    {
                       data->m_arrowImageSrc = child.firstChild().attribute(G_NodeHtml.SRC);
                       QStringList imageList = data->m_arrowImageSrc.split(".");
@@ -532,11 +538,11 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
                           data->m_arrowImageOn = imageList.at(0) + "_selected." + imageList.at(1);
                       }
                    }
-                   else if(child.attribute("data-label").contains(QStringLiteral("下拉框背景")))
+                   else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉框背景")))
                    {
                        data->m_widgetSizeId = child.id();
                    }
-                   else if(child.attribute("data-label").contains(QStringLiteral("下拉框文本")))
+                   else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉框文本")))
                    {
                        data->m_textId = child.id();
                        data->m_selectedValue = child.secondChild().firstChild().firstChild().firstChild().text();
@@ -600,17 +606,17 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
 {
     BaseData * data = new BaseData();
     GumboNodeWrapperList childs = element.children();
-    if(element.attribute("data-label").contains(QStringLiteral("菜单选项（触发选中标识）")))
+    if(element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("菜单选项（触发选中标识）")))
     {
         for(int i = 0; i < childs.size(); i++)
         {
             GumboNodeWrapper child = childs.at(i);
-            if(child.attribute("data-label").contains(QStringLiteral("选项")))
+            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("选项")))
             {
                 data->m_text = child.secondChild().firstChild().firstChild().firstChild().text();
                 node->m_id = child.id();
             }
-            else if(child.attribute("data-label").contains(QStringLiteral("选中图标")))
+            else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("选中图标")))
             {
                 BaseData *childData = new BaseData();
                 childData->m_srcImage = child.firstChild().attribute(G_NodeHtml.SRC);
@@ -657,18 +663,18 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute("data-label") == QStringLiteral("未选中"))
+        if(child.attribute(G_NodeHtml.DATA_LABEL) == QStringLiteral("未选中"))
         {
            data->m_unCheckedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
-        else if(child.attribute("data-label") == QStringLiteral("选中"))
+        else if(child.attribute(G_NodeHtml.DATA_LABEL) == QStringLiteral("选中"))
         {
             data->m_checkedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
 
     }
-    data->m_widths = element.firstChild().firstChild().firstChild().attribute("data-width").toInt();
-    data->m_heights = element.firstChild().firstChild().firstChild().attribute("data-height").toInt();
+    data->m_widths = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    data->m_heights = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_HEIGHT).toInt();
 
     data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
     data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
@@ -683,8 +689,8 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
     node->m_data = data;
 
     //获取定制控件文字描述
-    if(element.hasAttribute("data-label")){
-        data->m_panelDataLab = element.attribute(QStringLiteral("data-label"));
+    if(element.hasAttribute(G_NodeHtml.DATA_LABEL)){
+        data->m_panelDataLab = element.attribute(G_NodeHtml.DATA_LABEL);
     }
 
     GumboNodeWrapperList childs = element.children();
@@ -741,9 +747,9 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
 
                 std::for_each(firstFloorGroupChilds.begin(),firstFloorGroupChilds.end(),
                               [&](GumboNodeWrapper firstFloorGroupChild){
-                    if(firstFloorGroupChild.hasAttribute("data-label"))
+                    if(firstFloorGroupChild.hasAttribute(G_NodeHtml.DATA_LABEL))
                     {
-                        QString firstDataLabelText = firstFloorGroupChild.attribute(QStringLiteral("data-label"));
+                        QString firstDataLabelText = firstFloorGroupChild.attribute(G_NodeHtml.DATA_LABEL);
 
                         if(firstDataLabelText.contains(QStringLiteral("背景")))
                         {
@@ -755,9 +761,9 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
                             GumboNodeWrapperList secondFloorGroupChilds = firstFloorGroupChild.firstChild().children();
                             std::for_each(secondFloorGroupChilds.begin(),secondFloorGroupChilds.end(),
                                           [&](GumboNodeWrapper secondFloorGroupChild){
-                                if(secondFloorGroupChild.hasAttribute("data-label"))
+                                if(secondFloorGroupChild.hasAttribute(G_NodeHtml.DATA_LABEL))
                                 {
-                                    QString secondDataLabelText = secondFloorGroupChild.attribute(QStringLiteral("data-label"));
+                                    QString secondDataLabelText = secondFloorGroupChild.attribute(G_NodeHtml.DATA_LABEL);
                                     if(secondDataLabelText.contains(QStringLiteral("背景")))
                                     {
                                         if(secondFloorGroupChild.firstChild().clazz().contains("img"))
@@ -914,10 +920,10 @@ void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeIt
 void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     GroupData * data = new GroupData();
-    data->m_left = element.attribute("data-left").toInt();
-    data->m_top = element.attribute("data-top").toInt();
-    data->m_width = element.attribute("data-width").toInt();
-    data->m_height = element.attribute("data-height").toInt();
+    data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
     node->m_data = data;
 }
 

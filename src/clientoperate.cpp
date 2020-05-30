@@ -563,9 +563,31 @@ bool ClientOperate::isRepeatedFile(QString filePath)
 
 /**
  * @brief 更新列表信息
+ * @details 20200530 将相同Axure工程的文件创建合并行显示工程名称
  */
 void ClientOperate::updateTableModel()
 {
+    QList<int> sameProjectStatstics;          //相同工程路路径下文件个数
+    QString lastProjectPath;
+
+    for(AxurePage page : m_pageList){
+        if(lastProjectPath == page.axureProjectPath){
+            sameProjectStatstics.last()++;
+        }else{
+            sameProjectStatstics.append(1);
+        }
+
+        lastProjectPath = page.axureProjectPath;
+    }
+
+    ui->tableView->clearSpans();
+
+    int t_startRow = 0;
+    for(int spanRow : sameProjectStatstics){
+        ui->tableView->setSpan(t_startRow,1,spanRow,1);
+        t_startRow += spanRow;
+    }
+
     m_model->setModelData(m_pageList);
     m_model->refreshModel();
 }

@@ -61,6 +61,7 @@ struct SwitchProgress{
  */
 enum TColumn{
     T_Index,
+    T_ProjectName,
     T_FileName,
     T_ClassName,
     T_Progress,

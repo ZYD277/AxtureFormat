@@ -36,6 +36,12 @@ struct NodeHtml{
     const QString DISABLED = "disabled";
     const QString READONLY = "readonly";
     const QString MAX_LEN = "maxlength";
+    const QString DATA_LABEL = "data-label";
+    const QString DATA_LEFT = "data-left";
+    const QString DATA_TOP = "data-top";
+    const QString DATA_WIDTH = "data-width";
+    const QString DATA_HEIGHT = "data-height";
+
 };
 
 /*!
