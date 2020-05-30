@@ -55,6 +55,8 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
             }
             case Qt::ToolTipRole:{
                 switch(static_cast<TColumn>(column)){
+                    case T_ProjectName:return axurePage.axureProjectPath; break;
+                    case T_FileName:return axurePage.htmlFilePath; break;
                     case T_Open: {
                         if(axurePage.processData.m_progress < 100)
                             return QStringLiteral("查看原文件");
