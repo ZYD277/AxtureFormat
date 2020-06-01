@@ -214,7 +214,8 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                                ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RDROPLIST
                                                ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSPINBOX
                                                ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RPROGRESSBAR
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSCROLLBAR))
+                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSCROLLBAR
+                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABWIDGET))
                         {
                             /*!< 设计的子节点和主节点的查找*/
                             QStringList selectorNames = divList.at(i).split("_div_");
