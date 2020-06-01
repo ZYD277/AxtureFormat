@@ -62,7 +62,6 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RTABWIDGET_PAGE:
         case Html::RDYNAMIC_PANEL_PAGE:
         case Html::RGROUP:return QString("QWidget");break;
-        case Html::RMENUBUTTON:
         case Html::RUNMENUBUTTON:
         case Html::RBUTTON:return QString("QPushButton");break;
         case Html::RDYNAMIC_PANEL:return QString("QStackedWidget");break;
@@ -357,12 +356,17 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             createTextProp(domWidget,node->m_data->m_text);
             createLayoutDirectionProp(domWidget,node->m_data->m_bLeftToRight);
 
+            MProperty * cursorShape = new MProperty;
+            cursorShape->setAttributeName("cursor");
+            cursorShape->setProCursor("PointingHandCursor");
+            domWidget->addProperty(cursorShape);
+
             if(!node->m_data->m_checkedImage.isEmpty()&&!node->m_data->m_unCheckedImage.isEmpty())
             {
                 createRadioBtnImageProp(domWidget,node->m_data->m_checkedImage,node->m_data->m_unCheckedImage,"QCheckBox");
             }
-            if(!node->m_data->m_textId.contains("text")){
-                QString m_textId = node->m_data->m_textId + "_div_" + node->m_id;
+            if(!node->m_data->m_specialTextId.isEmpty()){
+                QString m_textId = node->m_data->m_specialTextId + "_div_" + node->m_id;
                 m_selectorType.insert(m_textId,Html::RCHECKBOX);
             }
 
@@ -379,13 +383,19 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
             createLayoutDirectionProp(domWidget,node->m_data->m_bLeftToRight);
+
+            MProperty * cursorShape = new MProperty;
+            cursorShape->setAttributeName("cursor");
+            cursorShape->setProCursor("PointingHandCursor");
+            domWidget->addProperty(cursorShape);
+
             if(!node->m_data->m_checkedImage.isEmpty()&&!node->m_data->m_unCheckedImage.isEmpty())
             {
                 createRadioBtnImageProp(domWidget,node->m_data->m_checkedImage,node->m_data->m_unCheckedImage,"QRadioButton");
             }
 
-            if(!node->m_data->m_textId.contains("text")){
-                QString m_textId = node->m_data->m_textId + "_div_" + node->m_id;
+            if(!node->m_data->m_specialTextId.isEmpty()){
+                QString m_textId = node->m_data->m_specialTextId + "_div_" + node->m_id;
                 m_selectorType.insert(m_textId,Html::RRADIO_BUTTON);
             }
 
@@ -464,22 +474,15 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             break;
         }
-
-        case Html::RMENUBUTTON:{
-            createTextProp(domWidget,node->m_data->m_text);
-
-            if(node->m_data->m_toolTip.size() > 0)
-                createToolTipProp(domWidget,node->m_data->m_toolTip);
-            for(int i = node->m_childs.size()-1; i >=0 ; i--)
-            {
-                createDomWidget(domWidget,node->m_childs.at(i),rect);
-            }
-            break;
-        }
         case Html::RUNMENUBUTTON:
         case Html::RBUTTON:{
             createCheckedProp(domWidget,node->m_data->m_bChecked);
             createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            MProperty * cursorShape = new MProperty;
+            cursorShape->setAttributeName("cursor");
+            cursorShape->setProCursor("PointingHandCursor");
+            domWidget->addProperty(cursorShape);
 
             QString imageSrc = node->m_data->m_srcImage;
             if(!imageSrc.isEmpty())
@@ -635,10 +638,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             {
                 createDomWidget(domWidget,node->m_childs.at(i),rect);
             }
-            createTabWidgetImageProp(domWidget,tabData->m_srcImage,tabData->m_selectedImage,"QTabBar");
-            qDebug()<<__FILE__<<__FUNCTION__<<__LINE__<<"\n"
-                   <<tabData->m_srcImage<<tabData->m_selectedImage
-                   <<"\n";
+            QString tabBarid;
+            if(!tabData->m_tabBarId.isEmpty())
+                tabBarid = tabData->m_tabBarId;
+            createTabWidgetImageProp(domWidget,tabData->m_srcImage,tabData->m_selectedImage,tabBarid);
             break;
        }
         case Html::RTABWIDGET_PAGE:{
@@ -895,18 +898,26 @@ void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,QString check
     }
 }
 
-void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget,QString srcImage,QString selectImageSrc,QString widgetName)
+void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget,QString srcImage,QString selectImageSrc,QString tabId)
 {
+    QString tabStyle;
+    CSS::Rules tabRules = m_pageCss.value(tabId).rules;
+    for(int i = 0;i < tabRules.size(); i++){
+        if(tabRules.at(i).name != "left"&&tabRules.at(i).name != "top"){
+            tabStyle = tabStyle +tabRules.at(i).name + ":" + tabRules.at(i).value + ";";
+        }
+    }
     srcImage = handleImage(srcImage);
     selectImageSrc = handleImage(selectImageSrc);
 
     if(!srcImage.isEmpty()||!selectImageSrc.isEmpty()){
         MProperty * styleProp = new MProperty();
         styleProp->setAttributeName("styleSheet");
-        styleProp->setPropString(QString("%1::tab:selected, %2::tab:hover { border-image: url(:/%3);}"
-                                         "%4::tab:!selected, %5::tab:hover {  border-image: url(:/%6);}")
-                                 .arg(widgetName).arg(widgetName).arg(selectImageSrc).arg(widgetName).arg(widgetName)
-                                 .arg(srcImage));
+        styleProp->setPropString(QString("QTabWidget::pane{ border: none;}"
+                                         "QTabBar::tab:selected, QTabBar::tab:hover { border-image: url(:/%1);}"
+                                         "QTabBar::tab:!selected, QTabBar::tab:hover {  border-image: url(:/%2);}"
+                                         "QTabBar::tab{%3}")
+                                 .arg(selectImageSrc).arg(srcImage).arg(tabStyle));
         domWidget->addProperty(styleProp);
     }
 }
@@ -1038,6 +1049,7 @@ bool FormatProperty::judgeLayoutDirection(QString selectorId)
     //WARNING 不同Axure版本生成checkBox的格式存在一定的差异
     QString textId;
     QString tmpTextId = selectorId + "_text";
+    QString selector = selectorId;
     if(m_pageCss.contains(tmpTextId)){
         textId = tmpTextId;
     }else{
@@ -1053,14 +1065,13 @@ bool FormatProperty::judgeLayoutDirection(QString selectorId)
 
     //Axure9.0.0版本以选择框的背景id为准，而不是input
     QString inputId;
-    QString tmpImgId = selectorId + "_img";
+    QString tmpImgId = selector + "_img";
     if(m_pageCss.contains(tmpImgId)){
         inputId = tmpImgId;
     }else{
-        inputId = selectorId + "_input";
+        inputId = selector + "_input";
     }
     QString inputLeftVal = getCssStyle(inputId,"left");
-
     if(inputLeftVal.toLower().contains("px")){
         inputLeftVal = inputLeftVal.toLower().remove("px");
     }

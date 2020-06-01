@@ -48,7 +48,7 @@ private:
 
     inline void createImageProp(RDomWidget * domWidget, QString imageSrc);
     inline void createRadioBtnImageProp(RDomWidget *domWidget, QString checkImageSrc, QString unCheckImageSrc, QString widgetName);
-    inline void createTabWidgetImageProp(RDomWidget *domWidget, QString srcImage, QString selectImageSrc, QString widgetName);
+    inline void createTabWidgetImageProp(RDomWidget *domWidget, QString srcImage, QString selectImageSrc, QString tabId);
     inline void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);

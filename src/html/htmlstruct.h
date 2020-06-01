@@ -41,6 +41,8 @@ struct NodeHtml{
     const QString DATA_TOP = "data-top";
     const QString DATA_WIDTH = "data-width";
     const QString DATA_HEIGHT = "data-height";
+    const QString SELECTIONGROUP = "selectiongroup";
+
 
 };
 
@@ -73,8 +75,7 @@ enum NodeType{
     RPROGRESSBAR,           /*!< 进度条*/
     RTABWIDGET,             /*!< tabwidget*/
     RTABWIDGET_PAGE,        /*!< tab页 */
-    RMENUBUTTON,            /*!< 菜单选项触发按钮 */
-    RUNMENUBUTTON          /*!< 菜单选项无触发按钮 */
+    RUNMENUBUTTON         /*!< 菜单选项无触发按钮 */
 };
 
 /*!
@@ -127,6 +128,7 @@ struct BaseData{
     QString m_srcImageId;       /*!< 背景图片控件id */
     QString m_checkedImage;     /*!< 选中背景图 */
     QString m_unCheckedImage;   /*!< 未选中背景图 */
+    QString m_specialTextId;      /*!< 自制控件文本 */
 
     QString m_widgetSizeId;     /*!< 自制控件大小id */
 
@@ -275,6 +277,8 @@ struct TabWidgetData : public BaseData{
     QString m_selectedPage;     /*!< 默认选择页 */
     QString m_srcImage;         /*!< 背景图片 */
     QString m_selectedImage;    /*!< 选中背景图片 */
+    QString m_tabBarId;         /*!< 根据tabBarId来获取tab样式*/
+    QString m_paneId;           /*!<  根据paneId来获取pane样式*/
 
 };
 
