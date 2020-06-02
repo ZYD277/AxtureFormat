@@ -559,7 +559,6 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
     }
     if(element.clazz() == "ax_default"){
         node->m_id = element.firstChild().id();
-//        data->m_textId = element.secondChild().firstChild().id();
     }
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
@@ -871,58 +870,13 @@ void GumboParseMethod::parseTreeNodeData(GumboNodeWrapper &element, DomNode *nod
     virtualRoot->m_text = "root";
     virtualRoot->m_parentItem = nullptr;
 
-    if(element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("折叠信息")))
-    {
-        GumboNodeWrapperList childs = element.children();
-        for(int i = 0; i < childs.size(); i++)
-        {
-            TreeItemData * data = new TreeItemData();
-            GumboNodeWrapper child = childs.at(i);
-            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("折叠信息")))
-            {
-                data->m_parentItem = virtualRoot;
-                virtualRoot->m_childItemId = child.firstChild().id();
-
-                GumboNodeWrapperList secondChilds = child.children();
-                QString timeData;
-
-                QString messageData;
-                for(int k = 0; k < secondChilds.size(); k++)
-                {
-                    GumboNodeWrapper t_secondChild = secondChilds.at(i);
-                    if(t_secondChild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("时间")))
-                    {
-                        timeData = t_secondChild.secondChild().firstChild().firstChild().firstChild().text();
-                    }
-                    else if(t_secondChild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("信息")))
-                    {
-                        messageData = t_secondChild.secondChild().firstChild().firstChild().firstChild().text();
-                    }
-                }
-                data->m_text = timeData + " " + messageData;
-                node->m_id = child.firstChild().id();
-
-            }
-            else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("展开信息")))
-            {
-                TreeItemData * childData = new TreeItemData();
-                childData->m_parentItem = data;
-                childData->m_text = child.firstChild().firstChild().firstChild().secondChild().secondChild()
-                        .firstChild().firstChild().firstChild().text();
-                data->m_childItems.push_back(childData);
-            }
-
-        }
+    GumboNodeWrapperList topLevelChilds = element.firstChild().children();
+    for(int i = 0; i < topLevelChilds.size(); i++){
+        parseSubTreeDataNodeData(topLevelChilds.at(i),virtualRoot);
     }
-    else {
-        GumboNodeWrapperList topLevelChilds = element.firstChild().children();
-        for(int i = 0; i < topLevelChilds.size(); i++){
-            parseSubTreeDataNodeData(topLevelChilds.at(i),virtualRoot);
-        }
 
-        if(element.clazz() == "ax_default"){
-            node->m_id = element.firstChild().id();
-        }
+    if(element.clazz() == "ax_default"){
+        node->m_id = element.firstChild().id();
     }
 
     node->m_data = virtualRoot;
@@ -942,6 +896,7 @@ void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeIt
                 parentNode->m_childItemId = tmpChild.id();
                 data->m_text = tmpChild.secondChild().firstChild().firstChild().firstChild().text();
             }else if(tmpChild.clazz().contains("children")){
+                parentNode->m_childTextId = tmpChild.firstChild().id();
                 GumboNodeWrapperList subChilds = tmpChild.children();
                 for(int j = 0; j < subChilds.size(); j++){
                     parseSubTreeDataNodeData(subChilds.at(j),data);

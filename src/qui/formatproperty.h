@@ -35,9 +35,10 @@ public:
     QStringList getOriginalResources(){return m_originalResources;}
     QStringList getResources(){return m_resources;}
     SelectorTypeMap getHtmlParsedResult(){return m_selectorType;}
+    QString getTypeName(Html::NodeType type);
 
 private:
-    QString getTypeName(Html::NodeType type);
+//    QString getTypeName(Html::NodeType type);
 
     typedef QMap<QString, QString> StyleMap;
     StyleMap extractCssRule(Html::DomNode * node);
