@@ -63,6 +63,7 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
                 seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
             }
         }
+        seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
         m_pageCss.insert(name,seg);
         iter++;
     }
@@ -92,6 +93,18 @@ CSS::Rules QSSParseMethod::filterDuplicateData(CSS::Rules rules)
 {
     QMap<QString,QString> tmpRules;
     std::for_each(rules.begin(),rules.end(),[&](CSS::CssRule cssRule){
+        if(cssRule.value.contains("rgba") && cssRule.name.contains("color")){
+            int index1 = cssRule.value.lastIndexOf(" ");
+            int index2 = cssRule.value.lastIndexOf(")");
+            QString t_ruleValue;
+            QString tmp = cssRule.value.right(index2-index1);
+            QString tp = tmp.left( tmp.lastIndexOf(")"));
+            if(tp.toDouble() >= 0 && tp.toDouble() <= 1){
+                int b = tp.toDouble() * 255;
+                t_ruleValue = cssRule.value.left(cssRule.value.size() - (index2-index1)) + QString::number(b) + ")";
+            }
+            cssRule.value = t_ruleValue;
+        }
         tmpRules.insert(cssRule.name,cssRule.value);
     });
 
@@ -111,8 +124,6 @@ bool QSSParseMethod::startSave(RTextFile *file)
     QTextStream stream(file);
 
     QString newLine = "\r";
-
-    Html::QWidgetName widgetName;
 
     auto generateCss = [&](CSS::CssMap& cssMap){
 
@@ -146,18 +157,18 @@ bool QSSParseMethod::startSave(RTextFile *file)
                     ruleName = "border";
                     ruleValue = "none";
                 }
-                else if(ruleValue.contains("rgba") && ruleName.contains("color")){
-                    int index1 = ruleValue.lastIndexOf(" ");
-                    int index2 = ruleValue.lastIndexOf(")");
-                    QString t_ruleValue;
-                    QString tmp = ruleValue.right(index2-index1);
-                    QString tp = tmp.left( tmp.lastIndexOf(")"));
-                    if(tp.toDouble() >= 0 && tp.toDouble() <= 1){
-                        int b = tp.toDouble() * 255;
-                        t_ruleValue = ruleValue.left(ruleValue.size() - (index2-index1)) + QString::number(b) + ")";
-                    }
-                    ruleValue = t_ruleValue;
-                }
+//                else if(ruleValue.contains("rgba") && ruleName.contains("color")){
+//                    int index1 = ruleValue.lastIndexOf(" ");
+//                    int index2 = ruleValue.lastIndexOf(")");
+//                    QString t_ruleValue;
+//                    QString tmp = ruleValue.right(index2-index1);
+//                    QString tp = tmp.left( tmp.lastIndexOf(")"));
+//                    if(tp.toDouble() >= 0 && tp.toDouble() <= 1){
+//                        int b = tp.toDouble() * 255;
+//                        t_ruleValue = ruleValue.left(ruleValue.size() - (index2-index1)) + QString::number(b) + ")";
+//                    }
+//                    ruleValue = t_ruleValue;
+//                }
 
                 /*!< m_ruleSize计算剩余属性数量*/
                 if(deprecatedRulesName.contains(ruleName))
@@ -187,13 +198,22 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                 if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName))
                                 {
 
-                                    selectorName = widgetName.m_tableWidget + "#" + selectorNames.at(1);
+                                    selectorName = formatProperty.getTypeName(Html::RTABLE) + "#" + selectorNames.at(1);
                                     if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE)
                                     {
-                                        selectorName = widgetName.m_treeWidget + "#" + selectorNames.at(1) + "::item";
+                                        if(selectorNames.at(1).contains("back"))
+                                        {
+                                            QString back = selectorNames.at(1);
+                                            selectorName = formatProperty.getTypeName(Html::RTREE) + "#" + back.remove("back") + "::item";
+                                        }
+                                        else if(selectorNames.at(1).contains("text"))
+                                        {
+                                            QString text = selectorNames.at(1);
+                                            selectorName = formatProperty.getTypeName(Html::RTREE) + "#" + text.remove("text");
+                                        }
                                     }
                                 }else if(seg.selectorName.contains(selectorNames.at(0)+":")){
-                                    selectorName ="#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
+                                    selectorName = "#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
                                 }else{
                                     break;
                                 }
@@ -227,28 +247,28 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                     switch(m_selectorType.values().at(qssList.indexOf(divList.at(i))))
                                     {
                                     case Html::RCHECKBOX:{
-                                        selectorName = widgetName.m_checkBox + "#" + selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RCHECKBOX) + "#" + selectorNames.at(1);
                                         break;
                                     }
                                     case Html::RRADIO_BUTTON:{
-                                        selectorName = "#" + selectorNames.at(1);
+                                        selectorName =formatProperty.getTypeName(Html::RRADIO_BUTTON) + "#" + selectorNames.at(1);
                                         break;
                                     }
                                     case Html::RDROPLIST:{
                                         if(selectorNames.at(1).contains("option"))
                                         {
                                             QString option = selectorNames.at(1);
-                                            selectorName = "#" + option.remove("option") + " QAbstractItemView";
+                                            selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + option.remove("option") + " QAbstractItemView";
                                         }
                                         else if(selectorNames.at(1).contains("arrow"))
                                         {
                                             QString arrow = selectorNames.at(1);
-                                            selectorName = "#" + arrow.remove("arrow") + "::drop-down";
+                                            selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + arrow.remove("arrow") + "::drop-down";
                                         }
                                         else if(selectorNames.at(1).contains("back"))
                                         {
                                             QString back = selectorNames.at(1);
-                                            selectorName = "#" + back.remove("back");
+                                            selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + back.remove("back");
                                         }
                                         break;
                                     }
@@ -256,12 +276,12 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         if(selectorNames.at(1).contains("spinbox"))
                                         {
                                             QString spinBox = selectorNames.at(1);
-                                            selectorName = widgetName.m_spinBox + "#" + spinBox.remove("spinbox");
+                                            selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinBox.remove("spinbox");
                                         }
                                         else if(selectorNames.at(1).contains("text"))
                                         {
                                             QString spinText = selectorNames.at(1);
-                                            selectorName = widgetName.m_spinBox + "#" + spinText.remove("text");
+                                            selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinText.remove("text");
                                         }
                                         break;
                                     }
@@ -269,12 +289,12 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         if(selectorNames.at(1).contains("bar"))
                                         {
                                             QString widgetId = selectorNames.at(1);
-                                            selectorName = widgetName.m_progressBar +  "#" + widgetId.remove("bar") + "::chunk";
+                                            selectorName = formatProperty.getTypeName(Html::RPROGRESSBAR) +  "#" + widgetId.remove("bar") + "::chunk";
                                         }
                                         else if(selectorNames.at(1).contains("slot"))
                                         {
                                             QString widgetId = selectorNames.at(1);
-                                            selectorName = widgetName.m_progressBar +  "#" + widgetId.remove("slot");
+                                            selectorName = formatProperty.getTypeName(Html::RPROGRESSBAR) +  "#" + widgetId.remove("slot");
                                         }
                                         break;
                                     }
@@ -282,27 +302,27 @@ bool QSSParseMethod::startSave(RTextFile *file)
                                         if(selectorNames.at(1).contains("addline"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = widgetName.m_scrollBar +  "#" + t_string.remove("addline") + "::add-line";
+                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) +  "#" + t_string.remove("addline") + "::add-line";
                                         }
                                         else if(selectorNames.at(1).contains("downarrow"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("downarrow") + "::down-arrow";
+                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("downarrow") + "::down-arrow";
                                         }
                                         else if(selectorNames.at(1).contains("uparrow"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("uparrow") + "::up-arrow";
+                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("uparrow") + "::up-arrow";
                                         }
                                         else if(selectorNames.at(1).contains("subline"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("subline") + "::sub-line";
+                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("subline") + "::sub-line";
                                         }
                                         else if(selectorNames.at(1).contains("scrollbar"))
                                         {
                                             QString t_string = selectorNames.at(1);
-                                            selectorName = widgetName.m_scrollBar + "#" + t_string.remove("scrollbar") + "::handle";
+                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("scrollbar") + "::handle";
                                         }
                                         break;
                                     }
@@ -412,7 +432,7 @@ bool QSSParseMethod::startSave(RTextFile *file)
             /*!< 对下拉框下拉状态的样式处理*/
             if(m_ruleSize != 0 && qssList.contains(seg.selectorName)){
                 if(m_selectorType.values().at(qssList.indexOf(seg.selectorName)) == Html::RDROPLIST){
-                    seg.selectorName = widgetName.m_comBox + "#" + seg.selectorName + " QAbstractItemView";
+                    seg.selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + seg.selectorName + " QAbstractItemView";
                     stream<<seg.selectorName<<" {"<<newLine;
                     foreach(const CSS::CssRule & rule,seg.rules)
                     {

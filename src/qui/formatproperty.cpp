@@ -312,8 +312,12 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 domWidget->addItem(item);
             }
             if(!virtualRoot->m_childItemId.isEmpty()){
-                virtualRoot->m_childItemId = virtualRoot->m_childItemId + "_div_" + node->m_id;
+                virtualRoot->m_childItemId = virtualRoot->m_childItemId + "_div_back" + node->m_id;
                 m_selectorType.insert(virtualRoot->m_childItemId,Html::RTREE);
+            }
+            if(!virtualRoot->m_childTextId.isEmpty()){
+                virtualRoot->m_childTextId = virtualRoot->m_childTextId + "_div_text" + node->m_id;
+                m_selectorType.insert(virtualRoot->m_childTextId,Html::RTREE);
             }
 
             break;
@@ -823,10 +827,12 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     }
     else if(node->m_type == Html::RDROPLIST)
     {
-        if(rect.width() == 0 || rect.height() == 0){
+        if(!node->m_data->m_widgetSizeId.isEmpty())
+        {
             QString textId = node->m_data->m_widgetSizeId;
-            rect.setWidth(removePxUnit(getCssStyle(textId,"width")));
-            rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
+            QRect dropListRect(removePxUnit(getCssStyle(textId,"left")),removePxUnit(getCssStyle(textId,"top")),
+                       removePxUnit(getCssStyle(textId,"width")),removePxUnit(getCssStyle(textId,"height")));
+            rect = dropListRect;
         }
     }
     else if(node->m_type == Html::RSPINBOX)
