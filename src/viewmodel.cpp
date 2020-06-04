@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QFileInfo>
+#include <QDir>
 
 ViewModel::ViewModel()
 {
@@ -46,7 +47,7 @@ QVariant ViewModel::data(const QModelIndex & index, int role) const
 
                 switch(static_cast<TColumn>(column)){
                     case T_Index: return row + 1;break;
-                    case T_ProjectName:return QFileInfo(axurePage.axureProjectPath).baseName();break;
+                    case T_ProjectName:return QDir(axurePage.axureProjectPath).dirName();break;
                     case T_FileName: return axurePage.htmlFileName;break;
                     case T_ClassName:return axurePage.switchClassName;break;
                     default:break;
