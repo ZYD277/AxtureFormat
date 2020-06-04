@@ -435,7 +435,6 @@ void GumboParseMethod::parseScrollBarNodeData(GumboNodeWrapper &element,DomNode 
         if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("滚动条")))
         {
             data->m_scrollBarId = child.firstChild().firstChild().firstChild().id();
-
         }
         if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下翻")))
         {
@@ -474,7 +473,6 @@ void GumboParseMethod::parseSpinBoxNodeData(GumboNodeWrapper &element,DomNode *n
 
         }
     }
-
 }
 
 void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node)
