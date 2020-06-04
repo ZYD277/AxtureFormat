@@ -359,54 +359,82 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     }
 }
 
+/*!
+ * @brief 解析TAB标签页
+ * @attention TAB标签页的结构:
+ *            +[div]
+ *              +[div data-label="内容"]
+ *              +[div data-label="选项卡"]
+ *          通过针对性识别两个子div获取类型，需要注意的是“内容”中面板名称的顺序和“选项卡”中面板名称顺序相反。
+ *          【因‘内容’面板中每个panel都带了data-label属性，与对应的选项卡名称一致，所以就把每个data-label属性作为tab页面名称】
+ */
 void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode *node)
 {
-    TabWidgetData *data = new TabWidgetData();
     GumboNodeWrapperList childs = element.children();
 
-    std::for_each(childs.begin(),childs.end(),[&](GumboNodeWrapper child){
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("选项卡")))
-        {
-            GumboNodeWrapperList childPages = child.children();
-            std::for_each(childPages.begin(),childPages.end(),[&](GumboNodeWrapper childPage){
-                if(childPage.attribute("selectiongroup").contains(QStringLiteral("选项组")))
-                {
-                    if(childPage.clazz().contains("selected"))
-                    {
-                        data->m_selectedImage = childPage.firstChild().attribute(G_NodeHtml.SRC);
-                    }
-                    else
-                        data->m_srcImage = childPage.firstChild().attribute(G_NodeHtml.SRC);
+    GumboNodeWrapper headNode;
+    GumboNodeWrapper contentNode;
 
-                    data->m_tabBarId = childPage.id();
-                    QString dataLabel = childPage.attribute(G_NodeHtml.DATA_LABEL);
-                    BaseData *childData = new BaseData();
-                    childData->m_text = childPage.secondChild().firstChild().firstChild().firstChild().text();
-                    DomNode * nodeChild = new DomNode(RTABWIDGET_PAGE);
-                    nodeChild->m_id = childPage.id();
-                    nodeChild->m_class = childPage.clazz();
-                    nodeChild->m_style = childPage.style();
-                    nodeChild->m_data = childData;
-                    establishRelation(node,nodeChild);
-                    std::for_each(childs.begin(),childs.end(),[&](GumboNodeWrapper child){
-                        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("内容")))
-                        {
-                            GumboNodeWrapperList pageChilds = child.children();
-                            std::for_each(pageChilds.begin(),pageChilds.end(),[&](GumboNodeWrapper pageChild){
-                                if(pageChild.attribute(G_NodeHtml.DATA_LABEL).contains(dataLabel))
-                                {
-                                    data->m_srcImageId = pageChild.firstChild().firstChild().id();
-                                    parseDiv(pageChild.firstChild(),nodeChild);
-                                }
-                            });
-                        }
-                    });
-                }
-
-            });
+    for(int i = 0; i < childs.size(); i++){
+        QString dataLabel = childs.at(i).attribute(G_NodeHtml.DATA_LABEL);
+        if(dataLabel.contains(QStringLiteral("选项卡"))){
+            headNode = childs.at(i);
+        }else if(dataLabel.contains(QStringLiteral("内容"))){
+            contentNode = childs.at(i);
         }
-    });
-    node->m_data = data;
+    }
+
+    if(headNode.valid() && contentNode.valid()){
+        TabWidgetData * tabData = new TabWidgetData();
+
+        tabData->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+        tabData->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+        tabData->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+        tabData->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+        //根据选项卡中包含‘selected’的项，将其作为默认选中的index
+        GumboNodeWrapperList headPanels = headNode.children();
+        QString selectedTabPageName;
+        for(int i = 0; i < headPanels.size(); i++){
+            GumboNodeWrapper headPanel = headPanels.at(i);
+            if(headPanel.clazz().contains("selected")){
+                selectedTabPageName = headPanel.secondChild().firstChild().firstChild().firstChild().text();
+                tabData->m_tabSelectedImage = headPanel.firstChild().attribute(G_NodeHtml.SRC);
+            }else if(headPanel.hasAttribute("selectiongroup")){
+                tabData->m_tabNormalImage = headPanel.firstChild().attribute(G_NodeHtml.SRC);
+            }
+        }
+
+        //根据内容面板创建页面
+        GumboNodeWrapperList contentPanels = contentNode.children();
+        for(int i = 0; i < contentPanels.size(); i++){
+            GumboNodeWrapper contentPanel = contentPanels.at(i);
+
+            BaseData * pageData = new BaseData();
+            pageData->m_text = contentPanel.attribute(G_NodeHtml.DATA_LABEL);
+
+            if(pageData->m_text == selectedTabPageName){
+                tabData->m_selectedPageIndex = i;
+            }
+
+            DomNode * page = new DomNode(RTABWIDGET_PAGE);
+            page->m_id = contentPanel.id();
+            page->m_class = contentPanel.clazz();
+            page->m_style = contentPanel.style();
+            page->m_data = pageData;
+            establishRelation(node,page);
+
+            parseDiv(contentPanel.firstChild(),page);
+        }
+
+        //设置每个tab标签页的尺寸
+        tabData->m_tabHeight = headNode.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+        if(contentPanels.size() > 0){
+            tabData->m_tabWidth = headNode.attribute(G_NodeHtml.DATA_WIDTH).toInt() / contentPanels.size();
+        }
+
+        node->m_data = tabData;
+    }
 }
 
 /*!

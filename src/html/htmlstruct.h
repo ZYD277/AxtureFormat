@@ -73,8 +73,8 @@ enum NodeType{
     RSPINBOX,               /*!< 加减输入框*/
     RSCROLLBAR,             /*!< 滚动条*/
     RPROGRESSBAR,           /*!< 进度条*/
-    RTABWIDGET,             /*!< tabwidget*/
-    RTABWIDGET_PAGE,        /*!< tab页 */
+    RTABWIDGET,             /*!< Tabwidget*/
+    RTABWIDGET_PAGE,        /*!< Tab页 */
     RUNMENUBUTTON,          /*!< 菜单选项无触发按钮 */
     /***********识别自定义控件************/
     R_CUSTOM_TEXT_FIELD      /*!< 自定义元件-输入框 */
@@ -249,15 +249,24 @@ struct ListData : public BaseData{
  * @brief tab页
  */
 struct TabWidgetData : public BaseData{
-    TabWidgetData(){}
+    TabWidgetData():m_selectedPageIndex(0),m_left(0),m_top(0),m_width(0),m_height(0),
+    m_tabWidth(0),m_tabHeight(0){}
 
-    QStringList m_pageList;     /*!< 页面合集 */
-    QString m_selectedPage;     /*!< 默认选择页 */
-    QString m_srcImage;         /*!< 背景图片 */
-    QString m_selectedImage;    /*!< 选中背景图片 */
+    int m_left;                 /*!< 'tab页'div中data-left属性 */
+    int m_top;                  /*!< 'tab页'div中data-top属性 */
+    int m_width;
+    int m_height;
+
+    int m_tabWidth;             /*!< '选项卡'div中单个宽度 */
+    int m_tabHeight;            /*!< '选项卡'div中单个高度 */
+
+    int m_selectedPageIndex;    /*!< 默认选中的页面选项 */
+
+    QString m_tabNormalImage;   /*!< 默认tab项中背景图片 */
+    QString m_tabSelectedImage; /*!< 选中tab项背景图片 */
+
     QString m_tabBarId;         /*!< 根据tabBarId来获取tab样式*/
-    QString m_paneId;           /*!<  根据paneId来获取pane样式*/
-
+    QString m_paneId;           /*!< 根据paneId来获取pane样式*/
 };
 
 /*!

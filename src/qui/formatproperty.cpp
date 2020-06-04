@@ -645,21 +645,27 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
        }
        case Html::RTABWIDGET:{
-        Html::TabWidgetData *tabData = static_cast<Html::TabWidgetData *>(node->m_data);
-            for(int i = node->m_childs.size()-1; i >=0 ; i--)
-            {
-                createDomWidget(domWidget,node->m_childs.at(i),rect);
+            Html::TabWidgetData * tabData = static_cast<Html::TabWidgetData *>(node->m_data);
+            if(tabData){
+                MProperty * indexProp = new MProperty();
+                indexProp->setAttributeName("currentIndex");
+                indexProp->setPropNumber(QString::number(tabData->m_selectedPageIndex));
+                domWidget->addProperty(indexProp);
+
+                for(int i = 0;  i < node->m_childs.size(); i++){
+                    createDomWidget(domWidget,node->m_childs.at(i),rect);
+                }
+
+                createTabWidgetImageProp(domWidget,tabData);
             }
-            QString tabBarid;
-            if(!tabData->m_tabBarId.isEmpty())
-                tabBarid = tabData->m_tabBarId;
-            createTabWidgetImageProp(domWidget,tabData->m_srcImage,tabData->m_selectedImage,tabBarid);
             break;
        }
         case Html::RTABWIDGET_PAGE:{
             MAttribute * hVisibleAttribute = new MAttribute();
+
             hVisibleAttribute->setAttributeName("title");
             hVisibleAttribute->setPropString(node->m_data->m_text);
+
             domWidget->addAttrinute(hVisibleAttribute);
             break;
         }
@@ -825,7 +831,8 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
 
     //转换成父窗口的相对坐标
     //NOTE dynamic panel中每个子页面容器已经是相对位置，不必计算相对位置。
-    if(node->m_type != Html::RDYNAMIC_PANEL_PAGE){
+    //tab widget中属性不在css中，因此获取的位置信息为0
+    if(node->m_type != Html::RDYNAMIC_PANEL_PAGE && node->m_type != Html::RTABWIDGET){
         rect.moveLeft(rect.x() - parentRect.x());
         rect.moveTop(rect.y() - parentRect.y());
     }
@@ -942,18 +949,12 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     }
     else if(node->m_type == Html::RTABWIDGET)
     {
-        int width = 0;
-        int height = 0;
-        for(int i = 0; i < node->m_childs.size(); i++)
-        {
-            rect.setTop(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"top")));
-            rect.setLeft(removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"left")));
-            height = removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"height"));
-            width = width + removePxUnit(getCssStyle(node->m_childs.at(i)->m_id,"width"));
+        Html::TabWidgetData * tabData = dynamic_cast<Html::TabWidgetData *>(node->m_data);
+        if(tabData){
+            rect.setTop(tabData->m_top - parentRect.y());
+            rect.setWidth(tabData->m_width);
+            rect.setHeight(tabData->m_height);
         }
-        height = height + removePxUnit(getCssStyle(node->m_data->m_srcImageId,"height"));
-        rect.setHeight(height);
-        rect.setWidth(width);
     }
 
     if(rect.left() < 0)
@@ -1004,26 +1005,36 @@ void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,QString check
     }
 }
 
-void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget,QString srcImage,QString selectImageSrc,QString tabId)
+/*!
+ * @brief 创建QTabWidget中tab相关的样式属性
+ * @attention 包括选中、mouseover时以及未选中时状态
+ * @param[in] tabData tab页面数据
+ */
+void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData * tabData)
 {
-    QString tabStyle;
-    CSS::Rules tabRules = m_pageCss.value(tabId).rules;
-    for(int i = 0;i < tabRules.size(); i++){
-        if(tabRules.at(i).name != "left"&&tabRules.at(i).name != "top"){
-            tabStyle = tabStyle +tabRules.at(i).name + ":" + tabRules.at(i).value + ";";
-        }
-    }
-    srcImage = handleImage(srcImage);
-    selectImageSrc = handleImage(selectImageSrc);
+    QString tabStyle = QString("width:%1px;height:%2px;").arg(tabData->m_tabWidth).arg(tabData->m_tabHeight);
 
-    if(!srcImage.isEmpty()||!selectImageSrc.isEmpty()){
+    QString normalImageSrc = handleImage(tabData->m_tabNormalImage);
+    QString selectedImageSrc = handleImage(tabData->m_tabSelectedImage);
+
+    if(!normalImageSrc.isEmpty() && !selectedImageSrc.isEmpty()){
+        QStringList normalNameList = tabData->m_tabNormalImage.split(".");
+        QString mouseOverImageSrc = normalImageSrc;
+        //hover状态在正常状态加入_mouseOver
+        if(normalNameList.size() == 2){
+            mouseOverImageSrc = handleImage(normalNameList.at(0) + "_mouseOver."+normalNameList.at(1));
+        }
+
         MProperty * styleProp = new MProperty();
         styleProp->setAttributeName("styleSheet");
-        styleProp->setPropString(QString("QTabWidget::pane{ border: none;}"
-                                         "QTabBar::tab:selected, QTabBar::tab:hover { border-image: url(:/%1);}"
-                                         "QTabBar::tab:!selected, QTabBar::tab:hover {  border-image: url(:/%2);}"
-                                         "QTabBar::tab{%3}")
-                                 .arg(selectImageSrc).arg(srcImage).arg(tabStyle));
+
+        //QTabBar::tab无border-image属性
+        styleProp->setPropString(QString("QTabWidget::pane{ border: none;}\r\n"
+                                         "QTabBar::tab:selected,QTabBar::tab:selected:hover{border-image: url(':/%1');}\r\n"
+                                         "QTabBar::tab:!selected{border-image: url(':/%2');}\r\n"
+                                         "QTabBar::tab:!selected:hover{border-image: url(':/%3');}\r\n"
+                                         "QTabBar::tab{%4}")
+                                 .arg(selectedImageSrc).arg(normalImageSrc).arg(mouseOverImageSrc).arg(tabStyle));
         domWidget->addProperty(styleProp);
     }
 }
@@ -1048,13 +1059,13 @@ void FormatProperty::createComBoxImageProp(RDomWidget *domWidget, QString imageS
 
 QString FormatProperty::handleImage(QString imageSrc)
 {
-    QString imagePath = imageSrc;
+    m_originalResources.append(imageSrc);
+
     int firstSplitPos = imageSrc.indexOf("/");
     int secondSplitPos = imageSrc.indexOf("/",firstSplitPos + 1);
 
     imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
 
-    m_originalResources.append(imagePath);
     if(!m_resources.contains(imageSrc))
         m_resources.append(imageSrc);
 

@@ -63,10 +63,11 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                     if(RUtil::createDir(dstImagePath)){
                         //根据图片引用的资源链接去拷贝
                         QStringList resourcesLinks = m_qtOutput.getOriginalResouces();
+
                         foreach(const QString & links,resourcesLinks){
                             QString imgPath = dir.path() + QDir::separator() + links;
                             QString dstImageFullPath = dstImagePath + QDir::separator() + QFileInfo(imgPath).fileName();
-                            QFile::copy(imgPath,dstImageFullPath);
+                            qDebug()<<imgPath<<dstImageFullPath<<QFile::copy(imgPath,dstImageFullPath);
                         }
 
                         //拷贝对应目录下所有文件
