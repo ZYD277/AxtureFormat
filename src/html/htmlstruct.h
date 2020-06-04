@@ -88,33 +88,6 @@ struct DomHead{
 };
 
 /*!
- * @brief ui标准控件名
- */
-struct QWidgetName{
-    QWidgetName():m_pushBtn("QPushbtton"),m_stackedWidget("QStackedWidget"),m_lineEdit("QLineEdit"),
-        m_radioBtn("QRadioBtton"),m_tableWidget("QTableWidget"),m_label("QLabel"),m_line("QLine"),
-        m_listWidget("QListWidget"),m_textEdit("QTextEdit"),m_checkBox("QCheckBox"),m_comBox("QComBox"),
-        m_treeWidget("QTreeWidget"),m_spinBox("QSpinBox"),m_scrollBar("QScrollBar"),m_progressBar("QProgressBar"),
-        m_tabWidget("QTabWidget"){}
-    QString m_pushBtn;
-    QString m_stackedWidget;        /*!< StackWidget */
-    QString m_lineEdit;             /*!< 单行文本框 */
-    QString m_radioBtn;             /*!< 单选框 */
-    QString m_tableWidget;          /*!< 表格 */
-    QString m_label;                /*!< 文本显示 */
-    QString m_line;                 /*!< 水平/竖直线条*/
-    QString m_listWidget;           /*!< 列表框 */
-    QString m_textEdit;             /*!< 文本框 */
-    QString m_checkBox;             /*!< 复选框 */
-    QString m_comBox;               /*!< 下拉框 */
-    QString m_treeWidget;           /*!< 树形控件*/
-    QString m_spinBox;              /*!< 加减输入框*/
-    QString m_scrollBar;            /*!<  滚动条*/
-    QString m_progressBar;          /*!< 进度条*/
-    QString m_tabWidget;            /*!< tabwidget*/
-};
-
-/*!
  * @brief 控件基础通用属性
  */
 struct BaseData{
@@ -213,6 +186,7 @@ struct TreeItemData : public BaseData{
     TreeItemData * m_parentItem;                /*!< 父节点 */
     QList<TreeItemData *>   m_childItems;       /*!< 子节点 */
     QString m_childItemId;                  /*!< 子节点id用于tree的样式*/
+    QString m_childTextId;                  /*!< 子节点处理树的文字样式 */
 };
 
 /*!
