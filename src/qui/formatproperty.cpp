@@ -834,6 +834,17 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     if(node->m_type == Html::RDYNAMIC_PANEL && rect.width() < 1)
     {
         Html::PanelData * panelData = dynamic_cast<Html::PanelData *>(node->m_data);
+
+        //定制化控件“输入框”:取第一个孩子面板中的width、height属性，作为自身的属性
+        if(panelData->m_panelDataLabel.contains(QStringLiteral("输入框"))){
+            if(node->m_childs.size() > 0){
+                CSS::CssSegment childSegment = m_pageCss.value(node->m_childs.first()->m_id);
+                rect.setWidth(removePxUnit(findRuleByName(childSegment.rules,"width").value));
+                rect.setHeight(removePxUnit(findRuleByName(childSegment.rules,"height").value));
+                return rect;
+            }
+        }
+
         if(!panelData->m_sonPanelStateId.isEmpty())
         {
             QString twidth = getCssStyle(panelData->m_sonPanelStateId,"width");
@@ -867,7 +878,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                 QString textX = getCssStyle(panelData->m_panelTextId,"left");
 
                 //获取自定义复选框，单选框，半选中复选框等特殊自定义控件位置尺寸
-                if((panelData->m_panelDataLab.contains(QStringLiteral("复选"))) ||(panelData->m_panelDataLab.contains(QStringLiteral("单选")))){
+                if((panelData->m_panelDataLabel.contains(QStringLiteral("复选"))) ||(panelData->m_panelDataLabel.contains(QStringLiteral("单选")))){
                     rect.setWidth((removePxUnit(timgx) > removePxUnit(textX)) ? (removePxUnit(twidth) + removePxUnit(timgx)) : (removePxUnit(textWidth) + removePxUnit(textX)));
                     rect.setHeight((removePxUnit(theight) > removePxUnit(textheight)) ? removePxUnit(theight) : removePxUnit(textheight));
                 }

@@ -160,7 +160,7 @@ struct ProgressBarData : public BaseData{
 struct PanelData : public BaseData{
     ~PanelData(){}
 
-    QString m_panelDataLab;             /*!< DynamicPanel中每个panel_state的data-label标签内容 */
+    QString m_panelDataLabel;           /*!< DynamicPanel中最外层data-label标签内容 */
     QString m_secondSrcImageId;         /*!< 二级子菜单背景id*/
     QString m_sonPanelStateId;          /*!< 二级动态面板id*/
     QString m_panelTextId;

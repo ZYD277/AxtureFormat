@@ -721,7 +721,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
 
     //获取定制控件文字描述
     if(element.hasAttribute(G_NodeHtml.DATA_LABEL)){
-        data->m_panelDataLab = element.attribute(G_NodeHtml.DATA_LABEL);
+        data->m_panelDataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
     }
 
     GumboNodeWrapperList childs = element.children();
@@ -766,13 +766,11 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
                 if(!imageChild.clazz().isEmpty())
                 {
                     data->m_srcImageId = imageChild.id();
-
                 }
                 //获取自制动态面板下组合的第二个控件id（一般只能处理两个控件组合的情况）
                 if(!textChild.clazz().isEmpty())
                 {
                     data->m_panelTextId = textChild.id();
-
                 }
 
                 //处理自制动态面板下含有二级子菜单，获取一级子菜单和二级子菜单背景id（右垂直菜单）
