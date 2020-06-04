@@ -71,11 +71,13 @@ enum NodeType{
     RINLINE_FRAME,          /*!< 内联窗口 */
     RTREE,                  /*!< 树形控件*/
     RSPINBOX,               /*!< 加减输入框*/
-    RSCROLLBAR,             /*!<  滚动条*/
+    RSCROLLBAR,             /*!< 滚动条*/
     RPROGRESSBAR,           /*!< 进度条*/
     RTABWIDGET,             /*!< tabwidget*/
     RTABWIDGET_PAGE,        /*!< tab页 */
-    RUNMENUBUTTON         /*!< 菜单选项无触发按钮 */
+    RUNMENUBUTTON,          /*!< 菜单选项无触发按钮 */
+    /***********识别自定义控件************/
+    R_CUSTOM_TEXT_FIELD      /*!< 自定义元件-输入框 */
 };
 
 /*!
@@ -101,7 +103,7 @@ struct BaseData{
     QString m_srcImageId;       /*!< 背景图片控件id */
     QString m_checkedImage;     /*!< 选中背景图 */
     QString m_unCheckedImage;   /*!< 未选中背景图 */
-    QString m_specialTextId;      /*!< 自制控件文本 */
+    QString m_specialTextId;    /*!< 自制控件文本 */
 
     QString m_widgetSizeId;     /*!< 自制控件大小id */
 
@@ -109,13 +111,15 @@ struct BaseData{
     int m_heights;
     QString m_textId;
 
-    bool m_bChecked;        /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
+    bool m_bChecked;            /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
     bool m_bDisabled;
-    bool m_bReadOnly;       /*!< 只读 */
-    bool m_bLeftToRight;    /*!< 布局默认从左至右 */
+    bool m_bReadOnly;           /*!< 只读 */
+    bool m_bLeftToRight;        /*!< 布局默认从左至右 */
+
+    QStringList m_referenceIds;     /*!< 当前控件的样式需要引用其它ID的样式，可参考自定义控件‘输入框’中 */
 };
 
-typedef QMap<NodeType,QString> CustControl;
+typedef QMap<QString,NodeType> CustControl;        //key：自定义控件名称，value：对应转换的自定义控件类型
 
 /*!
  * @brief 图像数据

@@ -33,6 +33,7 @@ public:
 
 private:
     CSS::Rules filterDuplicateData(CSS::Rules rules);
+    void generateCss(RTextFile *file, CSS::CssMap& cssMap);
 
 private:
     CSS::CssMap m_globalCss;

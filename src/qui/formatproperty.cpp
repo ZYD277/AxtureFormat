@@ -25,6 +25,12 @@ void FormatProperty::setDataSource(DomHtmlPtr ptr)
     m_dataSrc = ptr;
 }
 
+/*!
+ * @brief 设置全局和当前页面的CSS
+ * @details 20200604:因自定义控件中需要将控件A的样式挪动至控件B进行显示，因此需要对pageCss中原来属于A的移除，将B的属性改成A。
+ * @param[in] globalCss 全局CSS
+ * @param[in] pageCss 当前页面CSS
+ */
 void FormatProperty::setCssMap(CSS::CssMap globalCss, CSS::CssMap pageCss)
 {
     m_globalCss = globalCss;
@@ -65,6 +71,7 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RUNMENUBUTTON:
         case Html::RBUTTON:return QString("QPushButton");break;
         case Html::RDYNAMIC_PANEL:return QString("QStackedWidget");break;
+        case Html::R_CUSTOM_TEXT_FIELD:
         case Html::RTEXT_FIELD:return QString("QLineEdit");break;
         case Html::RRADIO_BUTTON:return QString("QRadioButton");break;
         case Html::RTABLE:return QString("QTableWidget");break;
@@ -322,7 +329,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             break;
         }
-        case Html::RTEXT_FIELD:{
+        case Html::RTEXT_FIELD:
+        case Html::R_CUSTOM_TEXT_FIELD:{
             Html::TextFieldData * textData = dynamic_cast<Html::TextFieldData *>(node->m_data);
 
             createTextProp(domWidget,textData->m_text);
@@ -672,6 +680,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         default:break;
     }
 
+    //20200604:对自定义控件样式进行合并处理
+    processNodeStyle(node);
+
     if(node->m_childs.size() > 0 && node->m_type != Html::RTABLE && node->m_type != Html::RDYNAMIC_PANEL
             &&node->m_type != Html::RTABWIDGET){
         std::for_each(node->m_childs.begin(),node->m_childs.end(),[&](Html::DomNode * element){
@@ -681,9 +692,80 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 }
 
 /*!
+ * @brief 对每个控件样式进行特殊处理
+ * @attention 【此操作会改变样式表中的内容，使得相关控件的样式被移除、修改】
+ *              示例：在自定义控件中”输入框“，设计时采用组合模式拼接成一个输入框，但样式信息不在text filed控件中，而在其兄弟节点里，需要将其兄弟节点的样式拿过来，将名称替换成
+ *              text field的相关信息，才可使用。
+ * @param[in] 待处理节点
+ */
+void FormatProperty::processNodeStyle(Html::DomNode *node)
+{
+    if(node->m_data && node->m_data->m_referenceIds.size() > 0){
+        QStringList referenceIds = node->m_data->m_referenceIds;
+
+        switch(node->m_type){
+            case Html::R_CUSTOM_TEXT_FIELD:{
+                //在css解析时，已经将XX_div.selected替换成了XX:checked和XX:disabled
+                QString selectedSuffix = ":checked";
+                QString disabledSuffix = ":disabled";
+
+                QString referenceId = referenceIds.at(0);
+
+                //找出所有参考ID的样式,并用当前ID等价替换
+                if(m_pageCss.contains(referenceId)){
+                    m_pageCss.remove(referenceId);
+                }
+
+                QString selectedId = referenceId + selectedSuffix;
+                if(m_pageCss.contains(selectedId)){
+                    QString newSelectedId = node->m_id + ":hover";      //QLineEdit无checked属性，用hover代替
+                    m_pageCss.operator [](selectedId).selectorName = newSelectedId;
+
+                    m_pageCss.insert(newSelectedId,m_pageCss.value(selectedId));
+                    m_pageCss.remove(selectedId);
+                }
+
+                QString disabledId = referenceId + disabledSuffix;
+                if(m_pageCss.contains(disabledId)){
+                    QString newDisabledId = node->m_id + disabledSuffix;
+                    m_pageCss.operator [](disabledId).selectorName = newDisabledId;
+
+                    m_pageCss.insert(newDisabledId,m_pageCss.value(disabledId));
+                    m_pageCss.remove(disabledId);
+                }
+
+                //移除当前本身的样式(text filed不包含样式信息)
+                m_pageCss.remove(node->m_id);
+                QString inputId = node->m_id + "_input";
+
+                CSS::CssRule colorRule;
+                if(m_pageCss.contains(inputId)){
+                    CSS::Rules inputIdStyle = m_pageCss.operator [](inputId).rules;
+                    colorRule = findRuleByName(inputIdStyle,"color");
+                }
+
+                m_pageCss.remove(inputId);
+
+                QString divId = referenceId + "_div";
+                if(m_pageCss.contains(divId)){
+                    m_pageCss.operator [](divId).selectorName = node->m_id;
+                    m_pageCss.operator [](divId).rules.append(colorRule);
+
+                    m_pageCss.insert(node->m_id,m_pageCss.value(divId));
+                }
+
+                break;
+            }
+            default:break;
+        }
+    }
+}
+
+/*!
  * @brief 分别从全局和当前页面样式中，将当前节点相关样式整合
  * @attention 1.根据class提取全局样式;
  *            2.根据class和id提取当前页面样式;
+ *            3.若设置了样式参考ID，则拉取参考ID的的样式(针对定制化控件)
  * @param[in] node 待提取样式节点
  * @return 当前控件的全部样式信息
  */
@@ -709,6 +791,13 @@ FormatProperty::StyleMap FormatProperty::extractCssRule(Html::DomNode *node)
         addCss(m_pageCss.value(node->m_class),finalRuleMap);
 
         addCss(m_pageCss.value(node->m_id),finalRuleMap);
+    }
+
+    //[3] 若设置了参考ID，则从参考ID中拉取样式作为己方的样式
+    if(node->m_data && !node->m_data->m_referenceIds.isEmpty()){
+        for(QString referenceId : node->m_data->m_referenceIds){
+            addCss(m_pageCss.value(referenceId),finalRuleMap);
+        }
     }
 
     return finalRuleMap;
@@ -1105,6 +1194,38 @@ QString FormatProperty::getCssStyle(QString selectorName, QString propName)
     }
 
     return QString();
+}
+
+/*!
+ * @brief 根据属性名在属性集合中查找对应的属性
+ * @param[in] rules 待查找集合列表
+ * @param[in] ruleName 待查找的属性名
+ * @return 若查找则返回对应的属性记录，否则返回一个空的
+ */
+CSS::CssRule FormatProperty::findRuleByName(CSS::Rules &rules, QString ruleName)
+{
+    auto iresult = std::find_if(rules.begin(),rules.end(),[&ruleName](const CSS::CssRule & rule){
+        return rule.name == ruleName;
+    });
+
+    if(iresult != rules.end()){
+        return *iresult;
+    }
+
+    return CSS::CssRule();
+}
+
+/*!
+ * @brief 根据属性名替换属性集合中的原始属性
+ * @param[in] rules 待替换集合列表
+ * @param[in] ruleName 待替换的属性名
+ * @param[in] newRule 待替换的属性
+ */
+void FormatProperty::replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS::CssRule newRule)
+{
+    std::replace_if(rules.begin(),rules.end(),[&](const CSS::CssRule & rule){
+        return rule.name == ruleName;
+    },newRule);
 }
 
 } //namespace RQt

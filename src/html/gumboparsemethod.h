@@ -67,6 +67,8 @@ private:
     void parseProgreesBarNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode *node);
 
+    void parseCustomInputEdit(GumboNodeWrapper &element,DomNode *node);
+
 private:
     DomHtmlPtr m_htmlResultPtr;
 
@@ -75,7 +77,7 @@ private:
     QString m_classInfo;
     QString m_treeDatas;
     QStringList m_panlIdList;
-    CustControl m_custControl;
+    CustControl m_custControl;          //自定义输入框与可转换的控件类型
 };
 
 } //namespace Html

@@ -25,6 +25,8 @@ public:
     GumboNodeWrapper();
     GumboNodeWrapper(GumboNode * node);
 
+    GumboNodeWrapper & operator= (const GumboNodeWrapper & GumboNodeWrapper);
+
     /*!< 子节点操作 */
     GumboNodeWrapper elementByTagName(QString tagName);
     GumboNodeWrapperList elementsByTagName(QString tagName);
@@ -39,10 +41,10 @@ public:
 
     /*!< 属性操作 */
     AttributeList attributes();
-    QString attribute(QString attrName);
+    QString attribute(QString attrName) const;
     bool hasAttribute(QString attrName);
     QString id();
-    QString clazz();
+    QString clazz() const;
     QString style();
 
     bool valid() const{return m_bValid;}
@@ -63,7 +65,7 @@ public:
 
 private:
     GumboTag getTagByTagName(QString tagName);
-    inline bool isValidElement();
+    inline bool isValidElement() const;
     inline bool isValidText();
 
     typedef std::function<GumboNodeWrapper(const GumboVector &)> IterCallback;

@@ -29,6 +29,7 @@ public:
 
     void setDataSource(DomHtmlPtr ptr);
     void setCssMap(CSS::CssMap globalCss, CSS::CssMap pageCss);
+    CSS::CssMap getPageCss(){return m_pageCss;}
 
     RDomWidget * formart();
 
@@ -43,6 +44,7 @@ private:
     typedef QMap<QString, QString> StyleMap;
     StyleMap extractCssRule(Html::DomNode * node);
     void createDomWidget(RDomWidget *parentWidget, Html::DomNode * node, QRect parentRect);
+    void processNodeStyle(Html::DomNode * node);
 
     QRect calculateGeomerty(StyleMap & cssMap,Html::DomNode *node,QRect & parentRect);
     int removePxUnit(QString valueWithUnit);
@@ -65,6 +67,9 @@ private:
 
     bool judgeLayoutDirection(QString selectorId);
     QString getCssStyle(QString selectorName,QString propName);
+
+    CSS::CssRule findRuleByName(CSS::Rules & rules,QString ruleName);
+    void replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS::CssRule newRule);
 
 private:
     DomHtmlPtr m_dataSrc;

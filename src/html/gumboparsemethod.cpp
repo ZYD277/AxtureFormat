@@ -8,15 +8,19 @@ NodeHtml G_NodeHtml;
 
 GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
 {
-    m_custControl.insert(RRADIO_BUTTON,QStringLiteral("单选按钮"));
-    m_custControl.insert(RCHECKBOX,QStringLiteral("复选框"));
+    m_custControl.insert(QStringLiteral("单选按钮"),RRADIO_BUTTON);
+    m_custControl.insert(QStringLiteral("复选框"),RCHECKBOX);
 //    m_custControl.insert(RTREE,QStringLiteral("折叠信息"));
-    m_custControl.insert(RDROPLIST,QStringLiteral("下拉列表框"));
-    m_custControl.insert(RSPINBOX,QStringLiteral("加减输入框"));
-    m_custControl.insert(RSCROLLBAR,QStringLiteral("滚动条"));
-    m_custControl.insert(RPROGRESSBAR,QStringLiteral("进度条"));
-    m_custControl.insert(RTABWIDGET,QStringLiteral("tab页"));
-    m_custControl.insert(RUNMENUBUTTON,QStringLiteral("菜单选项（无标识触发）"));
+    m_custControl.insert(QStringLiteral("下拉列表框"),RDROPLIST);
+    m_custControl.insert(QStringLiteral("加减输入框"),RSPINBOX);
+    m_custControl.insert(QStringLiteral("滚动条"),RSCROLLBAR);
+    m_custControl.insert(QStringLiteral("进度条"),RPROGRESSBAR);
+    m_custControl.insert(QStringLiteral("tab页"),RTABWIDGET);
+    m_custControl.insert(QStringLiteral("菜单选项（无标识触发）"),RUNMENUBUTTON);
+
+    m_custControl.insert(QStringLiteral("输入框-默认"),R_CUSTOM_TEXT_FIELD);
+    m_custControl.insert(QStringLiteral("输入框-禁用"),R_CUSTOM_TEXT_FIELD);
+    m_custControl.insert(QStringLiteral("输入框-警告"),R_CUSTOM_TEXT_FIELD);
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -38,7 +42,7 @@ bool GumboParseMethod::startParse(RTextFile *file)
         m_htmlResultPtr = DomHtmlPtr(new DomHtml);
         parseBody(bodyNode);
 
-        //        printBody(m_htmlResultPtr->body);
+//        printBody(m_htmlResultPtr->body);
     }
 
     return true;
@@ -117,7 +121,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             }
 
             if(ttype == RGROUP){
-                parseDiv(childEle,parentNode);
+                parseDiv(childEle,node);
             }
             //自制控件子级有组合控件继续解析
             else if(ttype == RLABEL||ttype == RBOX||ttype == RBUTTON){
@@ -144,7 +148,6 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
  */
 NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapper parentElement)
 {
-
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
         if(element.firstChild().tagName() == "iframe"){
@@ -191,17 +194,19 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                     return RBUTTON;
                 }
             }
+
             auto iter = m_custControl.begin();
+
             while(iter != m_custControl.end()){
-                if(dataLabel.contains(iter.value()))
-                {
-                    return iter.key();
+                if(dataLabel.contains(iter.key())){
+                    return iter.value();
                 }
                 else if((classInfo.contains("box_1")||classInfo.contains("box_2")
                         ||classInfo.contains("box_3")||classInfo.contains("label"))&&!dataLabel.contains(QStringLiteral("菜单选项（无标识触发）")))
                 {
                     return RLABEL;
                 }
+
                 ++iter;
             }
         }
@@ -348,6 +353,8 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         case RSCROLLBAR:parseScrollBarNodeData(element,node);break;
         case RPROGRESSBAR:parseProgreesBarNodeData(element,node);break;
         case RTABWIDGET:parseTabWidgetNodeData(element,node);break;
+
+        case R_CUSTOM_TEXT_FIELD:parseCustomInputEdit(element,node);break;
         default:break;
     }
 }
@@ -402,6 +409,44 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
     node->m_data = data;
 }
 
+/*!
+ * @brief 解析自定义输入框
+ * @details 1.对应元件.rp中信息输入组件，输入框-默认、输入框-禁用、输入框-警告三种
+ *          2.解析时，子元素中包含Rectangele和Text field两个组件，其中Rectangle负责维护样式，Text field只负责输入(不管理样式)
+ *            解析后使用QLineEdit控件，需要将Rectangle控件的样式拷贝至QLineEdit上。
+ */
+void GumboParseMethod::parseCustomInputEdit(GumboNodeWrapper &element, DomNode *node)
+{
+    GumboNodeWrapperList childs = element.children();
+
+    GumboNodeWrapper boxNode;
+    GumboNodeWrapper textFieldNode;
+
+    for(int i = 0; i < childs.size(); i++)
+    {
+        QString childClazz = childs.at(i).clazz();
+        if(childClazz.contains("text_field")){
+            textFieldNode = childs.at(i);
+        }else if(childClazz.contains("box_")){
+            boxNode = childs.at(i);
+        }
+    }
+
+    if(textFieldNode.valid() && boxNode.valid())
+    {
+        parseTextFieldNodeData(textFieldNode,node);
+
+        //因样式信息都在Rectangle中
+        node->m_id = textFieldNode.id();
+
+        if(node->m_data){
+            QStringList referenceIds;
+            referenceIds << boxNode.id();      //"uXX_div"，css中样式都是对内层div设置的
+            node->m_data->m_referenceIds = referenceIds;
+        }
+    }
+}
+
 void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     ProgressBarData *data = new ProgressBarData();
@@ -418,8 +463,8 @@ void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNod
            data->m_progressBarId = child.id();
         }
     }
-    node->m_data = data;
 
+    node->m_data = data;
 }
 
 void GumboParseMethod::parseScrollBarNodeData(GumboNodeWrapper &element,DomNode *node)
@@ -691,7 +736,7 @@ void GumboParseMethod::parserDynamicPanelNodeData(GumboNodeWrapper &element, Dom
             nodeChild->m_style = child.style();   
 
             GumboNodeWrapper panel = child.firstChild();
-            GumboNodeWrapperList panelChilds= panel.children();
+            GumboNodeWrapperList panelChilds = panel.children();
             for(int j = 0; j < panelChilds.size(); j++)
             {
                 GumboNodeWrapper panelChild = panelChilds.at(j);

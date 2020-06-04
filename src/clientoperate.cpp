@@ -584,7 +584,9 @@ void ClientOperate::updateTableModel()
 
     int t_startRow = 0;
     for(int spanRow : sameProjectStatstics){
-        ui->tableView->setSpan(t_startRow,1,spanRow,1);
+        if(spanRow != 1){
+            ui->tableView->setSpan(t_startRow,1,spanRow,1);
+        }
         t_startRow += spanRow;
     }
 

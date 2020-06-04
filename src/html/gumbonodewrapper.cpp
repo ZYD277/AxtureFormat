@@ -13,6 +13,14 @@ GumboNodeWrapper::GumboNodeWrapper(GumboNode *node):m_node(node),m_bValid(true){
 
 }
 
+GumboNodeWrapper&  GumboNodeWrapper::operator=(const GumboNodeWrapper&  wrapper)
+{
+    m_node = wrapper.m_node;
+    m_bValid = wrapper.m_bValid;
+
+    return *this;
+}
+
 /*!
  * @brief 匹配子节点中第一个符合的标签名
  * @param[in] tagName 标签名
@@ -129,7 +137,7 @@ GumboNodeWrapper::AttributeList GumboNodeWrapper::attributes()
     return attrs;
 }
 
-QString GumboNodeWrapper::attribute(QString attrName)
+QString GumboNodeWrapper::attribute(QString attrName) const
 {
     QString result;
     do{
@@ -167,7 +175,7 @@ QString GumboNodeWrapper::id()
     return attribute(m_nodeHtml.ID);
 }
 
-QString GumboNodeWrapper::clazz()
+QString GumboNodeWrapper::clazz() const
 {
     return attribute(m_nodeHtml.CLASS);
 }
@@ -255,7 +263,7 @@ GumboTag GumboNodeWrapper::getTagByTagName(QString tagName)
     return GUMBO_TAG_UNKNOWN;
 }
 
-bool GumboNodeWrapper::isValidElement()
+bool GumboNodeWrapper::isValidElement() const
 {
     if(!m_bValid || m_node->type != GUMBO_NODE_ELEMENT)
         return false;

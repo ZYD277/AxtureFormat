@@ -17,9 +17,6 @@ QSSParseMethod::QSSParseMethod()
 
 /*!
  * @brief 添加普通的样式
- * @attention
- * @param[in]
- * @return
  */
 void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssMap& pageCss,SelectorTypeMap selectorType)
 {
@@ -32,7 +29,7 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
         QString name = iter.key();
         CSS::CssSegment seg = iter.value();
 
-        if(name.contains("_div")||name.contains("_input"))
+        if(name.contains("_div") || name.contains("_input"))
         {
             QString otherName;
             if(name.contains("_div"))
@@ -45,25 +42,25 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
                 name.remove("_input");
                 otherName = name + "_div";
             }
+
             auto findSrc = pageCss.find(name);
             auto findOther = pageCss.find(otherName);
+
             if((findSrc != pageCss.end())&&(findOther != pageCss.end()))
             {
                 CSS::CssSegment srcSeg = findSrc.value();
                 CSS::CssSegment otherSeg = findOther.value();
                 seg.rules = srcSeg.rules + seg.rules + otherSeg.rules;
-
-                seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
             }
             else if((findSrc != pageCss.end())||(findOther != pageCss.end()))
             {
                 CSS::CssSegment tmpSeg = (findSrc != pageCss.end()) ? findSrc.value() : findOther.value();
                 seg.rules = tmpSeg.rules + seg.rules;
-
-                seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
             }
         }
-        seg.rules = filterDuplicateData(seg.rules);//过滤重复属性
+
+        seg.rules = filterDuplicateData(seg.rules);     //过滤重复属性
+
         m_pageCss.insert(name,seg);
         iter++;
     }
@@ -82,6 +79,15 @@ void QSSParseMethod::setCommonStyle(const CSS::CssMap& globalCss,const CSS::CssM
             }
         }
     }
+}
+
+bool QSSParseMethod::startSave(RTextFile *file)
+{
+    generateCss(file,m_globalCss);
+
+    generateCss(file,m_pageCss);
+
+    return true;
 }
 
 /**
@@ -109,6 +115,7 @@ CSS::Rules QSSParseMethod::filterDuplicateData(CSS::Rules rules)
     });
 
     rules.clear();
+
     for(int i = 0; i < tmpRules.size(); i++)
     {
         CSS::CssRule cssRule;
@@ -119,339 +126,318 @@ CSS::Rules QSSParseMethod::filterDuplicateData(CSS::Rules rules)
     return rules;
 }
 
-bool QSSParseMethod::startSave(RTextFile *file)
+void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
 {
     QTextStream stream(file);
 
     QString newLine = "\r";
 
-    auto generateCss = [&](CSS::CssMap& cssMap){
+    //qss中无用属性
+    QStringList deprecatedRulesName;
+    deprecatedRulesName<<"position"<<"left"<<"top"<<"width"<<"height"
+            <<"-moz-box-shadow"<<"-webkit-box-shadow"
+           <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
+          <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
+         <<"visibility"<<"z-index"<<"touch-action"<<"overflow"
+        <<"word-wrap"<<"-ms-transform"<<"transform"<<"-webkit-transform"
+       <<"-moz-transform"<<"-webkit-overflow-scrolling"
+      <<"letter-spacing"<<"resize"<<"display";
 
-        //qss中无用属性
-        QStringList deprecatedRulesName;
-        deprecatedRulesName<<"position"<<"left"<<"top"<<"width"<<"height"
-                <<"-moz-box-shadow"<<"-webkit-box-shadow"
-               <<"box-shadow"<<"box-sizing"<<"-ms-overflow-x"
-              <<"-ms-overflow-y"<<"overflow-y"<<"overflow-x"
-             <<"visibility"<<"z-index"<<"touch-action"<<"overflow"
-            <<"word-wrap"<<"-ms-transform"<<"transform"<<"-webkit-transform"
-           <<"-moz-transform"<<"-webkit-overflow-scrolling"
-          <<"letter-spacing"<<"resize"<<"display";
+    auto iter = cssMap.begin();
 
-        auto iter = cssMap.begin();
+    while(iter != cssMap.end()){
+        CSS::CssSegment & seg = iter.value();
 
-        while(iter != cssMap.end()){
-            CSS::CssSegment & seg = iter.value();
+        SelectorTypeMap selectorType;
+        FormatProperty formatProperty;
+        selectorType = formatProperty.getHtmlParsedResult();
 
-            SelectorTypeMap selectorType;
-            FormatProperty formatProperty;
-            selectorType = formatProperty.getHtmlParsedResult();
+        m_ruleSize = seg.rules.size();
 
-            m_ruleSize = seg.rules.size();
+        for(int i = 0; i < seg.rules.size(); i++){
+            QString ruleName = seg.rules.at(i).name;
+            QString ruleValue = seg.rules.at(i).value;
 
-            for(int i = 0; i < seg.rules.size(); i++){
-                QString ruleName = seg.rules.at(i).name;
-                QString ruleValue = seg.rules.at(i).value;
+            if(ruleName == "border-color" && ruleValue == "transparent"){
+                ruleName = "border";
+                ruleValue = "none";
+            }
 
-                if(ruleName == "border-color" && ruleValue == "transparent"){
-                    ruleName = "border";
-                    ruleValue = "none";
-                }
-//                else if(ruleValue.contains("rgba") && ruleName.contains("color")){
-//                    int index1 = ruleValue.lastIndexOf(" ");
-//                    int index2 = ruleValue.lastIndexOf(")");
-//                    QString t_ruleValue;
-//                    QString tmp = ruleValue.right(index2-index1);
-//                    QString tp = tmp.left( tmp.lastIndexOf(")"));
-//                    if(tp.toDouble() >= 0 && tp.toDouble() <= 1){
-//                        int b = tp.toDouble() * 255;
-//                        t_ruleValue = ruleValue.left(ruleValue.size() - (index2-index1)) + QString::number(b) + ")";
-//                    }
-//                    ruleValue = t_ruleValue;
-//                }
+            /*!< m_ruleSize计算剩余属性数量*/
+            if(deprecatedRulesName.contains(ruleName))
+            {
+                m_ruleSize--;
+            }
+        }
 
-                /*!< m_ruleSize计算剩余属性数量*/
-                if(deprecatedRulesName.contains(ruleName))
+        /*!< 对tree和table的样式通过获取其子节点的添加*/
+        QStringList qssList = m_selectorType.keys();
+        QStringList divList = qssList.filter("_div_");
+
+        for(int i = 0;i < divList.size(); i++)
+        {
+            if(divList.at(i).contains(iter.key()))
+            {
+                if(qssList.size() > qssList.indexOf(divList.at(i)))
                 {
-                    m_ruleSize--;
+                    if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABLE)){
+
+                        /*!< 设计的子节点和主节点的查找*/
+                        QStringList selectorNames = divList.at(i).split("_div_");
+                        QString selectorName = seg.selectorName;
+
+                        if(selectorNames.size() > 1){
+                            if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName))
+                            {
+
+                                selectorName = formatProperty.getTypeName(Html::RTABLE) + "#" + selectorNames.at(1);
+                                if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE)
+                                {
+                                    if(selectorNames.at(1).contains("back"))
+                                    {
+                                        QString back = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RTREE) + "#" + back.remove("back") + "::item";
+                                    }
+                                    else if(selectorNames.at(1).contains("text"))
+                                    {
+                                        QString text = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RTREE) + "#" + text.remove("text");
+                                    }
+                                }
+                            }else if(seg.selectorName.contains(selectorNames.at(0)+":")){
+                                selectorName = "#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
+                            }else{
+                                break;
+                            }
+
+                            stream<<selectorName<<" {"<<newLine;
+
+                            foreach(const CSS::CssRule & rule,seg.rules){
+                                if(!deprecatedRulesName.contains(rule.name)){
+                                    stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                                }
+                            }
+                            stream<<"}"<<newLine<<newLine;
+                        }
+                    }
+                    /*!< 自制控件组合样式 */
+                    else if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RCHECKBOX
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RRADIO_BUTTON
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RDROPLIST
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSPINBOX
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RPROGRESSBAR
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSCROLLBAR
+                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABWIDGET))
+                    {
+                        /*!< 设计的子节点和主节点的查找*/
+                        QStringList selectorNames = divList.at(i).split("_div_");
+                        QString selectorName = seg.selectorName;
+                        if(selectorNames.size() > 1){
+                            if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName)
+                                    ||(selectorNames.at(0) + "_input" == seg.selectorName))
+                            {
+                                switch(m_selectorType.values().at(qssList.indexOf(divList.at(i))))
+                                {
+                                case Html::RCHECKBOX:{
+                                    selectorName = formatProperty.getTypeName(Html::RCHECKBOX) + "#" + selectorNames.at(1);
+                                    break;
+                                }
+                                case Html::RRADIO_BUTTON:{
+                                    selectorName =formatProperty.getTypeName(Html::RRADIO_BUTTON) + "#" + selectorNames.at(1);
+                                    break;
+                                }
+                                case Html::RDROPLIST:{
+                                    if(selectorNames.at(1).contains("option"))
+                                    {
+                                        QString option = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + option.remove("option") + " QAbstractItemView";
+                                    }
+                                    else if(selectorNames.at(1).contains("arrow"))
+                                    {
+                                        QString arrow = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + arrow.remove("arrow") + "::drop-down";
+                                    }
+                                    else if(selectorNames.at(1).contains("back"))
+                                    {
+                                        QString back = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + back.remove("back");
+                                    }
+                                    break;
+                                }
+                                case Html::RSPINBOX:{
+                                    if(selectorNames.at(1).contains("spinbox"))
+                                    {
+                                        QString spinBox = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinBox.remove("spinbox");
+                                    }
+                                    else if(selectorNames.at(1).contains("text"))
+                                    {
+                                        QString spinText = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinText.remove("text");
+                                    }
+                                    break;
+                                }
+                                case Html::RPROGRESSBAR:{
+                                    if(selectorNames.at(1).contains("bar"))
+                                    {
+                                        QString widgetId = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RPROGRESSBAR) +  "#" + widgetId.remove("bar") + "::chunk";
+                                    }
+                                    else if(selectorNames.at(1).contains("slot"))
+                                    {
+                                        QString widgetId = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RPROGRESSBAR) +  "#" + widgetId.remove("slot");
+                                    }
+                                    break;
+                                }
+                                case Html::RSCROLLBAR:{
+                                    if(selectorNames.at(1).contains("addline"))
+                                    {
+                                        QString t_string = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) +  "#" + t_string.remove("addline") + "::add-line";
+                                    }
+                                    else if(selectorNames.at(1).contains("downarrow"))
+                                    {
+                                        QString t_string = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("downarrow") + "::down-arrow";
+                                    }
+                                    else if(selectorNames.at(1).contains("uparrow"))
+                                    {
+                                        QString t_string = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("uparrow") + "::up-arrow";
+                                    }
+                                    else if(selectorNames.at(1).contains("subline"))
+                                    {
+                                        QString t_string = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("subline") + "::sub-line";
+                                    }
+                                    else if(selectorNames.at(1).contains("scrollbar"))
+                                    {
+                                        QString t_string = selectorNames.at(1);
+                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("scrollbar") + "::handle";
+                                    }
+                                    break;
+                                }
+                                default:break;
+                                }
+                            }
+                            else
+                                break;
+
+                            stream<<selectorName<<" {"<<newLine;
+
+                            foreach(const CSS::CssRule & rule,seg.rules){
+                                if(!deprecatedRulesName.contains(rule.name)){
+                                    if(!rule.value.contains("transparent"))
+                                    {
+                                        /*!< 处理控件的简单渐变背景*/
+                                        if(rule.value.contains("gradient")){
+                                            stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
+                                        }
+                                        else
+                                            stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                                    }
+                                }
+                            }
+                            stream<<"}"<<newLine<<newLine;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        /*!< 针对鼠标触发信号的样式处理修改*/
+        QString nowkey = iter.key();
+        if(nowkey.contains(":checked") || nowkey.contains(":disabled") || nowkey.contains(":hover") || nowkey.contains(":pressed")){
+            QStringList nowkeyList = nowkey.split(":");
+            if(nowkeyList.size() > 0)
+                nowkey = nowkeyList.at(0);
+        }
+
+        if(m_ruleSize != 0 && (m_selectorType.keys().contains(nowkey) || seg.selectorName == "base"))
+        {
+            if(seg.type == CSS::Clazz){
+                stream<<".";
+            }else if(seg.type == CSS::Id || seg.type == CSS::DynamicType){
+                stream<<"#";
+            }
+
+            if(seg.selectorName.contains("_div"))
+                seg.selectorName = seg.selectorName.remove("_div");
+            else if(seg.selectorName.contains("_input"))
+                seg.selectorName = seg.selectorName.remove("_input");
+
+            stream<<seg.selectorName<<" {"<<newLine;
+
+            /*!< 控件在样式文件的图片信息*/
+            int fontCount = seg.rules.size();
+            foreach(const CSS::CssRule & rule,seg.rules){
+                if(rule.name != "font-size")
+                    fontCount--;
+
+                if(!deprecatedRulesName.contains(rule.name)){
+                    if(rule.name == "background-image" && rule.value != "none"){
+                        QStringList imageValues = rule.value.split("/");
+                        if(imageValues.size() > 0){
+                            QString imageValue = imageValues.at(imageValues.size() - 1);
+                            QString imageSrc = "images/"+imageValue;
+                            imageSrc = imageSrc.remove("')");
+                            imageValue = "url(:/images/"+imageValue;
+                            imageValue = imageValue.remove("'");
+                            if(!m_resources.contains(imageSrc))
+                                m_resources.append(imageSrc);
+
+                            stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
+                        }
+                    }else{
+                        /*!< 处理控件的简单渐变背景*/
+                        if(rule.value.contains("gradient")){
+                            stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
+                        }
+                        else{
+                            stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
+                        }
+                    }
                 }
             }
 
-            /*!< 对tree和table的样式通过获取其子节点的添加*/
-            QStringList qssList = m_selectorType.keys();
-            QStringList divList = qssList.filter("_div_");
-
-            for(int i = 0;i < divList.size(); i++)
+            /*!< 获取标题的默认大小*/
+            if(fontCount == 0)
             {
-                if(divList.at(i).contains(iter.key()))
+                for(int i = 0; i < divList.size(); i++)
                 {
-                    if(qssList.size() > qssList.indexOf(divList.at(i)))
-                    {
-                        if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABLE)){
-
-                            /*!< 设计的子节点和主节点的查找*/
-                            QStringList selectorNames = divList.at(i).split("_div_");
-                            QString selectorName = seg.selectorName;
-
-                            if(selectorNames.size() > 1){
-                                if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName))
-                                {
-
-                                    selectorName = formatProperty.getTypeName(Html::RTABLE) + "#" + selectorNames.at(1);
-                                    if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE)
-                                    {
-                                        if(selectorNames.at(1).contains("back"))
-                                        {
-                                            QString back = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RTREE) + "#" + back.remove("back") + "::item";
-                                        }
-                                        else if(selectorNames.at(1).contains("text"))
-                                        {
-                                            QString text = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RTREE) + "#" + text.remove("text");
-                                        }
-                                    }
-                                }else if(seg.selectorName.contains(selectorNames.at(0)+":")){
-                                    selectorName = "#" + selectorName.replace(selectorNames.at(0),selectorNames.at(1) + "::item");
-                                }else{
-                                    break;
-                                }
-
-                                stream<<selectorName<<" {"<<newLine;
-
-                                foreach(const CSS::CssRule & rule,seg.rules){
-                                    if(!deprecatedRulesName.contains(rule.name)){
-                                        stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
-                                    }
-                                }
-                                stream<<"}"<<newLine<<newLine;
-                            }
-                        }
-                        /*!< 自制控件组合样式 */
-                        else if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RCHECKBOX
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RRADIO_BUTTON
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RDROPLIST
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSPINBOX
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RPROGRESSBAR
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSCROLLBAR
-                                               ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABWIDGET))
-                        {
-                            /*!< 设计的子节点和主节点的查找*/
-                            QStringList selectorNames = divList.at(i).split("_div_");
-                            QString selectorName = seg.selectorName;
-                            if(selectorNames.size() > 1){
-                                if((selectorNames.at(0) + "_div" == seg.selectorName) || (selectorNames.at(0) == seg.selectorName)
-                                        ||(selectorNames.at(0) + "_input" == seg.selectorName))
-                                {
-                                    switch(m_selectorType.values().at(qssList.indexOf(divList.at(i))))
-                                    {
-                                    case Html::RCHECKBOX:{
-                                        selectorName = formatProperty.getTypeName(Html::RCHECKBOX) + "#" + selectorNames.at(1);
-                                        break;
-                                    }
-                                    case Html::RRADIO_BUTTON:{
-                                        selectorName =formatProperty.getTypeName(Html::RRADIO_BUTTON) + "#" + selectorNames.at(1);
-                                        break;
-                                    }
-                                    case Html::RDROPLIST:{
-                                        if(selectorNames.at(1).contains("option"))
-                                        {
-                                            QString option = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + option.remove("option") + " QAbstractItemView";
-                                        }
-                                        else if(selectorNames.at(1).contains("arrow"))
-                                        {
-                                            QString arrow = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + arrow.remove("arrow") + "::drop-down";
-                                        }
-                                        else if(selectorNames.at(1).contains("back"))
-                                        {
-                                            QString back = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + back.remove("back");
-                                        }
-                                        break;
-                                    }
-                                    case Html::RSPINBOX:{
-                                        if(selectorNames.at(1).contains("spinbox"))
-                                        {
-                                            QString spinBox = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinBox.remove("spinbox");
-                                        }
-                                        else if(selectorNames.at(1).contains("text"))
-                                        {
-                                            QString spinText = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinText.remove("text");
-                                        }
-                                        break;
-                                    }
-                                    case Html::RPROGRESSBAR:{
-                                        if(selectorNames.at(1).contains("bar"))
-                                        {
-                                            QString widgetId = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RPROGRESSBAR) +  "#" + widgetId.remove("bar") + "::chunk";
-                                        }
-                                        else if(selectorNames.at(1).contains("slot"))
-                                        {
-                                            QString widgetId = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RPROGRESSBAR) +  "#" + widgetId.remove("slot");
-                                        }
-                                        break;
-                                    }
-                                    case Html::RSCROLLBAR:{
-                                        if(selectorNames.at(1).contains("addline"))
-                                        {
-                                            QString t_string = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) +  "#" + t_string.remove("addline") + "::add-line";
-                                        }
-                                        else if(selectorNames.at(1).contains("downarrow"))
-                                        {
-                                            QString t_string = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("downarrow") + "::down-arrow";
-                                        }
-                                        else if(selectorNames.at(1).contains("uparrow"))
-                                        {
-                                            QString t_string = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("uparrow") + "::up-arrow";
-                                        }
-                                        else if(selectorNames.at(1).contains("subline"))
-                                        {
-                                            QString t_string = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("subline") + "::sub-line";
-                                        }
-                                        else if(selectorNames.at(1).contains("scrollbar"))
-                                        {
-                                            QString t_string = selectorNames.at(1);
-                                            selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("scrollbar") + "::handle";
-                                        }
-                                        break;
-                                    }
-                                    default:break;
-                                    }
-                                }
-                                else
-                                    break;
-
-                                stream<<selectorName<<" {"<<newLine;
-
-                                foreach(const CSS::CssRule & rule,seg.rules){
-                                    if(!deprecatedRulesName.contains(rule.name)){
-                                        if(!rule.value.contains("transparent"))
-                                        {
-                                            /*!< 处理控件的简单渐变背景*/
-                                            if(rule.value.contains("gradient")){
-                                                stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
-                                            }
-                                            else
-                                                stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
-                                        }
-                                    }
-                                }
-                                stream<<"}"<<newLine<<newLine;
+                    if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RLABEL){
+                        QStringList selectorNames = divList.at(i).split("_div_");
+                        if(selectorNames.size() > 1){
+                            if(selectorNames.at(0) == seg.selectorName){
+                                stream<<"\t"<<"font-size:"<<selectorNames.at(1)<<";"<<newLine;
+                                break;
                             }
                         }
                     }
-                    break;
                 }
             }
+            stream<<"}"<<newLine<<newLine;
+        }
 
-            /*!< 针对鼠标触发信号的样式处理修改*/
-            QString nowkey = iter.key();
-            if(nowkey.contains(":checked") || nowkey.contains(":disabled") || nowkey.contains(":hover") || nowkey.contains(":pressed")){
-                QStringList nowkeyList = nowkey.split(":");
-                if(nowkeyList.size() > 0)
-                    nowkey = nowkeyList.at(0);
-            }
-
-            if(m_ruleSize != 0 && (m_selectorType.keys().contains(nowkey) || seg.selectorName == "base"))
-            {
-                if(seg.type == CSS::Clazz){
-                    stream<<".";
-                }else if(seg.type == CSS::Id || seg.type == CSS::DynamicType){
-                    stream<<"#";
-                }
-
-                if(seg.selectorName.contains("_div"))
-                    seg.selectorName = seg.selectorName.remove("_div");
-                else if(seg.selectorName.contains("_input"))
-                    seg.selectorName = seg.selectorName.remove("_input");
-
+        /*!< 对下拉框下拉状态的样式处理*/
+        if(m_ruleSize != 0 && qssList.contains(seg.selectorName)){
+            if(m_selectorType.values().at(qssList.indexOf(seg.selectorName)) == Html::RDROPLIST){
+                seg.selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + seg.selectorName + " QAbstractItemView";
                 stream<<seg.selectorName<<" {"<<newLine;
-
-                /*!< 控件在样式文件的图片信息*/
-                int fontCount = seg.rules.size();
-                foreach(const CSS::CssRule & rule,seg.rules){
-                    if(rule.name != "font-size")
-                        fontCount--;
-
-                    if(!deprecatedRulesName.contains(rule.name)){
-                        if(rule.name == "background-image" && rule.value != "none"){
-                            QStringList imageValues = rule.value.split("/");
-                            if(imageValues.size() > 0){
-                                QString imageValue = imageValues.at(imageValues.size() - 1);
-                                QString imageSrc = "images/"+imageValue;
-                                imageSrc = imageSrc.remove("')");
-                                imageValue = "url(:/images/"+imageValue;
-                                imageValue = imageValue.remove("'");
-                                if(!m_resources.contains(imageSrc))
-                                    m_resources.append(imageSrc);
-
-                                stream<<"\t"<<"border-image"<<":"<<imageValue<<";"<<newLine;
-                            }
-                        }else{
-                            /*!< 处理控件的简单渐变背景*/
-                            if(rule.value.contains("gradient")){
-                                stream<<"\t"<<rule.name<<":"<<getQssGraduatedColour(rule.value)<<";"<<newLine;
-                            }
-                            else{
-                                stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
-                            }
-                        }
-                    }
-                }
-
-                /*!< 获取标题的默认大小*/
-                if(fontCount == 0)
+                foreach(const CSS::CssRule & rule,seg.rules)
                 {
-                    for(int i = 0; i < divList.size(); i++)
-                    {
-                        if(m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RLABEL){
-                            QStringList selectorNames = divList.at(i).split("_div_");
-                            if(selectorNames.size() > 1){
-                                if(selectorNames.at(0) == seg.selectorName){
-                                    stream<<"\t"<<"font-size:"<<selectorNames.at(1)<<";"<<newLine;
-                                    break;
-                                }
-                            }
-                        }
+                    if(!deprecatedRulesName.contains(rule.name)){
+                        stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
                     }
                 }
                 stream<<"}"<<newLine<<newLine;
             }
-
-            /*!< 对下拉框下拉状态的样式处理*/
-            if(m_ruleSize != 0 && qssList.contains(seg.selectorName)){
-                if(m_selectorType.values().at(qssList.indexOf(seg.selectorName)) == Html::RDROPLIST){
-                    seg.selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + seg.selectorName + " QAbstractItemView";
-                    stream<<seg.selectorName<<" {"<<newLine;
-                    foreach(const CSS::CssRule & rule,seg.rules)
-                    {
-                        if(!deprecatedRulesName.contains(rule.name)){
-                            stream<<"\t"<<rule.name<<":"<<rule.value<<";"<<newLine;
-                        }
-                    }
-                    stream<<"}"<<newLine<<newLine;
-                }
-            }
-            iter++;
         }
-    };
-
-    generateCss(m_globalCss);
-
-    generateCss(m_pageCss);
-
-    return true;
+        iter++;
+    }
 }
 
 /**

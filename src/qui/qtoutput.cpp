@@ -64,7 +64,7 @@ bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::C
         //[3]
         QSSOutput qss;
 
-        qss.setCommonStyle(globalCss,pageCss,m_selectorType);
+        qss.setCommonStyle(globalCss,propFormat.getPageCss(),m_selectorType);
 
         QFileInfo uiPathQss(fullPath);
         QString qssPath = uiPathQss.path() + QDir::separator() + cssFileName;
