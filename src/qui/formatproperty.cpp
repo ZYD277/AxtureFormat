@@ -973,15 +973,8 @@ int FormatProperty::removePxUnit(QString valueWithUnit)
 
 void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
 {
-    QString imagePath = imageSrc;
-    int firstSplitPos = imageSrc.indexOf("/");
-    int secondSplitPos = imageSrc.indexOf("/",firstSplitPos + 1);
+    imageSrc = switchImageURL(imageSrc);
 
-    imageSrc = imageSrc.remove(firstSplitPos,secondSplitPos - firstSplitPos);
-
-    m_originalResources.append(imagePath);
-    if(!m_resources.contains(imageSrc))
-        m_resources.append(imageSrc);
     if(!imageSrc.isEmpty()){
         MProperty * styleProp = new MProperty();
         styleProp->setAttributeName("styleSheet");
@@ -992,8 +985,8 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
 
 void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,QString checkImageSrc,QString unCheckImageSrc,QString widgetName)
 {
-    checkImageSrc = handleImage(checkImageSrc);
-    unCheckImageSrc = handleImage(unCheckImageSrc);
+    checkImageSrc = switchImageURL(checkImageSrc);
+    unCheckImageSrc = switchImageURL(unCheckImageSrc);
 
     if(!checkImageSrc.isEmpty()||!unCheckImageSrc.isEmpty()){
         MProperty * styleProp = new MProperty();
@@ -1014,15 +1007,15 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
 {
     QString tabStyle = QString("width:%1px;height:%2px;").arg(tabData->m_tabWidth).arg(tabData->m_tabHeight);
 
-    QString normalImageSrc = handleImage(tabData->m_tabNormalImage);
-    QString selectedImageSrc = handleImage(tabData->m_tabSelectedImage);
+    QString normalImageSrc = switchImageURL(tabData->m_tabNormalImage);
+    QString selectedImageSrc = switchImageURL(tabData->m_tabSelectedImage);
 
     if(!normalImageSrc.isEmpty() && !selectedImageSrc.isEmpty()){
         QStringList normalNameList = tabData->m_tabNormalImage.split(".");
         QString mouseOverImageSrc = normalImageSrc;
         //hover状态在正常状态加入_mouseOver
         if(normalNameList.size() == 2){
-            mouseOverImageSrc = handleImage(normalNameList.at(0) + "_mouseOver."+normalNameList.at(1));
+            mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver."+normalNameList.at(1));
         }
 
         MProperty * styleProp = new MProperty();
@@ -1041,9 +1034,9 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
 
 void FormatProperty::createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage)
 {
-    imageSrc = handleImage(imageSrc);
-    arrowImage = handleImage(arrowImage);
-    unArrowImage = handleImage(unArrowImage);
+    imageSrc = switchImageURL(imageSrc);
+    arrowImage = switchImageURL(arrowImage);
+    unArrowImage = switchImageURL(unArrowImage);
 
     if(!imageSrc.isEmpty()||!arrowImage.isEmpty()||!unArrowImage.isEmpty()){
         MProperty * styleProp = new MProperty();
@@ -1057,7 +1050,11 @@ void FormatProperty::createComBoxImageProp(RDomWidget *domWidget, QString imageS
     }
 }
 
-QString FormatProperty::handleImage(QString imageSrc)
+/*!
+ * @brief 1.记录原始图片路径；2.去除图片中包含axure页面的名称，使其路径在images/xxx.png
+ * @param[in] imageSrc 原始图片路径1
+ */
+QString FormatProperty::switchImageURL(QString imageSrc)
 {
     m_originalResources.append(imageSrc);
 

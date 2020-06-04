@@ -48,7 +48,18 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                 if(RUtil::createDir(outputDir) && RUtil::createDir(m_outputDir)){
                     QString pageUiName = m_outputDir + QDir::separator() + page.switchClassName  +".ui";
                     QString qssFileName = "style.qss";
-                    m_qtOutput.save(page.switchClassName,qssFileName,m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName);
+
+                    if(m_qtOutput.save(page.switchClassName,m_htmlParser.getParsedResult(),globalCssMap,cssParser.getParsedResult(),pageUiName)){
+                        updataProcessBar(tproj,error,QStringLiteral("转换ui成功!"));
+                    }else{
+                        updataProcessBar(tproj,error,QStringLiteral("转换ui失败!"));
+                    }
+
+                    if(m_qtOutput.saveQss(qssFileName)){
+                        updataProcessBar(tproj,error,QStringLiteral("创建qss文件成功!"));
+                    }else{
+                        updataProcessBar(tproj,error,QStringLiteral("创建qss文件失败!"));
+                    }
 
                     tproj = P_CopyFile;
                     updataProcessBar(tproj,error,QStringLiteral("转换ui结束"));
@@ -67,7 +78,7 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                         foreach(const QString & links,resourcesLinks){
                             QString imgPath = dir.path() + QDir::separator() + links;
                             QString dstImageFullPath = dstImagePath + QDir::separator() + QFileInfo(imgPath).fileName();
-                            qDebug()<<imgPath<<dstImageFullPath<<QFile::copy(imgPath,dstImageFullPath);
+                            QFile::copy(imgPath,dstImageFullPath);
                         }
 
                         //拷贝对应目录下所有文件
@@ -76,6 +87,9 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                             QString dstImageFullPath = dstImagePath + QDir::separator() + finfo.fileName();
                             QFile::copy(finfo.filePath(),dstImageFullPath);
                         });
+
+                        //创建资源文件
+                        m_qtOutput.saveQrc();
 
                         //生成模板代码
                         GenerateProjectFile outputTemplte;

@@ -4,9 +4,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include "qrc/qrcoutput.h"
-#include "qss/qssoutput.h"
 #include "qss/qssparsemethod.h"
-#include "formatproperty.h"
 #include "exportui.h"
 #include "props/mdomwidget.h"
 
@@ -25,22 +23,21 @@ QtOutput::~QtOutput()
 /*!
  * @brief 1.将html节点保存至指定的xml文件 2.创建对应的资源文件 3.创建样式文件
  * @param[in] className 生成的UI控件窗口objectname
- * @param[in] cssFileName qss文件名
  * @param[in] ptr 待转换的html节点
  * @param[in] globalCss 全局的css信息
  * @param[in] pageCss 当前页面的css信息
  * @param[in] fullPath 文件保存全路径
  * @return true:保存成功
  */
-bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, QString fullPath)
+bool QtOutput::save(QString className,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS::CssMap pageCss, QString fullPath)
 {
-    FormatProperty propFormat;
     propFormat.setDataSource(ptr);
     propFormat.setCssMap(globalCss,pageCss);
 
     RDomWidget * root = propFormat.formart();
     if(root){
-        QFile file(fullPath);
+        m_saveFullFilePath = fullPath;
+        QFile file(m_saveFullFilePath);
         if(!file.open(QFile::WriteOnly)){
             return false;
         }
@@ -60,31 +57,44 @@ bool QtOutput::save(QString className,QString cssFileName,DomHtmlPtr ptr, CSS::C
 
         ui.endWrite();
 
-        m_selectorType = propFormat.getHtmlParsedResult();
-        //[3]
-        QSSOutput qss;
+        m_originalResoucesLinks = propFormat.getOriginalResources();
 
-        qss.setCommonStyle(globalCss,propFormat.getPageCss(),m_selectorType);
-
-        QFileInfo uiPathQss(fullPath);
-        QString qssPath = uiPathQss.path() + QDir::separator() + cssFileName;
-
-
-        if(qss.save(qssPath)){
-            //[2]
-            QrcOutput qrc;
-            qrc.addResources("/",propFormat.getResources() + qss.getResources());
-            qrc.addResources("/style",QStringList(cssFileName));
-
-            m_originalResoucesLinks = propFormat.getOriginalResources();
-
-            QFileInfo uiPath(fullPath);
-            QString resFile = "res.qrc";
-            QString qrcPath = uiPath.path() + QDir::separator() + resFile;
-            return qrc.save(qrcPath);
-        }
+        return true;
     }
     return false;
+}
+
+/*!
+ * @brief 保存QSS文件
+ * @param[in] cssFileName qss文件名
+ * @return
+ */
+bool QtOutput::saveQss(QString cssFileName)
+{
+    m_qssFileName = cssFileName;
+    m_selectorType = propFormat.getHtmlParsedResult();
+    //[3]
+    qssOutput.setCommonStyle(propFormat.getGlobalCss(),propFormat.getPageCss(),m_selectorType);
+
+    QFileInfo uiPathQss(m_saveFullFilePath);
+    QString qssPath = uiPathQss.path() + QDir::separator() + m_qssFileName;
+
+    return qssOutput.save(qssPath);
+}
+
+/*!
+ * @brief 保存资源文件
+ */
+bool QtOutput::saveQrc()
+{
+    QrcOutput qrc;
+    qrc.addResources("/",propFormat.getResources() + qssOutput.getResources());
+    qrc.addResources("/style",QStringList(m_qssFileName));
+
+    QFileInfo uiPath(m_saveFullFilePath);
+    QString resFile = "res.qrc";
+    QString qrcPath = uiPath.path() + QDir::separator() + resFile;
+    return qrc.save(uiPath.path(),qrcPath);
 }
 
 } //namespace RQt

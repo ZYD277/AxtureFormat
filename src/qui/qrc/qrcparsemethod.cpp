@@ -1,6 +1,8 @@
 ﻿#include "qrcparsemethod.h"
 
 #include <QDebug>
+#include <QFileInfo>
+#include <QDir>
 
 namespace RQt{
 
@@ -9,11 +11,15 @@ QrcParseMethod::QrcParseMethod()
 
 }
 
-void QrcParseMethod::setRecources(QMap<QString, QStringList> resMap)
+void QrcParseMethod::setRecources(QString rootPath,QMap<QString, QStringList> resMap)
 {
+    m_exportRootPath = rootPath;
     m_resMap = resMap;
 }
 
+/*!
+ * @attention 保存时对文件是否存在进行检测，只有存在后才会写入资源文件
+ */
 bool QrcParseMethod::startSave(QDomDocument &doc)
 {
     QDomElement rcc = doc.createElement("RCC");
@@ -25,10 +31,14 @@ bool QrcParseMethod::startSave(QDomDocument &doc)
         qres.setAttribute("prefix",iter.key());
 
         foreach(const QString & fpath,iter.value()){
-            QDomElement fele = doc.createElement("file");
-            fele.appendChild(doc.createTextNode(fpath));
+            QString fullpath = m_exportRootPath + QDir::separator() + fpath;
 
-            qres.appendChild(fele);
+            if(QFileInfo(fullpath).exists()){
+                QDomElement fele = doc.createElement("file");
+                fele.appendChild(doc.createTextNode(fpath));
+
+                qres.appendChild(fele);
+            }
         }
 
         rcc.appendChild(qres);

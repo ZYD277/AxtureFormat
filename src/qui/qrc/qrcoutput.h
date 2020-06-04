@@ -23,7 +23,7 @@ public:
 
     void addResources(QString prefix,QStringList files);
 
-    bool save(QString fullPath);
+    bool save(QString rootPath, QString fullPath);
 
 private:
     QMap<QString,QStringList>  m_resMap;  /*!< key:prefix，value:对应的资源列表 */

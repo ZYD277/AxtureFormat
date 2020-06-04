@@ -22,11 +22,12 @@ class QrcParseMethod : public RXmlParseMethod
 public:
     QrcParseMethod();
 
-    void setRecources(QMap<QString,QStringList> resMap);
+    void setRecources(QString rootPath, QMap<QString,QStringList> resMap);
 
     bool  startSave(QDomDocument & doc) override;
 
 private:
+    QString m_exportRootPath;             /*!< 导出的文件夹根目录 */
     QMap<QString,QStringList>  m_resMap;  /*!< key:prefix，value:对应的资源列表 */
 };
 

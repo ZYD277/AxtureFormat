@@ -29,6 +29,8 @@ public:
 
     void setDataSource(DomHtmlPtr ptr);
     void setCssMap(CSS::CssMap globalCss, CSS::CssMap pageCss);
+
+    CSS::CssMap getGlobalCss(){return m_globalCss;}
     CSS::CssMap getPageCss(){return m_pageCss;}
 
     RDomWidget * formart();
@@ -63,7 +65,7 @@ private:
 
     void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
 
-    QString handleImage(QString imageSrc);
+    QString switchImageURL(QString imageSrc);
 
     bool judgeLayoutDirection(QString selectorId);
     QString getCssStyle(QString selectorName,QString propName);
