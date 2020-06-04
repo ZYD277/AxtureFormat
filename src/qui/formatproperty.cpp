@@ -375,7 +375,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             if(!node->m_data->m_checkedImage.isEmpty()&&!node->m_data->m_unCheckedImage.isEmpty())
             {
-                createRadioBtnImageProp(domWidget,node->m_data->m_checkedImage,node->m_data->m_unCheckedImage,"QCheckBox");
+                createRadioBtnImageProp(domWidget,node->m_data,"QCheckBox");
             }
             if(!node->m_data->m_specialTextId.isEmpty()){
                 QString m_textId = node->m_data->m_specialTextId + "_div_" + node->m_id;
@@ -403,7 +403,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             if(!node->m_data->m_checkedImage.isEmpty()&&!node->m_data->m_unCheckedImage.isEmpty())
             {
-                createRadioBtnImageProp(domWidget,node->m_data->m_checkedImage,node->m_data->m_unCheckedImage,"QRadioButton");
+                createRadioBtnImageProp(domWidget,node->m_data,"QRadioButton");
             }
 
             if(!node->m_data->m_specialTextId.isEmpty()){
@@ -983,17 +983,28 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
     }
 }
 
-void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,QString checkImageSrc,QString unCheckImageSrc,QString widgetName)
+void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,Html::BaseData * baseData,QString widgetName)
 {
-    checkImageSrc = switchImageURL(checkImageSrc);
-    unCheckImageSrc = switchImageURL(unCheckImageSrc);
+    QString checkImageSrc = switchImageURL(baseData->m_checkedImage);
+    QString unCheckImageSrc = switchImageURL(baseData->m_unCheckedImage);
 
     if(!checkImageSrc.isEmpty()||!unCheckImageSrc.isEmpty()){
         MProperty * styleProp = new MProperty();
+
+        QStringList normalNameList = baseData->m_unCheckedImage.split(".");
+        QString mouseOverImageSrc = baseData->m_unCheckedImage;
+        //hover状态在正常状态加入_mouseOver
+        if(normalNameList.size() == 2){
+            mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver."+normalNameList.at(1));
+        }
+
         styleProp->setAttributeName("styleSheet");
-        styleProp->setPropString(QString("%1::indicator:checked {image: url(:/%2);}"
-                                         "%3::indicator:unchecked {image: url(:/%4);}")
-                                 .arg(widgetName).arg(checkImageSrc).arg(widgetName).arg(unCheckImageSrc));
+        styleProp->setPropString(QString("%1::indicator:checked {image: url(:/%2);} \r\n"
+                                         "%3::indicator:unchecked {image: url(:/%4);} \r\n"
+                                         "%5::indicator:unchecked:hover {image: url(:/%6);}")
+                                 .arg(widgetName).arg(checkImageSrc)
+                                 .arg(widgetName).arg(unCheckImageSrc)
+                                 .arg(widgetName).arg(mouseOverImageSrc));
         domWidget->addProperty(styleProp);
     }
 }

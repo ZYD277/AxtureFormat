@@ -52,7 +52,7 @@ private:
     int removePxUnit(QString valueWithUnit);
 
     inline void createImageProp(RDomWidget * domWidget, QString imageSrc);
-    inline void createRadioBtnImageProp(RDomWidget *domWidget, QString checkImageSrc, QString unCheckImageSrc, QString widgetName);
+    inline void createRadioBtnImageProp(RDomWidget *domWidget, Html::BaseData *baseData, QString widgetName);
     inline void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
     inline void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     inline void createTextProp(RDomWidget * domWidget, QString text);
