@@ -130,7 +130,7 @@ void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
 {
     QTextStream stream(file);
 
-    QString newLine = "\r";
+    QString newLine = "\r\n";
 
     //qss中无用属性
     QStringList deprecatedRulesName;

@@ -25,7 +25,8 @@ bool QSSOutput::save(QString fullPath)
     method.setCommonStyle(m_globalCss,m_pageCss,m_selectorType);
 
     file.setParseMethod(&method,false);
-    if(file.startSave(QFile::WriteOnly | QFile::Truncate | QFile::Text)){
+    //NOTE 打开方式中不要包含Text，否则会和换行符产生冲突
+    if(file.startSave(QFile::WriteOnly | QFile::Truncate)){
         m_resources = method.getResources();
         return true;
     }
