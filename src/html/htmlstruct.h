@@ -34,6 +34,7 @@ struct NodeHtml{
     const QString VALUE = "value";
     const QString CHECKED = "checked";
     const QString DISABLED = "disabled";
+    const QString SELECTED = "selected";
     const QString READONLY = "readonly";
     const QString MAX_LEN = "maxlength";
     const QString DATA_LABEL = "data-label";

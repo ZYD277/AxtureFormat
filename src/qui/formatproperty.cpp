@@ -989,27 +989,55 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
     }
 }
 
+/*!
+ * @attention 按钮若设置了背景图片，则需要添加正常背景、悬停、按下、选中四种状态背景；
+ *            若按钮被选中，其背景图片已经加入了_selected，在计算其它状态图片时，需先移除
+ */
 void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::BaseData *baseData)
 {
-    QString normalImageSrc = switchImageURL(baseData->m_srcImage);
+    QString normalImageSrc;
+    QString mouseOverImageSrc;
+    QString mouseDownImageSrc;
+    QString mouseSelectedImageSrc;
 
-    QStringList normalNameList = baseData->m_srcImage.split(".");
-    QString mouseOverImageSrc = baseData->m_srcImage;
-    QString mouseDownImageSrc = baseData->m_srcImage;
-    //hover状态在正常状态加入_mouseOver
-    if(normalNameList.size() == 2){
-        mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver."+normalNameList.at(1));
-        mouseDownImageSrc = switchImageURL(normalNameList.at(0) + "_mouseDown."+normalNameList.at(1));
+    if(baseData->m_bChecked){
+        mouseSelectedImageSrc = switchImageURL(baseData->m_srcImage);
+        QStringList selectedNameList = baseData->m_srcImage.split(".");
+        if(selectedNameList.size() == 2){
+            QString selectedName = selectedNameList.at(0);
+            QString normalName = selectedName.remove("_selected",Qt::CaseInsensitive);
+
+            normalImageSrc = switchImageURL(normalName +"." + selectedNameList.at(1));
+            mouseOverImageSrc = switchImageURL(normalName + "_mouseOver." + selectedNameList.at(1));
+            mouseDownImageSrc = switchImageURL(normalName + "_mouseDown." + selectedNameList.at(1));
+        }
+    }else{
+        normalImageSrc = switchImageURL(baseData->m_srcImage);
+        //hover状态在正常状态加入_mouseOver、_mouseDown、_selected
+        QStringList normalNameList = baseData->m_srcImage.split(".");
+        if(normalNameList.size() == 2){
+            mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
+            mouseDownImageSrc = switchImageURL(normalNameList.at(0) + "_mouseDown." + normalNameList.at(1));
+        }
     }
 
     MProperty * styleProp = new MProperty();
     styleProp->setAttributeName("styleSheet");
-    styleProp->setPropString(QString("QPushButton {border-image: url(:/%1);} \r\n"
-                                     "QPushButton:hover {border-image: url(:/%2);} \r\n"
-                                     "QPushButton:pressed {border-image: url(:/%3);}")
-                             .arg(normalImageSrc)
-                             .arg(mouseOverImageSrc)
-                             .arg(mouseDownImageSrc));
+
+
+    QString prop = QString("QPushButton {border-image: url(:/%1);} \r\n"
+                                "QPushButton:hover {border-image: url(:/%2);} \r\n"
+                                "QPushButton:pressed {border-image: url(:/%3)} \r\n")
+                        .arg(normalImageSrc)
+                        .arg(mouseOverImageSrc)
+                        .arg(mouseDownImageSrc);
+
+    if(baseData->m_bChecked){
+        prop += QString("QPushButton:checked {border-image: url(:/%1);}").arg(mouseSelectedImageSrc);
+    }
+
+    styleProp->setPropString(prop);
+
     domWidget->addProperty(styleProp);
 }
 

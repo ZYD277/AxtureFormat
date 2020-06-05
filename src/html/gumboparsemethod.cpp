@@ -23,6 +23,7 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("输入框-警告"),R_CUSTOM_TEXT_FIELD);
 
     m_custControl.insert(QStringLiteral("外框"),RCONTAINER);          //'系统控制区'中外框
+    m_custControl.insert(QStringLiteral("背景"),RCONTAINER);          //定制化控件中包含’背景‘，默认将其转换成QWidget
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -208,7 +209,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                 else if((classInfo.contains("box_1") || classInfo.contains("box_2")
                         ||classInfo.contains("box_3") || classInfo.contains("label"))
                         && !dataLabel.contains(QStringLiteral("菜单选项（无标识触发）"))
-                        && !dataLabel.contains(QStringLiteral("外框")))           //’系统控制区‘第一个子div
+                        && !dataLabel.contains(QStringLiteral("外框"))         //’系统控制区‘第一个子div
+                        && !dataLabel.contains(QStringLiteral("背景")))
                 {
                     return RLABEL;
                 }
@@ -371,7 +373,8 @@ void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode
     //解析定制控件‘系统控制区’中第一个子div的data-label值为‘外框’
     BaseData * data = new BaseData();
 
-    if(element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("外框"))){
+    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+    if(dataLabel.contains(QStringLiteral("外框")) || dataLabel.contains(QStringLiteral("背景"))){
         data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
         if(!(data->m_srcImage.isEmpty())){
             data->m_srcImageId = element.firstChild().id();
@@ -702,7 +705,7 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
 
     data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
-    data->m_bChecked = element.firstChild().clazz().contains("selected");
+    data->m_bChecked = element.clazz().contains(G_NodeHtml.SELECTED);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
 
@@ -748,7 +751,6 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
         {
             data->m_checkedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
-
     }
     data->m_widths = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_WIDTH).toInt();
     data->m_heights = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_HEIGHT).toInt();
@@ -1033,7 +1035,7 @@ void GumboParseMethod::parseLabelNodeData(GumboNodeWrapper &element, DomNode *no
     else
         data->m_text = element.secondChild().firstChild().firstChild().firstChild().text();
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
-    data->m_bChecked = element.firstChild().clazz().contains("selected");
+    data->m_bChecked = element.firstChild().clazz().contains(G_NodeHtml.SELECTED);
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     node->m_data = data;
 }
