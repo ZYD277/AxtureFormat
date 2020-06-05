@@ -23,7 +23,11 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("输入框-警告"),R_CUSTOM_TEXT_FIELD);
 
     m_custControl.insert(QStringLiteral("外框"),RCONTAINER);          //'系统控制区'中外框
-    m_custControl.insert(QStringLiteral("背景"),RCONTAINER);          //定制化控件中包含’背景‘，默认将其转换成QWidget
+    m_custControl.insert(QStringLiteral("背景"),RCONTAINER);
+    m_custControl.insert(QStringLiteral("框"),RCONTAINER);
+    m_custControl.insert(QStringLiteral("触发弹窗"),RCONTAINER);
+
+    m_custControl.insert(QStringLiteral("窗体"),RGROUP);
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -210,7 +214,9 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                         ||classInfo.contains("box_3") || classInfo.contains("label"))
                         && !dataLabel.contains(QStringLiteral("菜单选项（无标识触发）"))
                         && !dataLabel.contains(QStringLiteral("外框"))         //’系统控制区‘第一个子div
-                        && !dataLabel.contains(QStringLiteral("背景")))
+                        && !dataLabel.contains(QStringLiteral("背景"))
+                        && !dataLabel.contains(QStringLiteral("框"))
+                        && !dataLabel.contains(QStringLiteral("触发弹窗")))
                 {
                     return RLABEL;
                 }
@@ -374,7 +380,9 @@ void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode
     BaseData * data = new BaseData();
 
     QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
-    if(dataLabel.contains(QStringLiteral("外框")) || dataLabel.contains(QStringLiteral("背景"))){
+    if(dataLabel.contains(QStringLiteral("外框")) || dataLabel.contains(QStringLiteral("背景"))
+            || dataLabel.contains(QStringLiteral("框"))
+            || dataLabel.contains(QStringLiteral("触发弹窗"))){
         data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
         if(!(data->m_srcImage.isEmpty())){
             data->m_srcImageId = element.firstChild().id();
@@ -1000,12 +1008,27 @@ void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeIt
 
 void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *node)
 {
-
     GroupData * data = new GroupData();
-    data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
-    data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
-    data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
-    data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+
+    //自定义控件窗体
+    if(dataLabel.contains(QStringLiteral("窗体"))){
+        GumboNodeWrapperList children = element.children();
+        for(int i = 0; i< children.size(); i++){
+            GumboNodeWrapper child = children.at(i);
+            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("框"))){
+                data->m_geometryReferenceId = child.id();
+                break;
+            }
+        }
+    }else{
+        data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+        data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+        data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+        data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+    }
+
     node->m_data = data;
 }
 

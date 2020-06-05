@@ -218,8 +218,11 @@ struct GroupData : public BaseData{
     int m_top;
     int m_width;
     int m_height;
+
     QString m_spinBoxId;     /*!< 加减输入框id */
     QString m_sinBoxTextId;  /*!< 加减输入框的文字id */
+
+    QString m_geometryReferenceId;      /*!< 自定义控件’触发弹窗‘中窗体的尺寸需要依赖子div中’框‘的尺寸 */
 };
 
 /*!

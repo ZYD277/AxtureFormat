@@ -137,7 +137,20 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
         case Html::RGROUP:{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
-            rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
+
+            //定制控件’触发弹窗‘等
+            if(!gdata->m_geometryReferenceId.isEmpty()){
+                CSS::Rules rules = m_pageCss.value(gdata->m_geometryReferenceId).rules;
+                int left = removePxUnit(findRuleByName(rules,"left").value);
+                int top = removePxUnit(findRuleByName(rules,"top").value);
+                int width = removePxUnit(findRuleByName(rules,"width").value);
+                int height = removePxUnit(findRuleByName(rules,"height").value);
+
+                rect = QRect(left,top,width,height);
+            }else{
+                rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
+            }
+
             break;
         }
         case Html::RDYNAMIC_PANEL:{
@@ -828,11 +841,20 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     QRect rect(removePxUnit(cssMap.value("left")),removePxUnit(cssMap.value("top")),
                removePxUnit(cssMap.value("width")),removePxUnit(cssMap.value("height")));
 
-    bool tGeometryExisted = false;
     if(node->m_type == Html::RGROUP){
         Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
-        rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
-        tGeometryExisted = true;
+        if(!gdata->m_geometryReferenceId.isEmpty()){
+            CSS::Rules rules = m_pageCss.value(gdata->m_geometryReferenceId).rules;
+            int left = removePxUnit(findRuleByName(rules,"left").value);
+            int top = removePxUnit(findRuleByName(rules,"top").value);
+            int width = removePxUnit(findRuleByName(rules,"width").value);
+            int height = removePxUnit(findRuleByName(rules,"height").value);
+
+            rect = QRect(left,top,width,height);
+        }else{
+            Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
+            rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
+        }
     }
 
     //转换成父窗口的相对坐标
