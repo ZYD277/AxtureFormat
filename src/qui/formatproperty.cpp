@@ -126,6 +126,12 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
     switch(node->m_type){
         case Html::RCONTAINER:{
+            Html::BaseData * baseData = node->m_data;
+
+            if(!baseData->m_srcImage.isEmpty()){
+                if(!baseData->m_srcImage.isEmpty())
+                    createImageProp(domWidget,baseData->m_srcImage);
+            }
 
             break;
         }
@@ -496,9 +502,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             cursorShape->setProCursor("PointingHandCursor");
             domWidget->addProperty(cursorShape);
 
-            QString imageSrc = node->m_data->m_srcImage;
-            if(!imageSrc.isEmpty())
-                createImageProp(domWidget,imageSrc);
+            if(!node->m_data->m_srcImage.isEmpty()){
+                createButtonImageProp(domWidget,node->m_data);
+            }
             createTextProp(domWidget,node->m_data->m_text);
 
             if(node->m_data->m_toolTip.size() > 0)
@@ -983,6 +989,30 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
     }
 }
 
+void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::BaseData *baseData)
+{
+    QString normalImageSrc = switchImageURL(baseData->m_srcImage);
+
+    QStringList normalNameList = baseData->m_srcImage.split(".");
+    QString mouseOverImageSrc = baseData->m_srcImage;
+    QString mouseDownImageSrc = baseData->m_srcImage;
+    //hover状态在正常状态加入_mouseOver
+    if(normalNameList.size() == 2){
+        mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver."+normalNameList.at(1));
+        mouseDownImageSrc = switchImageURL(normalNameList.at(0) + "_mouseDown."+normalNameList.at(1));
+    }
+
+    MProperty * styleProp = new MProperty();
+    styleProp->setAttributeName("styleSheet");
+    styleProp->setPropString(QString("QPushButton {border-image: url(:/%1);} \r\n"
+                                     "QPushButton:hover {border-image: url(:/%2);} \r\n"
+                                     "QPushButton:pressed {border-image: url(:/%3);}")
+                             .arg(normalImageSrc)
+                             .arg(mouseOverImageSrc)
+                             .arg(mouseDownImageSrc));
+    domWidget->addProperty(styleProp);
+}
+
 void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,Html::BaseData * baseData,QString widgetName)
 {
     QString checkImageSrc = switchImageURL(baseData->m_checkedImage);
@@ -1016,7 +1046,15 @@ void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,Html::BaseDat
  */
 void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData * tabData)
 {
-    QString tabStyle = QString("width:%1px;height:%2px;").arg(tabData->m_tabWidth).arg(tabData->m_tabHeight);
+    //提取’选项卡‘中tab的样式信息
+    CSS::CssSegment tabStyleSegment = m_pageCss.value(tabData->m_tabBarId);
+
+    QString tabStyle;
+    for(CSS::CssRule rule : tabStyleSegment.rules){
+        if(rule.name != "left" && rule.name != "top"){
+            tabStyle += QString("%1:%2;").arg(rule.name).arg(rule.value);
+        }
+    }
 
     QString normalImageSrc = switchImageURL(tabData->m_tabNormalImage);
     QString selectedImageSrc = switchImageURL(tabData->m_tabSelectedImage);

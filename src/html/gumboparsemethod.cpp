@@ -21,6 +21,8 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("输入框-默认"),R_CUSTOM_TEXT_FIELD);
     m_custControl.insert(QStringLiteral("输入框-禁用"),R_CUSTOM_TEXT_FIELD);
     m_custControl.insert(QStringLiteral("输入框-警告"),R_CUSTOM_TEXT_FIELD);
+
+    m_custControl.insert(QStringLiteral("外框"),RCONTAINER);          //'系统控制区'中外框
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -176,6 +178,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                     return RBUTTON;
                 }
             }
+
             if(dataLabel.contains(QStringLiteral("关闭按钮")))
                 return RBUTTON;
             else if(dataLabel.contains(QStringLiteral("弹窗")))
@@ -186,8 +189,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                     ||dataLabel.contains(QStringLiteral("暂停"))||dataLabel.contains(QStringLiteral("台位切换按钮"))
                     ||dataLabel.contains(QStringLiteral("显控设置"))||dataLabel.contains(QStringLiteral("左"))
                     ||dataLabel.contains(QStringLiteral("右"))||dataLabel.contains(QStringLiteral("选项"))
-                    ||dataLabel.contains(QStringLiteral("下拉三角"))
-                    && !dataLabel.contains(QStringLiteral("单选按钮"))){
+                    ||dataLabel.contains(QStringLiteral("下拉三角"))&& !dataLabel.contains(QStringLiteral("单选按钮"))){
+
                 if(classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3")
                     || classInfo.contains("label")||classInfo.contains(QStringLiteral("图片"))||classInfo.contains("ellipse")
                     ||classInfo.contains("image")){
@@ -198,11 +201,14 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             auto iter = m_custControl.begin();
 
             while(iter != m_custControl.end()){
+
                 if(dataLabel.contains(iter.key())){
                     return iter.value();
                 }
-                else if((classInfo.contains("box_1")||classInfo.contains("box_2")
-                        ||classInfo.contains("box_3")||classInfo.contains("label"))&&!dataLabel.contains(QStringLiteral("菜单选项（无标识触发）")))
+                else if((classInfo.contains("box_1") || classInfo.contains("box_2")
+                        ||classInfo.contains("box_3") || classInfo.contains("label"))
+                        && !dataLabel.contains(QStringLiteral("菜单选项（无标识触发）"))
+                        && !dataLabel.contains(QStringLiteral("外框")))           //’系统控制区‘第一个子div
                 {
                     return RLABEL;
                 }
@@ -332,6 +338,7 @@ void GumboParseMethod::establishRelation(DomNode *parentNode, DomNode *childNode
 void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node)
 {
     switch(type){
+        case RCONTAINER:parseContainerNodeData(element,node);break;
         case RUNMENUBUTTON:
         case RBUTTON:parseButtonNodeData(element,node);break;
         case RCHECKBOX:
@@ -357,6 +364,21 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         case R_CUSTOM_TEXT_FIELD:parseCustomInputEdit(element,node);break;
         default:break;
     }
+}
+
+void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode *node)
+{
+    //解析定制控件‘系统控制区’中第一个子div的data-label值为‘外框’
+    BaseData * data = new BaseData();
+
+    if(element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("外框"))){
+        data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
+        if(!(data->m_srcImage.isEmpty())){
+            data->m_srcImageId = element.firstChild().id();
+        }
+    }
+
+    node->m_data = data;
 }
 
 /*!
@@ -387,6 +409,7 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
     if(headNode.valid() && contentNode.valid()){
         TabWidgetData * tabData = new TabWidgetData();
 
+        //整个QTabWidget的位置尺寸信息
         tabData->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
         tabData->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
         tabData->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
@@ -400,6 +423,7 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
             if(headPanel.clazz().contains("selected")){
                 selectedTabPageName = headPanel.secondChild().firstChild().firstChild().firstChild().text();
                 tabData->m_tabSelectedImage = headPanel.firstChild().attribute(G_NodeHtml.SRC);
+                tabData->m_tabBarId = headPanel.id();
             }else if(headPanel.hasAttribute("selectiongroup")){
                 tabData->m_tabNormalImage = headPanel.firstChild().attribute(G_NodeHtml.SRC);
             }
@@ -425,12 +449,6 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
             establishRelation(node,page);
 
             parseDiv(contentPanel.firstChild(),page);
-        }
-
-        //设置每个tab标签页的尺寸
-        tabData->m_tabHeight = headNode.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
-        if(contentPanels.size() > 0){
-            tabData->m_tabWidth = headNode.attribute(G_NodeHtml.DATA_WIDTH).toInt() / contentPanels.size();
         }
 
         node->m_data = tabData;

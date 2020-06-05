@@ -99,9 +99,9 @@ struct BaseData{
     QString m_text;             /*!< 控件显示内容 */
     QString m_toolTip;          /*!< 工具提示信息，鼠标移入显示 */
     QString m_inlineStyle;      /*!< 内嵌的样式信息 */
-    QString m_srcImage;         /*!< 背景图片信息*/
+    QString m_srcImage;         /*!< 正常状态背景图片*/
     QString m_srcImageId;       /*!< 背景图片控件id */
-    QString m_checkedImage;     /*!< 选中背景图 */
+    QString m_checkedImage;     /*!< 选中状态背景图片 */
     QString m_unCheckedImage;   /*!< 未选中背景图 */
     QString m_specialTextId;    /*!< 自制控件文本 */
 
@@ -249,16 +249,12 @@ struct ListData : public BaseData{
  * @brief tab页
  */
 struct TabWidgetData : public BaseData{
-    TabWidgetData():m_selectedPageIndex(0),m_left(0),m_top(0),m_width(0),m_height(0),
-    m_tabWidth(0),m_tabHeight(0){}
+    TabWidgetData():m_selectedPageIndex(0),m_left(0),m_top(0),m_width(0),m_height(0){}
 
     int m_left;                 /*!< 'tab页'div中data-left属性 */
     int m_top;                  /*!< 'tab页'div中data-top属性 */
     int m_width;
     int m_height;
-
-    int m_tabWidth;             /*!< '选项卡'div中单个宽度 */
-    int m_tabHeight;            /*!< '选项卡'div中单个高度 */
 
     int m_selectedPageIndex;    /*!< 默认选中的页面选项 */
 
