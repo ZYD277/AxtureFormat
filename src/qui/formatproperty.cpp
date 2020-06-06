@@ -108,20 +108,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 {
     //虚拟的容器无需创建UI界面，但可能携带信号槽
     if(node->m_type == Html::R_CUSTOM_VIRTUAL_CONTAINER){
-        if(node->m_data && !node->m_data->m_signals.isEmpty()){
-            if(m_conns == nullptr){
-                m_conns = new MConnections();
-            }
 
-            for(Html::SignalSlotInfo sinfo : node->m_data->m_signals){
-                MConnection * con = new MConnection();
-                con->setSender(sinfo.m_sender);
-                con->setSignal(sinfo.m_signal);
-                con->setReceiver(sinfo.m_receiver);
-                con->setSlot(sinfo.m_slot);
-                m_conns->addConn(con);
-            }
-        }
+        createConnections(node);
         return;
     }
 
@@ -160,6 +148,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
 
             createVisibleProp(domWidget,gdata->m_visible);
+
+            createConnections(node);
 
             //定制控件'触发弹窗'等
             if(!gdata->m_geometryReferenceId.isEmpty()){
@@ -1375,6 +1365,30 @@ void FormatProperty::replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS:
     std::replace_if(rules.begin(),rules.end(),[&](const CSS::CssRule & rule){
         return rule.name == ruleName;
     },newRule);
+}
+
+/*!
+ * @brief 判断是否包含信号槽信息，若有则提取并保存至信号槽列表
+ * @param[in] node 待解析的元素节点
+ */
+void FormatProperty::createConnections(Html::DomNode *node)
+{
+    if(node->m_data && !node->m_data->m_signals.isEmpty()){
+        if(m_conns == nullptr){
+            m_conns = new MConnections();
+        }
+
+        for(Html::SignalSlotInfo sinfo : node->m_data->m_signals){
+            MConnection * con = new MConnection();
+
+            con->setSender(sinfo.m_sender);
+            con->setSignal(sinfo.m_signal);
+            con->setReceiver(sinfo.m_receiver);
+            con->setSlot(sinfo.m_slot);
+
+            m_conns->addConn(con);
+        }
+    }
 }
 
 } //namespace RQt

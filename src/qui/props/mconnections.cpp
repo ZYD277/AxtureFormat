@@ -1,5 +1,6 @@
 ﻿#include "mconnections.h"
 
+#include <QDebug>
 #include "mconnection.h"
 
 namespace RQt{

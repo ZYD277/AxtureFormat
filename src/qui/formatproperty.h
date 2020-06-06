@@ -50,19 +50,20 @@ private:
     QRect calculateGeomerty(StyleMap & cssMap,Html::DomNode *node,QRect & parentRect);
     int removePxUnit(QString valueWithUnit);
 
+    //创建UI控件属性节点
     inline void createImageProp(RDomWidget * domWidget, QString imageSrc);
-    inline void createButtonImageProp(RDomWidget *domWidget, Html::BaseData *baseData);
-    inline void createRadioBtnImageProp(RDomWidget *domWidget, Html::BaseData *baseData, QString widgetName);
-    inline void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
-    inline void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
+    void createButtonImageProp(RDomWidget *domWidget, Html::BaseData *baseData);
+    void createRadioBtnImageProp(RDomWidget *domWidget, Html::BaseData *baseData, QString widgetName);
+    void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
+    void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
     inline void createVisibleProp(RDomWidget * domWidget,bool visible);
     inline void createEnableProp(RDomWidget * domWidget, bool disable);
-    inline void createCheckedProp(RDomWidget * domWidget,bool checked);
+    void createCheckedProp(RDomWidget * domWidget,bool checked);
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
     inline void createOrientationProp(RDomWidget *domWidget, bool leftToRight);
-    void createToolTipProp(RDomWidget * domWidget,QString toolTip);
+    inline void createToolTipProp(RDomWidget * domWidget,QString toolTip);
 
     void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
 
@@ -73,6 +74,8 @@ private:
 
     CSS::CssRule findRuleByName(CSS::Rules & rules,QString ruleName);
     void replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS::CssRule newRule);
+
+    void createConnections(Html::DomNode *node);
 
 private:
     DomHtmlPtr m_dataSrc;

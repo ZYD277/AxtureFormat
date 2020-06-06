@@ -749,8 +749,15 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
 
     if(element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("关闭按钮")))
     {
-         data->m_srcImage = element.firstChild().firstChild().attribute(G_NodeHtml.SRC);
-         node->m_id = element.firstChild().id();
+        GumboNodeWrapperList chils = element.children();
+        for(int j = 0; j < chils.size(); j++){
+            GumboNodeWrapper child = chils.at(j);
+            if(chils.at(j).attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("背景按钮"))){
+                data->m_srcImage = child.firstChild().attribute(G_NodeHtml.SRC);
+                node->m_id = child.id();
+                break;
+            }
+        }
     }
 
     node->m_data = data;
@@ -1045,13 +1052,31 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
     //自定义控件窗体
     if(dataLabel.contains(QStringLiteral("窗体"))){
         data->m_visible = false;
+
+        GumboNodeWrapper closeButtWrapper;
         GumboNodeWrapperList children = element.children();
         for(int i = 0; i< children.size(); i++){
             GumboNodeWrapper child = children.at(i);
             if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("框"))){
                 data->m_geometryReferenceId = child.id();
-                break;
+            }else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("关闭按钮"))){
+                GumboNodeWrapperList grandChils = child.children();
+                for(int j = 0; j < grandChils.size(); j++){
+                    if(grandChils.at(j).attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("背景按钮"))){
+                        closeButtWrapper = grandChils.at(j);
+                    }
+                }
             }
+        }
+
+        //连接‘关闭按钮’和‘窗体’信号
+        if(closeButtWrapper.valid()){
+            SignalSlotInfo sinfo;
+            sinfo.m_sender = closeButtWrapper.id();
+            sinfo.m_signal = "pressed()";
+            sinfo.m_receiver = element.id();
+            sinfo.m_slot = "hide()";
+            data->m_signals.append(sinfo);
         }
     }else{
         data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
