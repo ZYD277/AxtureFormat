@@ -56,6 +56,8 @@ private:
     void createRadioBtnImageProp(RDomWidget *domWidget, Html::BaseData *baseData, QString widgetName);
     void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
     void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
+    void createSpinboxImageProp(RDomWidget * domWidget,Html::SpinboxData * data);
+
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
     inline void createVisibleProp(RDomWidget * domWidget,bool visible);

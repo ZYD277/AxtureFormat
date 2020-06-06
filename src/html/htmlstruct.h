@@ -105,7 +105,8 @@ struct SignalSlotInfo{
  * @brief 控件基础通用属性
  */
 struct BaseData{
-    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true),m_visible(true){}
+    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true),m_visible(true)
+    ,m_left(0),m_top(0),m_width(0),m_height(0){}
     virtual ~BaseData(){}
 
     QString m_text;             /*!< 控件显示内容 */
@@ -122,8 +123,6 @@ struct BaseData{
 
     QString m_widgetSizeId;     /*!< 自制控件大小id */
 
-    int m_widths;
-    int m_heights;
     QString m_textId;
 
     bool m_bChecked;            /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
@@ -131,6 +130,11 @@ struct BaseData{
     bool m_bReadOnly;           /*!< 只读 */
     bool m_bLeftToRight;        /*!< 布局默认从左至右 */
     bool m_visible;             /*!< 是否可见：默认为可见，UI中即使不设置此属性也可以 */
+
+    int m_left;
+    int m_top;
+    int m_width;
+    int m_height;
 
     QStringList m_referenceIds;     /*!< 当前控件的样式需要引用其它ID的样式，可参考自定义控件‘输入框’中 */
 
@@ -228,19 +232,28 @@ struct TreeData : public BaseData{
  * @brief 分组数据
  */
 struct GroupData : public BaseData{
-    GroupData():m_left(0),m_top(0),m_width(0),m_height(0){}
+    GroupData(){}
     ~GroupData(){}
 
-    int m_left;
-    int m_top;
-    int m_width;
-    int m_height;
+    QString m_geometryReferenceId;      /*!< 自定义控件’触发弹窗‘中窗体的尺寸需要依赖子div中’框‘的尺寸 */
+};
+
+/*!
+ * @brief SpinBox数据
+ */
+struct SpinboxData : public BaseData{
+    SpinboxData(){}
+    ~SpinboxData(){}
 
     QString m_spinBoxId;     /*!< 加减输入框id */
     QString m_sinBoxTextId;  /*!< 加减输入框的文字id */
 
-    QString m_geometryReferenceId;      /*!< 自定义控件’触发弹窗‘中窗体的尺寸需要依赖子div中’框‘的尺寸 */
+    QString m_upArrowImage;     /*!< 上箭头默认状态 */
+    QString m_downArrowImage;   /*!< 下箭头默认状态 */
+    QString m_upArrowMouseOverImage;     /*!< 上箭头鼠标悬停状态 */
+    QString m_downArrowMouseOverImage;   /*!< 下箭头鼠标悬停状态 */
 };
+
 
 /*!
  * @brief 单行文本编辑框
@@ -270,12 +283,7 @@ struct ListData : public BaseData{
  * @brief tab页
  */
 struct TabWidgetData : public BaseData{
-    TabWidgetData():m_selectedPageIndex(0),m_left(0),m_top(0),m_width(0),m_height(0){}
-
-    int m_left;                 /*!< 'tab页'div中data-left属性 */
-    int m_top;                  /*!< 'tab页'div中data-top属性 */
-    int m_width;
-    int m_height;
+    TabWidgetData():m_selectedPageIndex(0){}
 
     int m_selectedPageIndex;    /*!< 默认选中的页面选项 */
 

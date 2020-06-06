@@ -14,6 +14,8 @@
 
 namespace RQt{
 
+QString G_NewLine = "\r\n";
+
 FormatProperty::FormatProperty():m_conns(nullptr)
 {
 
@@ -536,8 +538,17 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             }
             createTextProp(domWidget,node->m_data->m_text);
 
+            //若按钮设置了checked属性，则需要手动的添加checked:hover{}属性,使得在选中后，鼠标再移动时颜色不改变
+            QString checkedSelector = node->m_id+":checked";
+            CSS::CssSegment seg = m_pageCss.value(checkedSelector);
+            if(seg.rules.size() > 0){
+                seg.selectorName = checkedSelector + ":hover";
+                m_pageCss.insert(seg.selectorName,seg);
+            }
+
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
+
             break;
         }
 
@@ -567,15 +578,16 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             }
 
             MProperty * currentRow = new MProperty();
+
             if(node->m_type == Html::RDROPLIST)
                 currentRow->setAttributeName("currentIndex");
             else if(node->m_type == Html::RLIST_BOX)
                 currentRow->setAttributeName("currentRow");
+
             currentRow->setPropNumber(QString::number(t_selectedRow));
             domWidget->addProperty(currentRow);
 
-            if(!listData->m_srcImage.isEmpty()||!listData->m_arrowImageOn.isEmpty()||!listData->m_arrowImageSrc.isEmpty())
-            {
+            if(!listData->m_srcImage.isEmpty() || !listData->m_arrowImageOn.isEmpty() || !listData->m_arrowImageSrc.isEmpty()){
                 createComBoxImageProp(domWidget,listData->m_srcImage,listData->m_arrowImageSrc,listData->m_arrowImageOn);
             }
 
@@ -615,22 +627,26 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RSPINBOX:{
-            Html::GroupData *spinBox = static_cast<Html::GroupData *>(node->m_data);
-            if(!spinBox->m_sinBoxTextId.isEmpty())
-            {
+            Html::SpinboxData *spinBox = static_cast<Html::SpinboxData *>(node->m_data);
+
+            if(!spinBox->m_sinBoxTextId.isEmpty()){
                 QString m_sinBoxTextId = spinBox->m_sinBoxTextId + "_div_text" + node->m_id;
                 m_selectorType.insert(m_sinBoxTextId,Html::RSPINBOX);
             }
-            if(!spinBox->m_spinBoxId.isEmpty())
-            {
+
+            if(!spinBox->m_spinBoxId.isEmpty()){
                 QString m_spinbox = spinBox->m_spinBoxId + "_div_spinbox" + node->m_id;
                 m_selectorType.insert(m_spinbox,Html::RSPINBOX);
             }
+
+            createSpinboxImageProp(domWidget,spinBox);
+
             MProperty * miniMum = new MProperty();
             miniMum->setAttributeName("minimum");
             miniMum->setPropNumber("-99");
             domWidget->addProperty(miniMum);
-             break;
+
+            break;
         }
         case Html::RSCROLLBAR:{
             Html::ScrollBarData * scrollbarData = static_cast<Html::ScrollBarData *>(node->m_data);
@@ -964,12 +980,10 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     else if(node->m_type == Html::RRADIO_BUTTON || node->m_type == Html::RCHECKBOX)
     {
         if(rect.width() == 0 || rect.height() == 0){
-            if(node->m_data->m_widths != 0 && node->m_data->m_heights != 0){
-                rect.setWidth(node->m_data->m_widths);
-                rect.setHeight(node->m_data->m_heights);
-            }
-            else
-            {
+            if(node->m_data->m_width != 0 && node->m_data->m_height != 0){
+                rect.setWidth(node->m_data->m_width);
+                rect.setHeight(node->m_data->m_height);
+            }else{
                 QString textId = node->m_data->m_textId;
                 rect.setWidth(removePxUnit(getCssStyle(textId,"width")) + 20);
                 rect.setHeight(removePxUnit(getCssStyle(textId,"height")));
@@ -988,7 +1002,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     }
     else if(node->m_type == Html::RSPINBOX)
     {
-        Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
+        Html::SpinboxData * gdata = dynamic_cast<Html::SpinboxData*>(node->m_data);
         rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
     }
     else if(node->m_type == Html::RTABWIDGET)
@@ -1063,9 +1077,9 @@ void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::BaseData
     styleProp->setAttributeName("styleSheet");
 
 
-    QString prop = QString("QPushButton {border-image: url(:/%1);} \r\n"
-                                "QPushButton:hover {border-image: url(:/%2);} \r\n"
-                                "QPushButton:pressed {border-image: url(:/%3)} \r\n")
+    QString prop = QString("QPushButton {border-image: url(:/%1);}" + G_NewLine +
+                                "QPushButton:hover {border-image: url(:/%2);}" + G_NewLine +
+                                "QPushButton:pressed {border-image: url(:/%3)}")
                         .arg(normalImageSrc)
                         .arg(mouseOverImageSrc)
                         .arg(mouseDownImageSrc);
@@ -1098,9 +1112,9 @@ void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,Html::BaseDat
 
         styleProp->setAttributeName("styleSheet");
 
-        QString prop = QString("%1::indicator:checked {image: url(:/%2);} \r\n"
-                               "%3::indicator:unchecked {image: url(:/%4);} \r\n"
-                               "%5::indicator:unchecked:hover {image: url(:/%6);} \r\n")
+        QString prop = QString("%1::indicator:checked {image: url(:/%2);}" + G_NewLine +
+                               "%3::indicator:unchecked {image: url(:/%4);}" + G_NewLine +
+                               "%5::indicator:unchecked:hover {image: url(:/%6);}" + G_NewLine)
                        .arg(widgetName).arg(checkImageSrc)
                        .arg(widgetName).arg(unCheckImageSrc)
                        .arg(widgetName).arg(mouseOverImageSrc);
@@ -1148,10 +1162,10 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
         styleProp->setAttributeName("styleSheet");
 
         //QTabBar::tab无border-image属性
-        styleProp->setPropString(QString("QTabWidget::pane{ border: none;}\r\n"
-                                         "QTabBar::tab:selected,QTabBar::tab:selected:hover{border-image: url(':/%1');}\r\n"
-                                         "QTabBar::tab:!selected{border-image: url(':/%2');}\r\n"
-                                         "QTabBar::tab:!selected:hover{border-image: url(':/%3');}\r\n"
+        styleProp->setPropString(QString("QTabWidget::pane{ border: none;}" + G_NewLine +
+                                         "QTabBar::tab:selected,QTabBar::tab:selected:hover{border-image: url(':/%1');}" + G_NewLine +
+                                         "QTabBar::tab:!selected{border-image: url(':/%2');}" + G_NewLine +
+                                         "QTabBar::tab:!selected:hover{border-image: url(':/%3');}" + G_NewLine +
                                          "QTabBar::tab{%4}")
                                  .arg(selectedImageSrc).arg(normalImageSrc).arg(mouseOverImageSrc).arg(tabStyle));
         domWidget->addProperty(styleProp);
@@ -1164,14 +1178,35 @@ void FormatProperty::createComBoxImageProp(RDomWidget *domWidget, QString imageS
     arrowImage = switchImageURL(arrowImage);
     unArrowImage = switchImageURL(unArrowImage);
 
-    if(!imageSrc.isEmpty()||!arrowImage.isEmpty()||!unArrowImage.isEmpty()){
+    if(!imageSrc.isEmpty() || !arrowImage.isEmpty() || !unArrowImage.isEmpty()){
         MProperty * styleProp = new MProperty();
         styleProp->setAttributeName("styleSheet");
-        styleProp->setPropString(QString("QComboBox{border-image:url(:/%1);}"
-                                         "QComboBox QAbstractItemView {border-image: url(:/%2);}"
-                                         "QComboBox::down-arrow {image: url(:/%3);}"
-                                         "QComboBox::down-arrow:focus {image: url(:/%4);}")
+        styleProp->setPropString(QString("QComboBox{border-image:url(:/%1);}" + G_NewLine +
+                                         "QComboBox QAbstractItemView {border-image: url(:/%2);}" + G_NewLine +
+                                         "QComboBox::down-arrow {image: url(:/%3);}" + G_NewLine +
+                                         "QComboBox::down-arrow:on {image: url(:/%4);}")
                                  .arg(imageSrc).arg(imageSrc).arg(arrowImage).arg(unArrowImage));
+
+        domWidget->addProperty(styleProp);
+    }
+}
+
+void FormatProperty::createSpinboxImageProp(RDomWidget *domWidget, Html::SpinboxData *data)
+{
+    QString upArrow = switchImageURL(data->m_upArrowImage);
+    QString downArrow = switchImageURL(data->m_downArrowImage);
+    QString upArrowOver = switchImageURL(data->m_upArrowMouseOverImage);
+    QString downArrowOver = switchImageURL(data->m_downArrowMouseOverImage);
+
+    if(!upArrow.isEmpty() && !downArrow.isEmpty() && !upArrowOver.isEmpty() && !downArrowOver.isEmpty()){
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("QSpinBox::up-arrow {image:url(:/%1);}" + G_NewLine +
+                                         "QSpinBox::up-arrow:hover {image: url(:/%2);}" + G_NewLine +
+                                         "QSpinBox::down-arrow {image: url(:/%3);}" + G_NewLine +
+                                         "QSpinBox::down-arrow:hover {image: url(:/%4);}")
+                                 .arg(upArrow).arg(upArrowOver).arg(downArrow).arg(downArrowOver));
+
         domWidget->addProperty(styleProp);
     }
 }

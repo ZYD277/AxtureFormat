@@ -584,7 +584,7 @@ void GumboParseMethod::parseScrollBarNodeData(GumboNodeWrapper &element,DomNode 
 
 void GumboParseMethod::parseSpinBoxNodeData(GumboNodeWrapper &element,DomNode *node)
 {
-    GroupData * data = new GroupData();
+    SpinboxData * data = new SpinboxData();
     data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
     data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
     data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
@@ -602,7 +602,29 @@ void GumboParseMethod::parseSpinBoxNodeData(GumboNodeWrapper &element,DomNode *n
         }
         else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("加减箭头")))
         {
-
+            GumboNodeWrapperList grandChilds = child.children();
+            for(int j = 0; j < grandChilds.size(); j++){
+                GumboNodeWrapper gchild = grandChilds.at(j);
+                if(gchild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("默认"))){
+                    GumboNodeWrapperList arrows = gchild.firstChild().children();
+                    for(GumboNodeWrapper wrapper : arrows){
+                        if(wrapper.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("上三角"))){
+                            data->m_upArrowImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
+                        }else{
+                            data->m_downArrowImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
+                        }
+                    }
+                }else if(gchild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("得到焦点"))){
+                    GumboNodeWrapperList arrows = gchild.firstChild().children();
+                    for(GumboNodeWrapper wrapper : arrows){
+                        if(wrapper.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("上三角"))){
+                            data->m_upArrowMouseOverImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
+                        }else{
+                            data->m_downArrowMouseOverImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -668,9 +690,9 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
                    if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉箭头-默认")))
                    {
                       data->m_arrowImageSrc = child.firstChild().attribute(G_NodeHtml.SRC);
+
                       QStringList imageList = data->m_arrowImageSrc.split(".");
-                      if(imageList.size() == 2)
-                      {
+                      if(imageList.size() == 2){
                           data->m_arrowImageOn = imageList.at(0) + "_selected." + imageList.at(1);
                       }
                    }
@@ -801,8 +823,8 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
             data->m_partiallyCheckedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
     }
-    data->m_widths = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_WIDTH).toInt();
-    data->m_heights = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+    data->m_width = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    data->m_height = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_HEIGHT).toInt();
 
     data->m_bChecked = element.secondChild().hasAttribute(G_NodeHtml.CHECKED);
     data->m_bDisabled = element.secondChild().hasAttribute(G_NodeHtml.DISABLED);
