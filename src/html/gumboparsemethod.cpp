@@ -796,6 +796,10 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
         {
             data->m_checkedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
+        else if(child.attribute(G_NodeHtml.DATA_LABEL) == QStringLiteral("半选中"))
+        {
+            data->m_partiallyCheckedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
+        }
     }
     data->m_widths = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_WIDTH).toInt();
     data->m_heights = element.firstChild().firstChild().firstChild().attribute(G_NodeHtml.DATA_HEIGHT).toInt();

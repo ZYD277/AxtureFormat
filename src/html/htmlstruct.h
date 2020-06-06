@@ -111,10 +111,13 @@ struct BaseData{
     QString m_text;             /*!< 控件显示内容 */
     QString m_toolTip;          /*!< 工具提示信息，鼠标移入显示 */
     QString m_inlineStyle;      /*!< 内嵌的样式信息 */
+
     QString m_srcImage;         /*!< 正常状态背景图片*/
     QString m_srcImageId;       /*!< 背景图片控件id */
-    QString m_checkedImage;     /*!< 选中状态背景图片 */
-    QString m_unCheckedImage;   /*!< 未选中背景图 */
+    QString m_checkedImage;     /*!< 选中状态图片 */
+    QString m_unCheckedImage;   /*!< 未选中状态图片 */
+    QString m_partiallyCheckedImage;   /*!< 半选中状态图片：主要用于checkox */
+
     QString m_specialTextId;    /*!< 自制控件文本 */
 
     QString m_widgetSizeId;     /*!< 自制控件大小id */

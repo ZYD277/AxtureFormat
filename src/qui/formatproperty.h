@@ -60,6 +60,7 @@ private:
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
     inline void createVisibleProp(RDomWidget * domWidget,bool visible);
     inline void createEnableProp(RDomWidget * domWidget, bool disable);
+    inline void createTristateProp(RDomWidget * domWidget, bool tristate);
     void createCheckedProp(RDomWidget * domWidget,bool checked);
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
     inline void createOrientationProp(RDomWidget *domWidget, bool leftToRight);
