@@ -7,6 +7,8 @@
 #include "qss/qssparsemethod.h"
 #include "exportui.h"
 #include "props/mdomwidget.h"
+#include "props/mconnections.h"
+#include "props/mconnection.h"
 
 namespace RQt{
 
@@ -54,6 +56,11 @@ bool QtOutput::save(QString className,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS
         MDomResource * resc = new MDomResource;
         resc->addResource("res.qrc");
         ui.setDomResource(resc);
+
+        MConnections * conns = propFormat.connections();
+        if(conns){
+            ui.setConnections(conns);
+        }
 
         ui.endWrite();
 

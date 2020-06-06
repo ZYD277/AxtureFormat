@@ -69,6 +69,7 @@ private:
     void parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode *node);
 
     void parseCustomInputEdit(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomVirtualContainer(GumboNodeWrapper &element,DomNode *node);
 
 private:
     DomHtmlPtr m_htmlResultPtr;

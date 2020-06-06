@@ -145,12 +145,10 @@ void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
 
     auto iter = cssMap.begin();
 
+    FormatProperty formatProperty;
+
     while(iter != cssMap.end()){
         CSS::CssSegment & seg = iter.value();
-
-        SelectorTypeMap selectorType;
-        FormatProperty formatProperty;
-        selectorType = formatProperty.getHtmlParsedResult();
 
         m_ruleSize = seg.rules.size();
 

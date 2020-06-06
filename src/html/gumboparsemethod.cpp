@@ -18,14 +18,13 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("tab页"),RTABWIDGET);
     m_custControl.insert(QStringLiteral("菜单选项（无标识触发）"),RUNMENUBUTTON);
 
-    m_custControl.insert(QStringLiteral("输入框-默认"),R_CUSTOM_TEXT_FIELD);
-    m_custControl.insert(QStringLiteral("输入框-禁用"),R_CUSTOM_TEXT_FIELD);
-    m_custControl.insert(QStringLiteral("输入框-警告"),R_CUSTOM_TEXT_FIELD);
+    m_custControl.insert(QStringLiteral("输入-默认"),R_CUSTOM_TEXT_FIELD);
+    m_custControl.insert(QStringLiteral("输入-禁用"),R_CUSTOM_TEXT_FIELD);
+    m_custControl.insert(QStringLiteral("输入-警告"),R_CUSTOM_TEXT_FIELD);
 
     m_custControl.insert(QStringLiteral("外框"),RCONTAINER);          //'系统控制区'中外框
     m_custControl.insert(QStringLiteral("背景"),RCONTAINER);
-    m_custControl.insert(QStringLiteral("框"),RCONTAINER);
-    m_custControl.insert(QStringLiteral("触发弹窗"),RCONTAINER);
+    m_custControl.insert(QStringLiteral("触发弹窗"),R_CUSTOM_VIRTUAL_CONTAINER);
 
     m_custControl.insert(QStringLiteral("窗体"),RGROUP);
 }
@@ -129,6 +128,8 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
 
             if(ttype == RGROUP){
                 parseDiv(childEle,node);
+            }else if(ttype == R_CUSTOM_VIRTUAL_CONTAINER){
+                parseDiv(childEle,parentNode);
             }
             //自制控件子级有组合控件继续解析
             else if(ttype == RLABEL||ttype == RBOX||ttype == RBUTTON){
@@ -186,8 +187,11 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 
             if(dataLabel.contains(QStringLiteral("关闭按钮")))
                 return RBUTTON;
+            else if(dataLabel.contains(QStringLiteral("触发弹窗")))
+                return R_CUSTOM_VIRTUAL_CONTAINER;
             else if(dataLabel.contains(QStringLiteral("弹窗")))
                 return RLABEL;
+
             if(dataLabel.contains(QStringLiteral("按钮"))||dataLabel.contains(QStringLiteral("文件夹"))
                     ||dataLabel.contains(QStringLiteral("复位"))||dataLabel.contains(QStringLiteral("快进"))
                     ||dataLabel.contains(QStringLiteral("快退"))||dataLabel.contains(QStringLiteral("播放"))
@@ -215,7 +219,6 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                         && !dataLabel.contains(QStringLiteral("菜单选项（无标识触发）"))
                         && !dataLabel.contains(QStringLiteral("外框"))         //’系统控制区‘第一个子div
                         && !dataLabel.contains(QStringLiteral("背景"))
-                        && !dataLabel.contains(QStringLiteral("框"))
                         && !dataLabel.contains(QStringLiteral("触发弹窗")))
                 {
                     return RLABEL;
@@ -370,6 +373,7 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         case RTABWIDGET:parseTabWidgetNodeData(element,node);break;
 
         case R_CUSTOM_TEXT_FIELD:parseCustomInputEdit(element,node);break;
+        case R_CUSTOM_VIRTUAL_CONTAINER:parseCustomVirtualContainer(element,node);break;
         default:break;
     }
 }
@@ -381,7 +385,6 @@ void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode
 
     QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
     if(dataLabel.contains(QStringLiteral("外框")) || dataLabel.contains(QStringLiteral("背景"))
-            || dataLabel.contains(QStringLiteral("框"))
             || dataLabel.contains(QStringLiteral("触发弹窗"))){
         data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
         if(!(data->m_srcImage.isEmpty())){
@@ -502,6 +505,33 @@ void GumboParseMethod::parseCustomInputEdit(GumboNodeWrapper &element, DomNode *
             node->m_data->m_referenceIds = referenceIds;
         }
     }
+}
+
+/*!
+ * @brief 针对弹出菜单、弹窗等，其外层DIV不需要转换，但需要用来保存信号槽信息
+ */
+void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, DomNode *node)
+{
+    BaseData * data = new BaseData();
+
+    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+
+    if(dataLabel == QStringLiteral("触发弹窗")){
+        GumboNodeWrapperList childs = element.children();
+        Html::SignalSlotInfo signalInfo;
+        for(GumboNodeWrapper node : childs){
+            if(node.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("按钮"))){
+                signalInfo.m_sender = node.id();
+                signalInfo.m_signal = "clicked(bool)";
+            }else if(node.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("窗体"))){
+                signalInfo.m_receiver = node.id();
+                signalInfo.m_slot = "setVisible(bool)";
+            }
+        }
+        data->m_signals.append(signalInfo);
+    }
+
+    node->m_data = data;
 }
 
 void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNode *node)
@@ -1014,6 +1044,7 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
 
     //自定义控件窗体
     if(dataLabel.contains(QStringLiteral("窗体"))){
+        data->m_visible = false;
         GumboNodeWrapperList children = element.children();
         for(int i = 0; i< children.size(); i++){
             GumboNodeWrapper child = children.at(i);

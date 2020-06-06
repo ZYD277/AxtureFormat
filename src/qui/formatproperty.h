@@ -34,6 +34,7 @@ public:
     CSS::CssMap getPageCss(){return m_pageCss;}
 
     RDomWidget * formart();
+    MConnections * connections(){return m_conns;}
 
     QStringList getOriginalResources(){return m_originalResources;}
     QStringList getResources(){return m_resources;}
@@ -41,8 +42,6 @@ public:
     QString getTypeName(Html::NodeType type);
 
 private:
-//    QString getTypeName(Html::NodeType type);
-
     typedef QMap<QString, QString> StyleMap;
     StyleMap extractCssRule(Html::DomNode * node);
     void createDomWidget(RDomWidget *parentWidget, Html::DomNode * node, QRect parentRect);
@@ -58,6 +57,7 @@ private:
     inline void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
+    inline void createVisibleProp(RDomWidget * domWidget,bool visible);
     inline void createEnableProp(RDomWidget * domWidget, bool disable);
     inline void createCheckedProp(RDomWidget * domWidget,bool checked);
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
@@ -84,6 +84,7 @@ private:
 
     SelectorTypeMap m_selectorType;
 
+    MConnections * m_conns;
 };
 
 } //namespace RQt

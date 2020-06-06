@@ -19,6 +19,7 @@ namespace RQt{
 
 class RDomWidget;
 class MDomResource;
+class MConnections;
 
 class ExportUi
 {
@@ -36,6 +37,7 @@ public:
     void setElementClass(QString clazzName);
     void setDomWidget(RDomWidget * domWidget);
     void setDomResource(MDomResource * domResource);
+    void setConnections(MConnections * conns);
 
 private:
     ExportUi & operator=(const ExportUi &) = delete;
@@ -75,6 +77,7 @@ private:
 
     RDomWidget * m_domWidget;
     MDomResource * m_domResource;
+    MConnections * m_conns;
     QString m_className;
 };
 

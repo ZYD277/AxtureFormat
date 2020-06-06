@@ -9,10 +9,12 @@
 #include "props/mcolumn.h"
 #include "props/mitem.h"
 #include "props/mattribute.h"
+#include "props/mconnection.h"
+#include "props/mconnections.h"
 
 namespace RQt{
 
-FormatProperty::FormatProperty()
+FormatProperty::FormatProperty():m_conns(nullptr)
 {
 
 }
@@ -104,6 +106,25 @@ QString FormatProperty::getTypeName(Html::NodeType type)
  */
 void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *node,QRect parentRect)
 {
+    //虚拟的容器无需创建UI界面，但可能携带信号槽
+    if(node->m_type == Html::R_CUSTOM_VIRTUAL_CONTAINER){
+        if(node->m_data && !node->m_data->m_signals.isEmpty()){
+            if(m_conns == nullptr){
+                m_conns = new MConnections();
+            }
+
+            for(Html::SignalSlotInfo sinfo : node->m_data->m_signals){
+                MConnection * con = new MConnection();
+                con->setSender(sinfo.m_sender);
+                con->setSignal(sinfo.m_signal);
+                con->setReceiver(sinfo.m_receiver);
+                con->setSlot(sinfo.m_slot);
+                m_conns->addConn(con);
+            }
+        }
+        return;
+    }
+
     RDomWidget * domWidget = new RDomWidget();
     domWidget->setAttributeClass(getTypeName(node->m_type));
     domWidget->setAttributeName(node->m_id);
@@ -138,7 +159,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RGROUP:{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
 
-            //定制控件’触发弹窗‘等
+            createVisibleProp(domWidget,gdata->m_visible);
+
+            //定制控件'触发弹窗'等
             if(!gdata->m_geometryReferenceId.isEmpty()){
                 CSS::Rules rules = m_pageCss.value(gdata->m_geometryReferenceId).rules;
                 int left = removePxUnit(findRuleByName(rules,"left").value);
@@ -1182,6 +1205,14 @@ void FormatProperty::createReadonlyProp(RDomWidget *domWidget, bool readonly)
     readOnlyProp->setAttributeName("readOnly");
     readOnlyProp->setPropBool(readonly?"true":"false");
     domWidget->addProperty(readOnlyProp);
+}
+
+void FormatProperty::createVisibleProp(RDomWidget *domWidget, bool visible)
+{
+    MProperty * visibleProp = new MProperty;
+    visibleProp->setAttributeName("visible");
+    visibleProp->setPropBool(visible?"true":"false");
+    domWidget->addProperty(visibleProp);
 }
 
 void FormatProperty::createEnableProp(RDomWidget *domWidget, bool disable)

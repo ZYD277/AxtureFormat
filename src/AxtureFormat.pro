@@ -15,6 +15,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
     html/htmlparser.cpp \
+    qui/props/mconnection.cpp \
+    qui/props/mconnections.cpp \
     util/fileutils.cpp \
     util/rsingleton.cpp \
     util/rutil.cpp \
@@ -52,6 +54,8 @@ SOURCES += main.cpp\
 
 HEADERS  += \
     html/htmlparser.h \
+    qui/props/mconnection.h \
+    qui/props/mconnections.h \
     util/fileutils.h \
     util/rsingleton.h \
     util/rutil.h \

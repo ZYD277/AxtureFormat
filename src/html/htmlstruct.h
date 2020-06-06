@@ -78,7 +78,8 @@ enum NodeType{
     RTABWIDGET_PAGE,        /*!< Tab页 */
     RUNMENUBUTTON,          /*!< 菜单选项无触发按钮 */
     /***********识别自定义控件************/
-    R_CUSTOM_TEXT_FIELD      /*!< 自定义元件-输入框 */
+    R_CUSTOM_TEXT_FIELD,                /*!< 自定义元件-输入框 */
+    R_CUSTOM_VIRTUAL_CONTAINER          /*!< 自定义容器，此容器不会转换成Qt控件，但会携带信号槽等信息。 */
 };
 
 /*!
@@ -91,10 +92,20 @@ struct DomHead{
 };
 
 /*!
+ * @brief 信号槽描述信息
+ */
+struct SignalSlotInfo{
+    QString m_sender;
+    QString m_signal;
+    QString m_receiver;
+    QString m_slot;
+};
+
+/*!
  * @brief 控件基础通用属性
  */
 struct BaseData{
-    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true){}
+    BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true),m_visible(true){}
     virtual ~BaseData(){}
 
     QString m_text;             /*!< 控件显示内容 */
@@ -113,11 +124,14 @@ struct BaseData{
     QString m_textId;
 
     bool m_bChecked;            /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
-    bool m_bDisabled;
+    bool m_bDisabled;           /*!< 是否禁用 */
     bool m_bReadOnly;           /*!< 只读 */
     bool m_bLeftToRight;        /*!< 布局默认从左至右 */
+    bool m_visible;             /*!< 是否可见：默认为可见，UI中即使不设置此属性也可以 */
 
     QStringList m_referenceIds;     /*!< 当前控件的样式需要引用其它ID的样式，可参考自定义控件‘输入框’中 */
+
+    QList<SignalSlotInfo> m_signals;      /*!< 需生成的信号槽描述信息 */
 };
 
 typedef QMap<QString,NodeType> CustControl;        //key：自定义控件名称，value：对应转换的自定义控件类型
