@@ -46,6 +46,7 @@ public:
     QString id() const;
     QString clazz() const;
     QString style() const;
+    QString data_label() const;
 
     bool valid() const{return m_bValid;}
 

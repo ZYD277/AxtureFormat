@@ -174,6 +174,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             Html::PanelData * panelData = dynamic_cast<Html::PanelData *>(node->m_data);
 
+            createVisibleProp(domWidget,panelData->m_visible);
+
             if(panelData->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,panelData->m_toolTip);
 
@@ -668,37 +670,13 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RSCROLLBAR:{
             Html::ScrollBarData * scrollbarData = static_cast<Html::ScrollBarData *>(node->m_data);
 
-            if(!scrollbarData->m_addLine.isEmpty())
-            {
-                QString m_addLine = scrollbarData->m_addLine + "_div_addline" + node->m_id;
-                m_selectorType.insert(m_addLine,Html::RSCROLLBAR);
-            }
-            if(!scrollbarData->m_downArrow.isEmpty())
-            {
-                QString m_downArrow = scrollbarData->m_downArrow + "_div_downarrow" + node->m_id;
-                m_selectorType.insert(m_downArrow,Html::RSCROLLBAR);
-            }
-            if(!scrollbarData->m_upArrow.isEmpty())
-            {
-                QString m_upArrow = scrollbarData->m_upArrow + "_div_uparrow" + node->m_id;
-                m_selectorType.insert(m_upArrow,Html::RSCROLLBAR);
-            }
-            if(!scrollbarData->m_subLine.isEmpty())
-            {
-                QString m_subLine= scrollbarData->m_subLine + "_div_subline" + node->m_id;
-                m_selectorType.insert(m_subLine,Html::RSCROLLBAR);
-            }
-            if(!scrollbarData->m_scrollBarId.isEmpty())
-            {
-                QString m_scrollBar = scrollbarData->m_scrollBarId + "_div_scrollbar" + node->m_id;
-                m_selectorType.insert(m_scrollBar,Html::RSCROLLBAR);
-            }
-
             QString scrollBarWidth = getCssStyle(node->m_id,"width");
             QString scrollBarHight = getCssStyle(node->m_id,"height");
 
-            bool orientation = (removePxUnit(scrollBarWidth) > removePxUnit(scrollBarHight) ? true : false);
-            createOrientationProp(domWidget,orientation);
+            bool horizonal = (removePxUnit(scrollBarWidth) > removePxUnit(scrollBarHight) ? true : false);
+            createOrientationProp(domWidget,horizonal);
+
+            createSrollBarStyleProp(domWidget,scrollbarData,horizonal);
 
             break;
         }
@@ -1038,6 +1016,11 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         Html::SliderData * gdata = dynamic_cast<Html::SliderData*>(node->m_data);
         rect = QRect(gdata->m_left - parentRect.left(),gdata->m_top - parentRect.top(),gdata->m_width,gdata->m_height);
     }
+    else if(node->m_type == Html::RSCROLLBAR)
+    {
+        Html::ScrollBarData * gdata = dynamic_cast<Html::ScrollBarData*>(node->m_data);
+        rect = QRect(gdata->m_left,gdata->m_top - parentRect.top(),gdata->m_width,gdata->m_height);
+    }
     else if(node->m_type == Html::RTABWIDGET)
     {
         Html::TabWidgetData * tabData = dynamic_cast<Html::TabWidgetData *>(node->m_data);
@@ -1316,6 +1299,144 @@ void FormatProperty::createProgressStyleProp(RDomWidget *domWidget, Html::Slider
     domWidget->addProperty(styleProp);
 }
 
+void FormatProperty::createSrollBarStyleProp(RDomWidget *domWidget, Html::ScrollBarData *data,bool horizonal)
+{
+    MProperty * styleProp = new MProperty();
+    styleProp->setAttributeName("styleSheet");
+
+    QString prop;
+
+    QString direction = "horizontal";
+    if(!horizonal)
+        direction = "vertical";
+
+    QString subLineWidth;
+
+    //向上按钮
+    {
+        QString barId = data->m_subLineId + "_div";
+        CSS::CssSegment seg = m_pageCss.value(barId);
+
+        subLineWidth = findRuleByName(seg.rules,"width").value;
+
+        prop += QString("QScrollBar::sub-line:%1 {border: 0px;background: %2; width:%3; height:%4 ; subcontrol-origin: margin; image: url(:/%5);}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value)
+                .arg(switchImageURL(data->m_upArrowImage));
+
+        barId = data->m_subLineId + ":hover";
+        seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::sub-line:%1:hover {border: 0px;background: %2; width:%3; height:%4 ; subcontrol-origin: margin; image: url(:/%5);}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value)
+                .arg(switchImageURL(data->m_upArrowImage));
+
+        barId = data->m_subLineId + ":pressed";
+        seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::sub-line:%1:pressed {border: 0px;background: %2; width:%3; height:%4 ; subcontrol-origin: margin; image: url(:/%5);}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value)
+                .arg(switchImageURL(data->m_upArrowImage));
+
+    }
+
+    //向下按钮
+    {
+        QString barId = data->m_addLineId + "_div";
+        CSS::CssSegment seg = m_pageCss.value(barId);
+
+        subLineWidth = findRuleByName(seg.rules,"width").value;
+
+        prop += QString("QScrollBar::add-line:%1 {border: 0px;background: %2; width:%3; height:%4;subcontrol-origin: margin; image: url(:/%5);}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value)
+                .arg(switchImageURL(data->m_downArrowImage));
+
+        barId = data->m_addLineId + ":hover";
+        seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::add-line:%1:hover {border: 0px;background: %2; width:%3; height:%4;subcontrol-origin: margin; image: url(:/%5);}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value)
+                .arg(switchImageURL(data->m_downArrowImage));
+
+        barId = data->m_addLineId + ":pressed";
+        seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::add-line:%1:pressed {border: 0px;background: %2; width:%3; height:%4;subcontrol-origin: margin; image: url(:/%5);}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value)
+                .arg(switchImageURL(data->m_downArrowImage));
+    }
+
+    //滑动槽
+    {
+        QString barId = data->m_scrollSlotId + "_div";
+        CSS::CssSegment seg = m_pageCss.value(barId);
+
+        QString margin;
+        if(horizonal){
+            margin = QString("0 %1 0 %2").arg(subLineWidth).arg(subLineWidth);
+        }else{
+            margin = QString("%1 0 %2 0").arg(subLineWidth).arg(subLineWidth);
+        }
+
+        prop += QString("QScrollBar:%1 {border: 0px;background: %2; width:%3;margin:%4}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssRgbaToQt(findRuleByName(seg.rules,"background-color").value))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(margin);
+    }
+
+    //滑块
+    {
+        QString barId = data->m_scrollBarId + "_div";
+        CSS::CssSegment seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::handle:%1 {border: 0px;background: %2; border-radius:%4 ;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"border-radius").value);
+
+        barId = data->m_scrollBarId + ":hover";
+        seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::handle:%1:hover {border: 0px;background: %2; width:%3; border-radius:%4 ;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"border-radius").value);
+
+        barId = data->m_scrollBarId + ":pressed";
+        seg = m_pageCss.value(barId);
+
+        prop += QString("QScrollBar::handle:%1:pressed {border: 0px;background: %2; width:%3; border-radius:%4 ;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssGradientToQt(findRulesByName(seg.rules,"background")))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"border-radius").value);
+    }
+
+
+    styleProp->setPropString(prop);
+
+    domWidget->addProperty(styleProp);
+}
+
 /*!
  * @brief 1.记录原始图片路径；2.去除图片中包含axure页面的名称，使其路径在images/xxx.png
  * @param[in] imageSrc 原始图片路径1
@@ -1524,6 +1645,19 @@ CSS::CssRule FormatProperty::findRuleByName(CSS::Rules &rules, QString ruleName)
     return CSS::CssRule();
 }
 
+CSS::Rules FormatProperty::findRulesByName(CSS::Rules &rules, QString ruleName)
+{
+    CSS::Rules result;
+
+    std::for_each(rules.begin(),rules.end(),[&](const CSS::CssRule & rule){
+        if(rule.name == ruleName){
+            result.append(rule);
+        }
+    });
+
+    return result;
+}
+
 /*!
  * @brief 根据属性名替换属性集合中的原始属性
  * @param[in] rules 待替换集合列表
@@ -1568,7 +1702,7 @@ void FormatProperty::createConnections(Html::DomNode *node)
  */
 QString FormatProperty::switchCssRgbaToQt(QString cssRgba)
 {
-    QRegExp exp("(\\d+)");
+    QRegExp exp("(\\d+(\\.?\\d+)?)");
 
     QStringList list;
     int pos = 0;
@@ -1591,6 +1725,70 @@ QString FormatProperty::switchCssRgbaToQt(QString cssRgba)
     QString qtRgba = QString("rgba(%1)").arg(list.join(","));
 
     return qtRgba;
+}
+
+/*!
+ * @brief 将CSS中涉及的渐变色修改为Qt格式的渐变色
+ * @attention 目前只处理linear-gradient开头的渐变色:
+ *      linear-gradient(90deg, rgba(64, 111, 181, 1) 0%, rgba(64, 111, 181, 1) 0%, rgba(31, 78, 141, 1) 100%, rgba(31, 78, 141, 1) 100%)
+ * @param[in] linearGradient 线性渐变
+ * @return
+ */
+QString FormatProperty::switchCssGradientToQt(CSS::Rules linearGradients)
+{
+    QString newGradient = "qlineargradient(";
+
+    for(int i = 0; i < linearGradients.size(); i++){
+        QString linearGradient = linearGradients.at(i).value;
+        if(linearGradient.startsWith("linear-gradient")){
+            int firstBracket = linearGradient.indexOf("(");
+            int lastBracket = linearGradient.lastIndexOf(")");
+
+            QString noBracket = linearGradient.mid(firstBracket + 1,lastBracket - firstBracket - 1);
+
+            int firstPos = noBracket.indexOf(",");
+            //第一个为渐变角度
+            QString deg = noBracket.left(firstPos);
+            noBracket.append(",");      //手动补一个,用来和%组合作为分隔符
+            QStringList smallBlocks = noBracket.mid(firstPos + 1).split("%,");
+
+            //将角度进行转换成Qt格式
+            {
+                int degree = deg.remove("deg").toInt();
+                if(degree == 0){
+
+                }else if(degree == 90){
+                    newGradient += QString("x1: %1, y1: %2, x2: %3, y2: %4").arg(0).arg(0).arg(1).arg(0);
+                }
+            }
+
+            int lastPercent = -1;
+            for(int j = 0; j < smallBlocks.size(); j++){
+                QString block = smallBlocks.at(j);
+                if(block.trimmed().isEmpty())
+                    continue;
+
+                int endBracket = block.indexOf(")");
+                QString rgba = block.left(endBracket + 1);
+                QString percent = block.right(block.size() - endBracket - 1);
+
+                double pcent = (double)percent.toInt() / 100;
+
+                if(lastPercent != pcent){
+                    newGradient += ",";
+                    newGradient += QString("stop:%1 %2").arg(pcent).arg(switchCssRgbaToQt(rgba));
+
+                    lastPercent = pcent;
+                }
+            }
+
+            break;
+        }
+    }
+
+    newGradient += " )";
+
+    return newGradient;
 }
 
 } //namespace RQt

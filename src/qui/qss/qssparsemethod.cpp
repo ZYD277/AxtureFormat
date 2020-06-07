@@ -289,34 +289,6 @@ void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
                                     }
                                     break;
                                 }
-                                case Html::RSCROLLBAR:{
-                                    if(selectorNames.at(1).contains("addline"))
-                                    {
-                                        QString t_string = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) +  "#" + t_string.remove("addline") + "::add-line";
-                                    }
-                                    else if(selectorNames.at(1).contains("downarrow"))
-                                    {
-                                        QString t_string = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("downarrow") + "::down-arrow";
-                                    }
-                                    else if(selectorNames.at(1).contains("uparrow"))
-                                    {
-                                        QString t_string = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("uparrow") + "::up-arrow";
-                                    }
-                                    else if(selectorNames.at(1).contains("subline"))
-                                    {
-                                        QString t_string = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("subline") + "::sub-line";
-                                    }
-                                    else if(selectorNames.at(1).contains("scrollbar"))
-                                    {
-                                        QString t_string = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSCROLLBAR) + "#" + t_string.remove("scrollbar") + "::handle";
-                                    }
-                                    break;
-                                }
                                 default:break;
                                 }
                             }

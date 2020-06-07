@@ -185,6 +185,11 @@ QString GumboNodeWrapper::style() const
     return attribute(m_nodeHtml.STYLE);
 }
 
+QString GumboNodeWrapper::data_label() const
+{
+    return attribute(m_nodeHtml.DATA_LABEL);
+}
+
 QString GumboNodeWrapper::tagName()
 {
     if(isValidElement() && m_node->type == GUMBO_NODE_ELEMENT){

@@ -160,10 +160,12 @@ struct ScrollBarData : public BaseData{
 
     QString m_scrollBarId;          /*!< 滚动条 */
     QString m_scrollSlotId;         /*!< 滚动槽 */
-    QString m_subLine;
-    QString m_upArrow;
-    QString m_addLine;
-    QString m_downArrow;
+
+    QString m_subLineId;            /*!< 下翻 */
+    QString m_upArrowImage;
+
+    QString m_addLineId;            /*!< 上翻 */
+    QString m_downArrowImage;
 };
 
 /*!

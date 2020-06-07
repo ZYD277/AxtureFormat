@@ -58,6 +58,7 @@ private:
     void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     void createSpinboxImageProp(RDomWidget * domWidget,Html::SpinboxData * data);
     void createProgressStyleProp(RDomWidget * domWidget,Html::SliderData * data);
+    void createSrollBarStyleProp(RDomWidget * domWidget, Html::ScrollBarData * data, bool horizonal);
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
@@ -78,11 +79,14 @@ private:
     QString getCssStyle(QString selectorName,QString propName);
 
     CSS::CssRule findRuleByName(CSS::Rules & rules,QString ruleName);
+    CSS::Rules findRulesByName(CSS::Rules & rules,QString ruleName);
+
     void replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS::CssRule newRule);
 
     void createConnections(Html::DomNode *node);
 
     QString switchCssRgbaToQt(QString cssRgba);
+    QString switchCssGradientToQt(CSS::Rules linearGradients);
 
 private:
     DomHtmlPtr m_dataSrc;

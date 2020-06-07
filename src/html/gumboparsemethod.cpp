@@ -119,8 +119,8 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             parseNodeData(childEle,ttype,node);
             establishRelation(parentNode,node);
 
-            QString dataLabel = divNode.attribute(G_NodeHtml.DATA_LABEL);
-            QString childDataLabel = childEle.attribute(G_NodeHtml.DATA_LABEL);
+            QString dataLabel = divNode.data_label();
+            QString childDataLabel = childEle.data_label();
 
             if(i == 0 && (ttype == RLABEL || ttype == RIMAGE)
                     && (divNode.clazz().contains("ax_default_hidden") || dataLabel.contains(QStringLiteral("弹窗")))){
@@ -172,7 +172,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 
         //解析定制化控件(部分官方控件会包含data-label属性，需要过滤)
         if(element.hasAttribute(G_NodeHtml.DATA_LABEL)){
-            QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+            QString dataLabel = element.data_label();
             QString selectTionGroup = element.attribute(G_NodeHtml.SELECTIONGROUP);
             if(!dataLabel.contains(QStringLiteral("时间栏")))
                 m_classInfo.clear();
@@ -188,7 +188,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
 
             if(dataLabel.contains(QStringLiteral("关闭按钮")))
                 return RBUTTON;
-            else if(dataLabel.contains(QStringLiteral("触发弹窗")) || dataLabel.contains(QStringLiteral("提示框体")))
+            else if(dataLabel.contains(QStringLiteral("触发弹窗")) || dataLabel.contains(QStringLiteral("提示框体")) ||
+                    dataLabel.contains(QStringLiteral("全局控制栏")) || dataLabel.contains(QStringLiteral("表格菜单")))
                 return R_CUSTOM_VIRTUAL_CONTAINER;
             else if(dataLabel.contains(QStringLiteral("二次确认弹窗"))){
                 return RGROUP;
@@ -199,7 +200,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
                     ||dataLabel.contains(QStringLiteral("复位"))||dataLabel.contains(QStringLiteral("快进"))
                     ||dataLabel.contains(QStringLiteral("快退"))||dataLabel.contains(QStringLiteral("播放"))
                     ||dataLabel.contains(QStringLiteral("暂停"))||dataLabel.contains(QStringLiteral("台位切换按钮"))
-                    ||dataLabel.contains(QStringLiteral("显控设置"))||dataLabel.contains(QStringLiteral("左"))
+                    ||dataLabel.contains(QStringLiteral("显控设置按钮"))||dataLabel.contains(QStringLiteral("左"))
                     ||dataLabel.contains(QStringLiteral("右"))||dataLabel.contains(QStringLiteral("选项"))
                     ||dataLabel.contains(QStringLiteral("下拉三角"))&& !dataLabel.contains(QStringLiteral("单选按钮"))){
 
@@ -253,7 +254,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             if(element.hasAttribute(G_NodeHtml.DATA_LEFT) && element.hasAttribute(G_NodeHtml.DATA_LEFT) && element.hasAttribute(G_NodeHtml.DATA_LEFT))
                 return RGROUP;
 
-            if(element.hasAttribute(G_NodeHtml.DATA_LABEL)&&element.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("信息区")))
+            if(element.hasAttribute(G_NodeHtml.DATA_LABEL)&&element.data_label().contains(QStringLiteral("信息区")))
                 return RGROUP;
             if(classInfo.contains("radio_button"))
                 return RRADIO_BUTTON;
@@ -386,7 +387,7 @@ void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode
     //解析定制控件‘系统控制区’中第一个子div的data-label值为‘外框’
     BaseData * data = new BaseData();
 
-    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+    QString dataLabel = element.data_label();
     if(dataLabel.contains(QStringLiteral("外框")) || dataLabel.contains(QStringLiteral("背景"))
             || dataLabel.contains(QStringLiteral("触发弹窗"))){
         data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
@@ -415,7 +416,7 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
     GumboNodeWrapper contentNode;
 
     for(int i = 0; i < childs.size(); i++){
-        QString dataLabel = childs.at(i).attribute(G_NodeHtml.DATA_LABEL);
+        QString dataLabel = childs.at(i).data_label();
         if(dataLabel.contains(QStringLiteral("选项卡"))){
             headNode = childs.at(i);
         }else if(dataLabel.contains(QStringLiteral("内容"))){
@@ -452,7 +453,7 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
             GumboNodeWrapper contentPanel = contentPanels.at(i);
 
             BaseData * pageData = new BaseData();
-            pageData->m_text = contentPanel.attribute(G_NodeHtml.DATA_LABEL);
+            pageData->m_text = contentPanel.data_label();
 
             if(pageData->m_text == selectedTabPageName){
                 tabData->m_selectedPageIndex = i;
@@ -517,16 +518,16 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
 {
     BaseData * data = new BaseData();
 
-    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+    QString dataLabel = element.data_label();
 
     if(dataLabel == QStringLiteral("触发弹窗")){
         GumboNodeWrapperList childs = element.children();
         Html::SignalSlotInfo signalInfo;
         for(GumboNodeWrapper node : childs){
-            if(node.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("按钮"))){
+            if(node.data_label().contains(QStringLiteral("按钮"))){
                 signalInfo.m_sender = node.id();
                 signalInfo.m_signal = "clicked(bool)";
-            }else if(node.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("窗体"))){
+            }else if(node.data_label().contains(QStringLiteral("窗体"))){
                 signalInfo.m_receiver = node.id();
                 signalInfo.m_slot = "setVisible(bool)";
             }
@@ -536,15 +537,15 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
         GumboNodeWrapperList childs = element.children();
         Html::SignalSlotInfo signalInfo;
         for(GumboNodeWrapper node : childs){
-            if(node.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("详情"))){
+            if(node.data_label().contains(QStringLiteral("详情"))){
                 signalInfo.m_receiver = node.id();
                 signalInfo.m_slot = "setVisible(bool)";
-            }else if(node.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("折叠"))){
+            }else if(node.data_label().contains(QStringLiteral("折叠"))){
 
                 GumboNodeWrapperList grandChilds = node.children();
                 for(int i = 0; i < grandChilds.size(); i++){
                     GumboNodeWrapper grandChild = grandChilds.at(i);
-                    if(grandChild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉三角"))){
+                    if(grandChild.data_label().contains(QStringLiteral("下拉三角"))){
                         signalInfo.m_sender = grandChild.id();
                         signalInfo.m_signal = "clicked(bool)";
                     }
@@ -552,6 +553,62 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
             }
         }
         data->m_signals.append(signalInfo);
+    }else if(dataLabel.contains(QStringLiteral("全局控制栏"))){       //'全局控制栏'组件
+        GumboNodeWrapperList childs = element.children();
+        Html::SignalSlotInfo signalInfo;
+
+        QString xkId;           /*!< 线控设置id */
+        QString xkPopId;
+
+        QString twId;           /*!< 台位切换id */
+        QString twPopId;
+
+        for(GumboNodeWrapper node : childs){
+            if(node.data_label().contains(QStringLiteral("显控设置按钮"))){
+                xkId = node.id();
+            }else if(node.data_label().contains(QStringLiteral("显控设置弹出"))){
+                xkPopId = node.id();
+            }else if(node.data_label().contains(QStringLiteral("台位切换按钮"))){
+                twId = node.id();
+            }else if(node.data_label().contains(QStringLiteral("台位切换弹出"))){
+                twPopId = node.id();
+            }
+        }
+
+        {
+            Html::SignalSlotInfo signalInfo;
+            signalInfo.m_sender = xkId;
+            signalInfo.m_signal = "clicked(bool)";
+            signalInfo.m_receiver = xkPopId;
+            signalInfo.m_slot = "setVisible(bool)";
+            data->m_signals.append(signalInfo);
+        }
+
+        {
+            Html::SignalSlotInfo signalInfo;
+            signalInfo.m_sender = twId;
+            signalInfo.m_signal = "clicked(bool)";
+            signalInfo.m_receiver = twPopId;
+            signalInfo.m_slot = "setVisible(bool)";
+            data->m_signals.append(signalInfo);
+        }
+    }else if(dataLabel.contains(QStringLiteral("表格菜单"))){
+        GumboNodeWrapperList children = element.children();
+
+        SignalSlotInfo sinfo;
+
+        for(int i = 0; i< children.size(); i++){
+            GumboNodeWrapper child = children.at(i);
+            if(child.data_label().contains(QStringLiteral("选项"))){
+                sinfo.m_receiver = child.id();
+                sinfo.m_slot = "setVisible(bool)";
+            }else if(child.data_label().contains(QStringLiteral("菜单按钮"))){
+                sinfo.m_sender = child.id();
+                sinfo.m_signal = "clicked(bool)";
+            }
+        }
+
+        data->m_signals.append(sinfo);
     }
 
     node->m_data = data;
@@ -571,12 +628,12 @@ void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNod
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        QString dataLabel = child.attribute(G_NodeHtml.DATA_LABEL);
+        QString dataLabel = child.data_label();
 
         if(dataLabel.contains(QStringLiteral("进度条"))){
             GumboNodeWrapperList grandChilds = child.firstChild().firstChild().children();
             for(GumboNodeWrapper grandChild : grandChilds){
-                  QString grandDataLabel = grandChild.attribute(G_NodeHtml.DATA_LABEL);
+                  QString grandDataLabel = grandChild.data_label();
                   if(grandDataLabel.contains(QStringLiteral("进度槽"))){   //add-page
                       data->m_progressSlotId = grandChild.id();
                   }else if(grandDataLabel.contains(QStringLiteral("进度条"))){ //sub-page
@@ -586,7 +643,7 @@ void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNod
         }else if(dataLabel.contains(QStringLiteral("进度球"))){
             GumboNodeWrapperList grandChilds = child.children();
             for(GumboNodeWrapper grandChild : grandChilds){
-                  QString grandDataLabel = grandChild.attribute(G_NodeHtml.DATA_LABEL);
+                  QString grandDataLabel = grandChild.data_label();
                   if(grandDataLabel.contains(QStringLiteral("默认"))){   //handle
                       data->m_handleId = grandChild.firstChild().firstChild().id();
                       data->m_srcImage = grandChild.firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
@@ -603,29 +660,52 @@ void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNod
 
 void GumboParseMethod::parseScrollBarNodeData(GumboNodeWrapper &element,DomNode *node)
 {
-    ScrollBarData *data = new ScrollBarData();
+    ScrollBarData * data = new ScrollBarData();
+
+    data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
     GumboNodeWrapperList childs = element.children();
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("滚动槽"))){
-            node->m_id = child.id();
+
+        if(child.data_label().contains(QStringLiteral("滚动槽"))){
+            data->m_scrollSlotId = child.id();
         }
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("滚动条")))
+
+        if(child.data_label().contains(QStringLiteral("滚动条")))
         {
             data->m_scrollBarId = child.firstChild().firstChild().firstChild().id();
         }
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下翻")))
+
+        if(child.data_label().contains(QStringLiteral("下翻")))
         {
-            data->m_addLine = child.firstChild().id();
-            data->m_downArrow = child.secondChild().id();
+            GumboNodeWrapperList subChilds = child.children();
+            for(GumboNodeWrapper subChild : subChilds){
+                if(subChild.firstChild().hasAttribute(G_NodeHtml.SRC)){
+                    data->m_downArrowImage = subChild.firstChild().attribute(G_NodeHtml.SRC);
+                }else{
+                    data->m_addLineId = subChild.id();
+                }
+            }
         }
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("上翻")))
+
+        if(child.data_label().contains(QStringLiteral("上翻")))
         {
-            data->m_subLine = child.firstChild().id();
-            data->m_upArrow = child.secondChild().id();
+            GumboNodeWrapperList subChilds = child.children();
+            for(GumboNodeWrapper subChild : subChilds){
+                if(subChild.firstChild().hasAttribute(G_NodeHtml.SRC)){
+                    data->m_upArrowImage = subChild.firstChild().attribute(G_NodeHtml.SRC);
+                }else{
+                    data->m_subLineId = subChild.id();
+                }
+            }
         }
     }
+
     node->m_data = data;
 }
 
@@ -642,29 +722,29 @@ void GumboParseMethod::parseSpinBoxNodeData(GumboNodeWrapper &element,DomNode *n
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("输入框")))
+        if(child.data_label().contains(QStringLiteral("输入框")))
         {
             data->m_spinBoxId = child.firstChild().id();
             data->m_sinBoxTextId = child.secondChild().id();
         }
-        else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("加减箭头")))
+        else if(child.data_label().contains(QStringLiteral("加减箭头")))
         {
             GumboNodeWrapperList grandChilds = child.children();
             for(int j = 0; j < grandChilds.size(); j++){
                 GumboNodeWrapper gchild = grandChilds.at(j);
-                if(gchild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("默认"))){
+                if(gchild.data_label().contains(QStringLiteral("默认"))){
                     GumboNodeWrapperList arrows = gchild.firstChild().children();
                     for(GumboNodeWrapper wrapper : arrows){
-                        if(wrapper.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("上三角"))){
+                        if(wrapper.data_label().contains(QStringLiteral("上三角"))){
                             data->m_upArrowImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
                         }else{
                             data->m_downArrowImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
                         }
                     }
-                }else if(gchild.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("得到焦点"))){
+                }else if(gchild.data_label().contains(QStringLiteral("得到焦点"))){
                     GumboNodeWrapperList arrows = gchild.firstChild().children();
                     for(GumboNodeWrapper wrapper : arrows){
-                        if(wrapper.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("上三角"))){
+                        if(wrapper.data_label().contains(QStringLiteral("上三角"))){
                             data->m_upArrowMouseOverImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
                         }else{
                             data->m_downArrowMouseOverImage = wrapper.firstChild().attribute(G_NodeHtml.SRC);
@@ -711,13 +791,13 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
         for(int i = 0; i < childs.size(); i++)
         {
             GumboNodeWrapper child = childs.at(i);
-            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉菜单")))
+            if(child.data_label().contains(QStringLiteral("下拉菜单")))
             {
                  GumboNodeWrapperList childs = child.firstChild().firstChild().children();
                  for(int j = 0; j < childs.size(); j++)
                  {
                      GumboNodeWrapper child = childs.at(j);
-                    if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉菜单背景")))
+                    if(child.data_label().contains(QStringLiteral("下拉菜单背景")))
                     {
                         data->m_srcImage = child.firstChild().attribute(G_NodeHtml.SRC);
                     }
@@ -728,13 +808,13 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
                     }
                  }
             }
-            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉框部分")))
+            if(child.data_label().contains(QStringLiteral("下拉框部分")))
             {
                 GumboNodeWrapperList childs = child.children();
                 for(int j = 0; j < childs.size(); j++)
                 {
                     GumboNodeWrapper child = childs.at(j);
-                   if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉箭头-默认")))
+                   if(child.data_label().contains(QStringLiteral("下拉箭头-默认")))
                    {
                       data->m_arrowImageSrc = child.firstChild().attribute(G_NodeHtml.SRC);
 
@@ -743,11 +823,11 @@ void GumboParseMethod::parseListNodeData(GumboNodeWrapper &element,DomNode *node
                           data->m_arrowImageOn = imageList.at(0) + "_selected." + imageList.at(1);
                       }
                    }
-                   else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉框背景")))
+                   else if(child.data_label().contains(QStringLiteral("下拉框背景")))
                    {
                        data->m_widgetSizeId = child.id();
                    }
-                   else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("下拉框文本")))
+                   else if(child.data_label().contains(QStringLiteral("下拉框文本")))
                    {
                        data->m_textId = child.id();
                        data->m_selectedValue = child.secondChild().firstChild().firstChild().firstChild().text();
@@ -816,7 +896,7 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
     data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
 
-    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+    QString dataLabel = element.data_label();
     if(dataLabel.contains(QStringLiteral("标签按钮"))){
         data->m_bChecked = true;
         data->m_dataLabel = dataLabel;
@@ -831,7 +911,7 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
         GumboNodeWrapperList chils = element.children();
         for(int j = 0; j < chils.size(); j++){
             GumboNodeWrapper child = chils.at(j);
-            if(chils.at(j).attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("背景按钮"))){
+            if(chils.at(j).data_label().contains(QStringLiteral("背景按钮"))){
                 data->m_srcImage = child.firstChild().attribute(G_NodeHtml.SRC);
                 node->m_id = child.id();
                 break;
@@ -842,13 +922,15 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
         data->m_needMouseOver = false;
         data->m_needMousePressed = false;
         data->m_needMouseChecked = false;
-    }else if(dataLabel.contains(QStringLiteral("播放")) || dataLabel.contains(QStringLiteral("暂停"))){
+    }else if(dataLabel.contains(QStringLiteral("播放")) || dataLabel.contains(QStringLiteral("暂停"))
+             || dataLabel.contains(QStringLiteral("显控设置按钮")) || dataLabel.contains(QStringLiteral("台位切换按钮"))
+             || dataLabel.contains(QStringLiteral("菜单按钮"))){
         data->m_needMousePressed = false;
         data->m_needMouseChecked = false;
-    }else if(dataLabel.contains(QStringLiteral("页码"))){
+    }else if(dataLabel.contains(QStringLiteral("页码"))){     //‘翻页器’
+        data->m_needMousePressed = false;
         data->m_bChecked = true;
     }
-
     node->m_data = data;
 }
 
@@ -877,15 +959,15 @@ void GumboParseMethod::parseRadioButtonNodeData(GumboNodeWrapper &element, DomNo
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute(G_NodeHtml.DATA_LABEL) == QStringLiteral("未选中"))
+        if(child.data_label() == QStringLiteral("未选中"))
         {
            data->m_unCheckedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
-        else if(child.attribute(G_NodeHtml.DATA_LABEL) == QStringLiteral("选中"))
+        else if(child.data_label() == QStringLiteral("选中"))
         {
             data->m_checkedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
-        else if(child.attribute(G_NodeHtml.DATA_LABEL) == QStringLiteral("半选中"))
+        else if(child.data_label() == QStringLiteral("半选中"))
         {
             data->m_partiallyCheckedImage = child.firstChild().firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
         }
@@ -907,7 +989,12 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
 
     //获取定制控件文字描述
     if(element.hasAttribute(G_NodeHtml.DATA_LABEL)){
-        data->m_panelDataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+        data->m_panelDataLabel = element.data_label();
+
+        if(element.data_label().contains(QStringLiteral("台位切换弹出"))
+                || element.data_label().contains(QStringLiteral("显控设置弹出"))){
+            data->m_visible = false;
+        }
     }
 
     GumboNodeWrapperList childs = element.children();
@@ -918,7 +1005,7 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
             data->m_srcImageId.clear();
 
             //定制化控件‘开关’
-            if(element.attribute(G_NodeHtml.DATA_LABEL).contains("开关")){
+            if(element.data_label().contains("开关")){
                 if(child.style().contains("hidden")){
                     data->m_currentIndex = i;
                 }
@@ -974,7 +1061,7 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                               [&](GumboNodeWrapper firstFloorGroupChild){
                     if(firstFloorGroupChild.hasAttribute(G_NodeHtml.DATA_LABEL))
                     {
-                        QString firstDataLabelText = firstFloorGroupChild.attribute(G_NodeHtml.DATA_LABEL);
+                        QString firstDataLabelText = firstFloorGroupChild.data_label();
 
                         if(firstDataLabelText.contains(QStringLiteral("背景")))
                         {
@@ -988,7 +1075,7 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                                           [&](GumboNodeWrapper secondFloorGroupChild){
                                 if(secondFloorGroupChild.hasAttribute(G_NodeHtml.DATA_LABEL))
                                 {
-                                    QString secondDataLabelText = secondFloorGroupChild.attribute(G_NodeHtml.DATA_LABEL);
+                                    QString secondDataLabelText = secondFloorGroupChild.data_label();
                                     if(secondDataLabelText.contains(QStringLiteral("背景")))
                                     {
                                         if(secondFloorGroupChild.firstChild().clazz().contains("img"))
@@ -1148,7 +1235,7 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
 {
     GroupData * data = new GroupData();
 
-    QString dataLabel = element.attribute(G_NodeHtml.DATA_LABEL);
+    QString dataLabel = element.data_label();
 
     //自定义控件窗体
     if(dataLabel.contains(QStringLiteral("窗体"))){
@@ -1160,12 +1247,12 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
         GumboNodeWrapperList children = element.children();
         for(int i = 0; i< children.size(); i++){
             GumboNodeWrapper child = children.at(i);
-            if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("框"))){
+            if(child.data_label().contains(QStringLiteral("框"))){
                 data->m_geometryReferenceId = child.id();
-            }else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("关闭按钮"))){
+            }else if(child.data_label().contains(QStringLiteral("关闭按钮"))){
                 GumboNodeWrapperList grandChils = child.children();
                 for(int j = 0; j < grandChils.size(); j++){
-                    if(grandChils.at(j).attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("背景按钮"))){
+                    if(grandChils.at(j).data_label().contains(QStringLiteral("背景按钮"))){
                         closeButtWrapper = grandChils.at(j);
                     }
                 }
@@ -1183,23 +1270,22 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
         }
     }else{
         if(dataLabel.contains(QStringLiteral("二次确认弹窗"))){
-
             GumboNodeWrapperList children = element.children();
             for(int i = 0; i< children.size(); i++){
                 GumboNodeWrapper child = children.at(i);
                 //连接‘确定’和‘取消’按钮点击后，窗体关闭
-                if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("普通按钮"))
-                        || child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("取消按钮"))){
+                if(child.data_label().contains(QStringLiteral("普通按钮"))
+                        || child.data_label().contains(QStringLiteral("取消按钮"))){
                     SignalSlotInfo sinfo;
                     sinfo.m_sender = child.id();
                     sinfo.m_signal = "pressed()";
                     sinfo.m_receiver = element.id();
                     sinfo.m_slot = "hide()";
                     data->m_signals.append(sinfo);
-                }else if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("关闭按钮"))){
+                }else if(child.data_label().contains(QStringLiteral("关闭按钮"))){
                     GumboNodeWrapperList grandChils = child.children();
                     for(int j = 0; j < grandChils.size(); j++){
-                        if(grandChils.at(j).attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("背景按钮"))){
+                        if(grandChils.at(j).data_label().contains(QStringLiteral("背景按钮"))){
                             SignalSlotInfo sinfo;
                             sinfo.m_sender = grandChils.at(j).id();
                             sinfo.m_signal = "pressed()";
@@ -1208,6 +1294,17 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                             data->m_signals.append(sinfo);
                         }
                     }
+                }
+            }
+        }else if(dataLabel.contains(QStringLiteral("选项"))){     //表格2
+
+            data->m_visible = false;
+
+            GumboNodeWrapperList children = element.children();
+            for(int i = 0; i< children.size(); i++){
+                GumboNodeWrapper child = children.at(i);
+                if(child.data_label().contains(QStringLiteral("外框"))){
+                    data->m_geometryReferenceId = child.id();
                 }
             }
         }
