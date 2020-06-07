@@ -1,6 +1,7 @@
 ﻿#include "formatproperty.h"
 
 #include <QDebug>
+#include <QRegExp>
 #include "../head.h"
 #include "../util/rutil.h"
 #include "props/mdomwidget.h"
@@ -92,6 +93,7 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RSPINBOX:return QString("QSpinBox");break;
         case Html::RSCROLLBAR:return QString("QScrollBar");break;
         case Html::RPROGRESSBAR:return QString("QProgressBar");break;
+        case Html::RSLIDER:return QString("QSlider");break;
         case Html::RTABWIDGET:return QString("QTabWidget");break;
 
         default:return QString();break;
@@ -700,18 +702,25 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             break;
         }
-       case Html::RPROGRESSBAR:{
-            Html::ProgressBarData *progressBarData = static_cast<Html::ProgressBarData *>(node->m_data);
-            if(!progressBarData->m_progressBarId.isEmpty())
-            {
-                QString m_textId = progressBarData->m_progressBarId + "_div_bar" + node->m_id;
-                m_selectorType.insert(m_textId,Html::RPROGRESSBAR);
-            }
-            if(!progressBarData->m_ProgressSlotId.isEmpty())
-            {
-                QString m_textId = progressBarData->m_ProgressSlotId + "_div_slot" + node->m_id;
-                m_selectorType.insert(m_textId,Html::RPROGRESSBAR);
-            }
+       case Html::RSLIDER:{
+            Html::SliderData * slideData = static_cast<Html::SliderData *>(node->m_data);
+
+            createOrientationProp(domWidget,true);
+
+            createProgressStyleProp(domWidget,slideData);
+
+//            if(!progressBarData->m_progressBarId.isEmpty())
+//            {
+//                QString m_textId = progressBarData->m_progressBarId + "_div_bar" + node->m_id;
+//                m_selectorType.insert(m_textId,Html::RPROGRESSBAR);
+//            }
+
+//            if(!progressBarData->m_ProgressSlotId.isEmpty())
+//            {
+//                QString m_textId = progressBarData->m_ProgressSlotId + "_div_slot" + node->m_id;
+//                m_selectorType.insert(m_textId,Html::RPROGRESSBAR);
+//            }
+
             break;
        }
        case Html::RTABWIDGET:{
@@ -1024,6 +1033,11 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         Html::SpinboxData * gdata = dynamic_cast<Html::SpinboxData*>(node->m_data);
         rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
     }
+    else if(node->m_type == Html::RSLIDER)
+    {
+        Html::SliderData * gdata = dynamic_cast<Html::SliderData*>(node->m_data);
+        rect = QRect(gdata->m_left - parentRect.left(),gdata->m_top - parentRect.top(),gdata->m_width,gdata->m_height);
+    }
     else if(node->m_type == Html::RTABWIDGET)
     {
         Html::TabWidgetData * tabData = dynamic_cast<Html::TabWidgetData *>(node->m_data);
@@ -1241,6 +1255,67 @@ void FormatProperty::createSpinboxImageProp(RDomWidget *domWidget, Html::Spinbox
     }
 }
 
+void FormatProperty::createProgressStyleProp(RDomWidget *domWidget, Html::SliderData *data)
+{
+    MProperty * styleProp = new MProperty();
+    styleProp->setAttributeName("styleSheet");
+
+    QString prop;
+
+    QString direction = "horizontal";
+
+    //sub-line
+    {
+        QString barId = data->m_progressBarId + "_div";
+        CSS::CssSegment seg = m_pageCss.value(barId);
+
+        prop += QString("QSlider::sub-page:%1 {background: %2; height: %3;border-radius: 1px;padding-left:-1px;padding-right:-1px;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssRgbaToQt(findRuleByName(seg.rules,"background-color").value))
+                .arg(findRuleByName(seg.rules,"height").value);
+    }
+
+    //若grooove的高度小于handle高度，那么handle操作不方便
+    QString handleHeight = 0;
+    //handle
+    {
+        CSS::CssSegment seg = m_pageCss.value(data->m_handleId);
+
+        handleHeight = findRuleByName(seg.rules,"height").value;
+
+        prop += QString("QSlider::handle:%1 {image: url(:/%2); width:%3; height: %4;border-radius: 1px;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchImageURL(data->m_srcImage))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(handleHeight);
+
+
+        seg = m_pageCss.value(data->m_pressedHandleId);
+
+        prop += QString("QSlider::handle:%1:hover {image: url(:/%2); width:%3; height: %4;border-radius: 1px;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchImageURL(data->m_checkedImage))
+                .arg(findRuleByName(seg.rules,"width").value)
+                .arg(findRuleByName(seg.rules,"height").value);
+    }
+
+    //add-line和groove
+    {
+        QString slotId = data->m_progressSlotId + "_div";
+        CSS::CssSegment seg = m_pageCss.value(slotId);
+
+        prop += QString("QSlider::groove:%1 {background: %2; height: %3;border-radius: 1px;padding-left:-1px;padding-right:-1px;}" + G_NewLine)
+                .arg(direction)
+                .arg(switchCssRgbaToQt(findRuleByName(seg.rules,"background-color").value))
+                .arg(handleHeight);
+    }
+
+
+    styleProp->setPropString(prop);
+
+    domWidget->addProperty(styleProp);
+}
+
 /*!
  * @brief 1.记录原始图片路径；2.去除图片中包含axure页面的名称，使其路径在images/xxx.png
  * @param[in] imageSrc 原始图片路径1
@@ -1326,11 +1401,11 @@ void FormatProperty::createLayoutDirectionProp(RDomWidget *domWidget, bool leftT
     domWidget->addProperty(layoutProp);
 }
 
-void FormatProperty::createOrientationProp(RDomWidget *domWidget, bool leftToRight)
+void FormatProperty::createOrientationProp(RDomWidget *domWidget, bool horizonal)
 {
     MProperty * layoutProp = new MProperty;
     layoutProp->setAttributeName("orientation");
-    layoutProp->setPropEnum(leftToRight?"Qt::Horizontal":"Qt::Vertical");
+    layoutProp->setPropEnum(horizonal?"Qt::Horizontal":"Qt::Vertical");
     domWidget->addProperty(layoutProp);
 }
 
@@ -1484,6 +1559,38 @@ void FormatProperty::createConnections(Html::DomNode *node)
             m_conns->addConn(con);
         }
     }
+}
+
+/*!
+ * @brief 将CSS中RGBA的颜色转换成Qt
+ * @attention CSS中a的取值范围是0~1，而Qt中是0~255
+ * @param[in] cssRgba css颜色属性：格式为(r,g,b,a)
+ */
+QString FormatProperty::switchCssRgbaToQt(QString cssRgba)
+{
+    QRegExp exp("(\\d+)");
+
+    QStringList list;
+    int pos = 0;
+
+    while ((pos = exp.indexIn(cssRgba, pos)) != -1) {
+        list << exp.cap(1);
+        pos += exp.matchedLength();
+    }
+
+    if(list.size() == 4){
+        double alpha = list.last().toDouble();
+        alpha *= 255;
+        if(alpha >= 255)
+            alpha = 255;
+
+        list.removeLast();
+        list.append(QString::number(alpha));
+    }
+
+    QString qtRgba = QString("rgba(%1)").arg(list.join(","));
+
+    return qtRgba;
 }
 
 } //namespace RQt

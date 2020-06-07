@@ -57,6 +57,7 @@ private:
     void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
     void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     void createSpinboxImageProp(RDomWidget * domWidget,Html::SpinboxData * data);
+    void createProgressStyleProp(RDomWidget * domWidget,Html::SliderData * data);
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
@@ -65,7 +66,7 @@ private:
     inline void createTristateProp(RDomWidget * domWidget, bool tristate);
     void createCheckedProp(RDomWidget * domWidget,bool checked);
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
-    inline void createOrientationProp(RDomWidget *domWidget, bool leftToRight);
+    inline void createOrientationProp(RDomWidget *domWidget, bool horizonal);
     inline void createToolTipProp(RDomWidget * domWidget,QString toolTip);
     inline void createCurrentIndexProp(RDomWidget * domWidget, int currentIndex);
 
@@ -80,6 +81,8 @@ private:
     void replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS::CssRule newRule);
 
     void createConnections(Html::DomNode *node);
+
+    QString switchCssRgbaToQt(QString cssRgba);
 
 private:
     DomHtmlPtr m_dataSrc;

@@ -74,6 +74,7 @@ enum NodeType{
     RSPINBOX,               /*!< 加减输入框*/
     RSCROLLBAR,             /*!< 滚动条*/
     RPROGRESSBAR,           /*!< 进度条*/
+    RSLIDER,                /*!< 滑动条*/
     RTABWIDGET,             /*!< Tabwidget*/
     RTABWIDGET_PAGE,        /*!< Tab页 */
     RUNMENUBUTTON,          /*!< 菜单选项无触发按钮 */
@@ -114,7 +115,7 @@ struct BaseData{
     QString m_inlineStyle;      /*!< 内嵌的样式信息 */
 
     QString m_srcImage;         /*!< 正常状态背景图片*/
-    QString m_srcImageId;       /*!< 背景图片控件id */
+    QString m_srcImageId;       /*!< 正常状态背景图片控件id */
     QString m_checkedImage;     /*!< 选中状态图片 */
     QString m_unCheckedImage;   /*!< 未选中状态图片 */
     QString m_partiallyCheckedImage;   /*!< 半选中状态图片：主要用于checkox */
@@ -166,13 +167,16 @@ struct ScrollBarData : public BaseData{
 };
 
 /*!
- * @brief 进度条
+ * @brief 滑动条
  */
-struct ProgressBarData : public BaseData{
-    ~ProgressBarData(){}
+struct SliderData : public BaseData{
+    SliderData(){}
+    ~SliderData(){}
 
     QString m_progressBarId;          /*!< 进度条 */
-    QString m_ProgressSlotId;         /*!< 进度槽 */
+    QString m_progressSlotId;         /*!< 进度槽 */
+    QString m_handleId;               /*!< 滑块默认状态Id */
+    QString m_pressedHandleId;        /*!< 滑块按压状态Id */
 };
 
 /*!

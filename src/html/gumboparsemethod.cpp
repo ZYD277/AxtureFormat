@@ -14,7 +14,7 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("下拉列表框"),RDROPLIST);
     m_custControl.insert(QStringLiteral("加减输入框"),RSPINBOX);
     m_custControl.insert(QStringLiteral("滚动条"),RSCROLLBAR);
-    m_custControl.insert(QStringLiteral("进度条"),RPROGRESSBAR);
+    m_custControl.insert(QStringLiteral("滑动条"),RSLIDER);
     m_custControl.insert(QStringLiteral("tab页"),RTABWIDGET);
     m_custControl.insert(QStringLiteral("菜单选项(无标识触发)"),RUNMENUBUTTON);
 
@@ -372,7 +372,7 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
         case RTREE:parseTreeNodeData(element,node);break;
         case RSPINBOX:parseSpinBoxNodeData(element,node);break;
         case RSCROLLBAR:parseScrollBarNodeData(element,node);break;
-        case RPROGRESSBAR:parseProgreesBarNodeData(element,node);break;
+        case RSLIDER:parseProgreesBarNodeData(element,node);break;
         case RTABWIDGET:parseTabWidgetNodeData(element,node);break;
 
         case R_CUSTOM_TEXT_FIELD:parseCustomInputEdit(element,node);break;
@@ -559,18 +559,42 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
 
 void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNode *node)
 {
-    ProgressBarData *data = new ProgressBarData();
-    GumboNodeWrapperList childs = element.firstChild().firstChild().children();
+    SliderData * data = new SliderData();
+
+    data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+    GumboNodeWrapperList childs = element.children();
+
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("进度槽")))
-        {
-           data->m_ProgressSlotId = child.id();
-        }
-        if(child.attribute(G_NodeHtml.DATA_LABEL).contains(QStringLiteral("进度条")))
-        {
-           data->m_progressBarId = child.id();
+        QString dataLabel = child.attribute(G_NodeHtml.DATA_LABEL);
+
+        if(dataLabel.contains(QStringLiteral("进度条"))){
+            GumboNodeWrapperList grandChilds = child.firstChild().firstChild().children();
+            for(GumboNodeWrapper grandChild : grandChilds){
+                  QString grandDataLabel = grandChild.attribute(G_NodeHtml.DATA_LABEL);
+                  if(grandDataLabel.contains(QStringLiteral("进度槽"))){   //add-page
+                      data->m_progressSlotId = grandChild.id();
+                  }else if(grandDataLabel.contains(QStringLiteral("进度条"))){ //sub-page
+                      data->m_progressBarId = grandChild.id();
+                  }
+            }
+        }else if(dataLabel.contains(QStringLiteral("进度球"))){
+            GumboNodeWrapperList grandChilds = child.children();
+            for(GumboNodeWrapper grandChild : grandChilds){
+                  QString grandDataLabel = grandChild.attribute(G_NodeHtml.DATA_LABEL);
+                  if(grandDataLabel.contains(QStringLiteral("默认"))){   //handle
+                      data->m_handleId = grandChild.firstChild().firstChild().id();
+                      data->m_srcImage = grandChild.firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
+                  }else if(grandDataLabel.contains(QStringLiteral("选中"))){ //handle:hover
+                      data->m_pressedHandleId = grandChild.firstChild().firstChild().id();
+                      data->m_checkedImage = grandChild.firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
+                  }
+            }
         }
     }
 
