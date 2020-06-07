@@ -897,9 +897,10 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
     data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
 
     QString dataLabel = element.data_label();
+    data->m_dataLabel = dataLabel;
+
     if(dataLabel.contains(QStringLiteral("标签按钮"))){
         data->m_bChecked = true;
-        data->m_dataLabel = dataLabel;
 
         SignalSlotInfo sinfo;
         sinfo.m_sender = element.id();

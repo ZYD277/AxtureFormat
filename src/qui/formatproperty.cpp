@@ -547,7 +547,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 createButtonImageProp(domWidget,buttData);
             }
 
-            if(buttData->m_dataLabel.contains(QStringLiteral("标签按钮"))){
+            if(buttData->m_dataLabel.contains(QStringLiteral("标签按钮"))
+                    || buttData->m_dataLabel.contains(QStringLiteral("页码"))){
                 buttData->m_bChecked = false;
 
                 createConnections(node);
