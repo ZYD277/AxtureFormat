@@ -170,7 +170,7 @@ bool GumboNodeWrapper::hasAttribute(QString attrName)
     return false;
 }
 
-QString GumboNodeWrapper::id()
+QString GumboNodeWrapper::id() const
 {
     return attribute(m_nodeHtml.ID);
 }
@@ -180,7 +180,7 @@ QString GumboNodeWrapper::clazz() const
     return attribute(m_nodeHtml.CLASS);
 }
 
-QString GumboNodeWrapper::style()
+QString GumboNodeWrapper::style() const
 {
     return attribute(m_nodeHtml.STYLE);
 }

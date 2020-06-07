@@ -120,9 +120,7 @@ struct BaseData{
     QString m_partiallyCheckedImage;   /*!< 半选中状态图片：主要用于checkox */
 
     QString m_specialTextId;    /*!< 自制控件文本 */
-
     QString m_widgetSizeId;     /*!< 自制控件大小id */
-
     QString m_textId;
 
     bool m_bChecked;            /*!< 是否默认选中：checkbox、radiobutton等需要选择的有效 */
@@ -137,6 +135,7 @@ struct BaseData{
     int m_height;
 
     QStringList m_referenceIds;     /*!< 当前控件的样式需要引用其它ID的样式，可参考自定义控件‘输入框’中 */
+    QString m_dataLabel;            /*!< 元素的data-label属性值 */
 
     QList<SignalSlotInfo> m_signals;      /*!< 需生成的信号槽描述信息 */
 };
@@ -180,12 +179,15 @@ struct ProgressBarData : public BaseData{
  * @brief 动态面板数据
  */
 struct PanelData : public BaseData{
+    PanelData():m_currentIndex(0){}
     ~PanelData(){}
 
     QString m_panelDataLabel;           /*!< DynamicPanel中最外层data-label标签内容 */
     QString m_secondSrcImageId;         /*!< 二级子菜单背景id*/
     QString m_sonPanelStateId;          /*!< 二级动态面板id*/
     QString m_panelTextId;
+
+    int m_currentIndex;                 /*!< 面板默认选中的索引，从0开始 */
 };
 
 /*!
@@ -254,6 +256,17 @@ struct SpinboxData : public BaseData{
     QString m_downArrowMouseOverImage;   /*!< 下箭头鼠标悬停状态 */
 };
 
+/*!
+ * @brief QPushButton数据
+ */
+struct ButtonData : public BaseData{
+    ButtonData():m_needMouseOver(true),m_needMousePressed(true),m_needMouseChecked(true){}
+    ~ButtonData(){}
+
+    bool m_needMouseOver;       /*!< 是否开启MouseOver属性 */
+    bool m_needMousePressed;    /*!< 是否开启MousePressd属性 */
+    bool m_needMouseChecked;    /*!< 是否开启MouseChecked属性 */
+};
 
 /*!
  * @brief 单行文本编辑框

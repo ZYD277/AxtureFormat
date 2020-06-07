@@ -52,7 +52,7 @@ private:
 
     //创建UI控件属性节点
     inline void createImageProp(RDomWidget * domWidget, QString imageSrc);
-    void createButtonImageProp(RDomWidget *domWidget, Html::BaseData *baseData);
+    void createButtonImageProp(RDomWidget *domWidget, Html::ButtonData *baseData);
     void createRadioBtnImageProp(RDomWidget *domWidget, Html::BaseData *baseData, QString widgetName);
     void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
     void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
@@ -67,6 +67,7 @@ private:
     inline void createLayoutDirectionProp(RDomWidget * domWidget,bool leftToRight);
     inline void createOrientationProp(RDomWidget *domWidget, bool leftToRight);
     inline void createToolTipProp(RDomWidget * domWidget,QString toolTip);
+    inline void createCurrentIndexProp(RDomWidget * domWidget, int currentIndex);
 
     void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
 

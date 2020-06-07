@@ -169,15 +169,21 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
         case Html::RDYNAMIC_PANEL:{
-            if(node->m_data->m_toolTip.size() > 0)
-                createToolTipProp(domWidget,node->m_data->m_toolTip);
-            QString imageSrc = node->m_data->m_srcImage;
+
+            Html::PanelData * panelData = dynamic_cast<Html::PanelData *>(node->m_data);
+
+            if(panelData->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,panelData->m_toolTip);
+
+            QString imageSrc = panelData->m_srcImage;
             if(!imageSrc.isEmpty() && rect.width() < 1)
                 createImageProp(domWidget,imageSrc);
 
             for(int i = 0; i < node->m_childs.size();i++){
                 createDomWidget(domWidget,node->m_childs.at(i),rect);
             }
+
+            createCurrentIndexProp(domWidget,panelData->m_currentIndex);
 
             break;
         }
@@ -525,18 +531,27 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
         case Html::RUNMENUBUTTON:
         case Html::RBUTTON:{
-            createCheckedProp(domWidget,node->m_data->m_bChecked);
-            createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            Html::ButtonData * buttData = dynamic_cast<Html::ButtonData *>(node->m_data);
 
             MProperty * cursorShape = new MProperty;
             cursorShape->setAttributeName("cursor");
             cursorShape->setProCursor("PointingHandCursor");
             domWidget->addProperty(cursorShape);
 
-            if(!node->m_data->m_srcImage.isEmpty()){
-                createButtonImageProp(domWidget,node->m_data);
+            if(!buttData->m_srcImage.isEmpty()){
+                createButtonImageProp(domWidget,buttData);
             }
-            createTextProp(domWidget,node->m_data->m_text);
+
+            if(buttData->m_dataLabel.contains(QStringLiteral("标签按钮"))){
+                buttData->m_bChecked = false;
+
+                createConnections(node);
+            }
+
+            createCheckedProp(domWidget,buttData->m_bChecked);
+            createEnableProp(domWidget,buttData->m_bDisabled);
+            createTextProp(domWidget,buttData->m_text);
 
             //若按钮设置了checked属性，则需要手动的添加checked:hover{}属性,使得在选中后，鼠标再移动时颜色不改变
             QString checkedSelector = node->m_id+":checked";
@@ -546,8 +561,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 m_pageCss.insert(seg.selectorName,seg);
             }
 
-            if(node->m_data->m_toolTip.size() > 0)
-                createToolTipProp(domWidget,node->m_data->m_toolTip);
+            if(buttData->m_toolTip.size() > 0)
+                createToolTipProp(domWidget,buttData->m_toolTip);
 
             break;
         }
@@ -650,6 +665,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
         case Html::RSCROLLBAR:{
             Html::ScrollBarData * scrollbarData = static_cast<Html::ScrollBarData *>(node->m_data);
+
             if(!scrollbarData->m_addLine.isEmpty())
             {
                 QString m_addLine = scrollbarData->m_addLine + "_div_addline" + node->m_id;
@@ -675,10 +691,13 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 QString m_scrollBar = scrollbarData->m_scrollBarId + "_div_scrollbar" + node->m_id;
                 m_selectorType.insert(m_scrollBar,Html::RSCROLLBAR);
             }
+
             QString scrollBarWidth = getCssStyle(node->m_id,"width");
             QString scrollBarHight = getCssStyle(node->m_id,"height");
+
             bool orientation = (removePxUnit(scrollBarWidth) > removePxUnit(scrollBarHight) ? true : false);
             createOrientationProp(domWidget,orientation);
+
             break;
         }
        case Html::RPROGRESSBAR:{
@@ -1045,7 +1064,7 @@ void FormatProperty::createImageProp(RDomWidget *domWidget, QString imageSrc)
  * @attention 按钮若设置了背景图片，则需要添加正常背景、悬停、按下、选中四种状态背景；
  *            若按钮被选中，其背景图片已经加入了_selected，在计算其它状态图片时，需先移除
  */
-void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::BaseData *baseData)
+void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::ButtonData *baseData)
 {
     QString normalImageSrc;
     QString mouseOverImageSrc;
@@ -1053,15 +1072,22 @@ void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::BaseData
     QString mouseSelectedImageSrc;
 
     if(baseData->m_bChecked){
-        mouseSelectedImageSrc = switchImageURL(baseData->m_srcImage);
+        QString selectedSuffix = "_selected";
+
         QStringList selectedNameList = baseData->m_srcImage.split(".");
         if(selectedNameList.size() == 2){
             QString selectedName = selectedNameList.at(0);
-            QString normalName = selectedName.remove("_selected",Qt::CaseInsensitive);
+            QString normalName = selectedName.remove(selectedSuffix,Qt::CaseInsensitive);
 
             normalImageSrc = switchImageURL(normalName +"." + selectedNameList.at(1));
             mouseOverImageSrc = switchImageURL(normalName + "_mouseOver." + selectedNameList.at(1));
             mouseDownImageSrc = switchImageURL(normalName + "_mouseDown." + selectedNameList.at(1));
+
+            if(baseData->m_srcImage.contains(selectedSuffix)){
+                mouseSelectedImageSrc = switchImageURL(baseData->m_srcImage);
+            }else{
+                mouseSelectedImageSrc = switchImageURL(normalName + selectedSuffix + "." + selectedNameList.at(1));
+            }
         }
     }else{
         normalImageSrc = switchImageURL(baseData->m_srcImage);
@@ -1077,14 +1103,18 @@ void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::BaseData
     styleProp->setAttributeName("styleSheet");
 
 
-    QString prop = QString("QPushButton {border-image: url(:/%1);}" + G_NewLine +
-                                "QPushButton:hover {border-image: url(:/%2);}" + G_NewLine +
-                                "QPushButton:pressed {border-image: url(:/%3)}")
-                        .arg(normalImageSrc)
-                        .arg(mouseOverImageSrc)
-                        .arg(mouseDownImageSrc);
+    QString prop = QString("QPushButton {border-image: url(:/%1);}" + G_NewLine)
+                        .arg(normalImageSrc);
 
-    if(baseData->m_bChecked){
+    if(baseData->m_needMouseOver){
+        prop += QString("QPushButton:hover {border-image: url(:/%1);}" + G_NewLine).arg(mouseOverImageSrc);
+    }
+
+    if(baseData->m_needMousePressed){
+        prop += QString("QPushButton:pressed {border-image: url(:/%1)}" + G_NewLine).arg(mouseDownImageSrc);
+    }
+
+    if(baseData->m_needMouseChecked && baseData->m_bChecked){
         prop += QString("QPushButton:checked {border-image: url(:/%1);}").arg(mouseSelectedImageSrc);
     }
 
@@ -1312,6 +1342,14 @@ void FormatProperty::createToolTipProp(RDomWidget *domWidget, QString toolTip)
         tipProp->setPropString(toolTip);
         domWidget->addProperty(tipProp);
     }
+}
+
+void FormatProperty::createCurrentIndexProp(RDomWidget *domWidget,int currentIndex)
+{
+    MProperty * layoutProp = new MProperty;
+    layoutProp->setAttributeName("currentIndex");
+    layoutProp->setPropNumber(QString::number(currentIndex));
+    domWidget->addProperty(layoutProp);
 }
 
 void FormatProperty::createTreeNode(MItem * parentItem,Html::TreeItemData * textData)

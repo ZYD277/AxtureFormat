@@ -43,9 +43,9 @@ public:
     AttributeList attributes();
     QString attribute(QString attrName) const;
     bool hasAttribute(QString attrName);
-    QString id();
+    QString id() const;
     QString clazz() const;
-    QString style();
+    QString style() const;
 
     bool valid() const{return m_bValid;}
 
