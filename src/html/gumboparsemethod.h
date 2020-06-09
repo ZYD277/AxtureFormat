@@ -59,7 +59,6 @@ private:
     void parseBoxNodeData(GumboNodeWrapper &element,DomNode *node);
 
     void parseTreeNodeData(GumboNodeWrapper &element, DomNode *node);
-    void parseSubTreeDataNodeData(GumboNodeWrapper element, TreeItemData *parentNode);
 
     void parseGroupNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseLabelNodeData(GumboNodeWrapper &element, DomNode *node);    

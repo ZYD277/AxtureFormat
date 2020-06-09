@@ -10,7 +10,7 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
 {
     m_custControl.insert(QStringLiteral("单选按钮"),RRADIO_BUTTON);
     m_custControl.insert(QStringLiteral("复选框"),RCHECKBOX);
-//    m_custControl.insert(RTREE,QStringLiteral("折叠信息"));
+    m_custControl.insert(QStringLiteral("折叠信息区"),RTREE);
     m_custControl.insert(QStringLiteral("下拉列表框"),RDROPLIST);
     m_custControl.insert(QStringLiteral("加减输入框"),RSPINBOX);
     m_custControl.insert(QStringLiteral("滚动条"),RSCROLLBAR);
@@ -189,7 +189,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
             if(dataLabel.contains(QStringLiteral("关闭按钮")))
                 return RBUTTON;
             else if(dataLabel.contains(QStringLiteral("触发弹窗")) || dataLabel.contains(QStringLiteral("提示框体")) ||
-                    dataLabel.contains(QStringLiteral("全局控制栏")) || dataLabel.contains(QStringLiteral("表格菜单")))
+                    dataLabel.contains(QStringLiteral("全局控制栏")) || dataLabel.contains(QStringLiteral("表格菜单")) ||
+                    dataLabel.contains(QStringLiteral("触发二级菜单")) || dataLabel.contains(QStringLiteral("右键垂直菜单")))
                 return R_CUSTOM_VIRTUAL_CONTAINER;
             else if(dataLabel.contains(QStringLiteral("二次确认弹窗"))){
                 return RGROUP;
@@ -513,6 +514,7 @@ void GumboParseMethod::parseCustomInputEdit(GumboNodeWrapper &element, DomNode *
 
 /*!
  * @brief 针对弹出菜单、弹窗等，其外层DIV不需要转换，但需要用来保存信号槽信息
+ * @attention 在第一层节点之上虚拟了一个节点，此节点不用于显示，只负责维护节点直接关系
  */
 void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, DomNode *node)
 {
@@ -555,7 +557,6 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
         data->m_signals.append(signalInfo);
     }else if(dataLabel.contains(QStringLiteral("全局控制栏"))){       //'全局控制栏'组件
         GumboNodeWrapperList childs = element.children();
-        Html::SignalSlotInfo signalInfo;
 
         QString xkId;           /*!< 线控设置id */
         QString xkPopId;
@@ -609,6 +610,38 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
         }
 
         data->m_signals.append(sinfo);
+    }else if(dataLabel.contains(QStringLiteral("触发二级菜单"))){
+        GumboNodeWrapperList children = element.children();
+
+        SignalSlotInfo sinfo;
+
+        for(int i = 0; i< children.size(); i++){
+            GumboNodeWrapper child = children.at(i);
+            if(child.data_label().contains(QStringLiteral("二级菜单"))){
+                sinfo.m_receiver = child.id();
+                sinfo.m_slot = "setVisible(bool)";
+            }else if(child.data_label().contains(QStringLiteral("菜单项"))){
+                GumboNodeWrapperList grandChilds = child.children();
+                for(GumboNodeWrapper grand : grandChilds){
+                    if(grand.data_label().contains(QStringLiteral("选项"))){
+                        sinfo.m_sender = grand.id();
+                        sinfo.m_signal = "clicked(bool)";
+                    }
+                }
+            }
+        }
+
+        data->m_signals.append(sinfo);
+    }else if(dataLabel.contains(QStringLiteral("右键垂直菜单"))){   //右键垂直菜单
+        data->m_visible = true;
+
+        GumboNodeWrapperList children = element.children();
+        for(int i = 0; i< children.size(); i++){
+            GumboNodeWrapper child = children.at(i);
+            if(child.data_label().contains(QStringLiteral("外框"))){
+//                data->m_geometryReferenceId = child.id();
+            }
+        }
     }
 
     node->m_data = data;
@@ -1002,6 +1035,7 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
     for(int i = 0; i < childs.size(); i++)
     {
         GumboNodeWrapper child = childs.at(i);
+
         if(child.clazz() == "panel_state"){
             data->m_srcImageId.clear();
 
@@ -1054,40 +1088,6 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                 {
                     data->m_panelTextId = textChild.id();
                 }
-
-                //处理自制动态面板下含有二级子菜单，获取一级子菜单和二级子菜单背景id（右垂直菜单）
-                GumboNodeWrapperList firstFloorGroupChilds = panel.firstChild().children();
-
-                std::for_each(firstFloorGroupChilds.begin(),firstFloorGroupChilds.end(),
-                              [&](GumboNodeWrapper firstFloorGroupChild){
-                    if(firstFloorGroupChild.hasAttribute(G_NodeHtml.DATA_LABEL))
-                    {
-                        QString firstDataLabelText = firstFloorGroupChild.data_label();
-
-                        if(firstDataLabelText.contains(QStringLiteral("背景")))
-                        {
-                            if(firstFloorGroupChild.firstChild().clazz().contains("img"))
-                                data->m_srcImageId = firstFloorGroupChild.firstChild().id();
-                        }
-                        if(firstDataLabelText.contains(QStringLiteral("二级菜单")))
-                        {
-                            GumboNodeWrapperList secondFloorGroupChilds = firstFloorGroupChild.firstChild().children();
-                            std::for_each(secondFloorGroupChilds.begin(),secondFloorGroupChilds.end(),
-                                          [&](GumboNodeWrapper secondFloorGroupChild){
-                                if(secondFloorGroupChild.hasAttribute(G_NodeHtml.DATA_LABEL))
-                                {
-                                    QString secondDataLabelText = secondFloorGroupChild.data_label();
-                                    if(secondDataLabelText.contains(QStringLiteral("背景")))
-                                    {
-                                        if(secondFloorGroupChild.firstChild().clazz().contains("img"))
-                                            data->m_secondSrcImageId = secondFloorGroupChild.firstChild().id();
-                                    }
-                                }
-                            });
-                        }
-
-                    }
-                });
             }
 
             if(imageChild.firstChild().clazz().contains("img"))
@@ -1184,52 +1184,54 @@ void GumboParseMethod::parseLineNodeData(GumboNodeWrapper &element, DomNode *nod
 }
 
 /*!
- * @attention 在第一层节点之上虚拟了一个节点，此节点不用于显示，只负责维护节点直接关系
+ * @attention
  */
 void GumboParseMethod::parseTreeNodeData(GumboNodeWrapper &element, DomNode *node)
 {
+    TreeData * treeData = new TreeData();
 
-    TreeItemData * virtualRoot = new TreeItemData();
-    virtualRoot->m_text = "root";
-    virtualRoot->m_parentItem = nullptr;
+    treeData->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    treeData->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    treeData->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    treeData->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
 
-    GumboNodeWrapperList topLevelChilds = element.firstChild().children();
-    for(int i = 0; i < topLevelChilds.size(); i++){
-        parseSubTreeDataNodeData(topLevelChilds.at(i),virtualRoot);
+    GumboNodeWrapperList childs = element.children();
+
+    TreeNodeData tdata;
+    for(int i = 0; i < childs.size(); i++){
+        GumboNodeWrapper child = childs.at(i);
+
+        if(child.data_label().contains(QStringLiteral("展开信息"))){
+            GumboNodeWrapperList grandChilds = child.firstChild().firstChild().firstChild().children();
+            for(GumboNodeWrapper grand : grandChilds){
+                if(grand.data_label().contains(QStringLiteral("详情内容"))){
+                    tdata.detailInfo = grand.secondChild().firstChild().firstChild().firstChild().text();
+                }
+            }
+        }else if(child.data_label().contains(QStringLiteral("折叠信息"))){
+            GumboNodeWrapperList grandChilds = child.children();
+            for(GumboNodeWrapper grand : grandChilds){
+                if(grand.data_label().contains(QStringLiteral("时间"))){
+                    tdata.timestamp = grand.secondChild().firstChild().firstChild().firstChild().text();
+                }else if(grand.data_label().contains(QStringLiteral("缩略信息"))){
+                    tdata.simpleInfo = grand.secondChild().firstChild().firstChild().firstChild().text();
+                }else if(grand.data_label().contains(QStringLiteral("悬浮显示"))){
+                    treeData->m_srcImage = grand.firstChild().attribute(G_NodeHtml.SRC);
+                }
+            }
+        }
+
+        if(tdata.valid()){
+            treeData->m_treeDatas.append(tdata);
+            tdata = TreeNodeData();
+        }
     }
 
     if(element.clazz() == "ax_default"){
         node->m_id = element.firstChild().id();
     }
 
-    node->m_data = virtualRoot;
-}
-
-void GumboParseMethod::parseSubTreeDataNodeData(GumboNodeWrapper element, TreeItemData *parentNode)
-{
-    GumboNodeWrapperList childs = element.children();
-
-    TreeItemData * data = new TreeItemData();
-    data->m_parentItem = parentNode;
-
-    if(childs.size() > 1){
-        for(int i = 0; i < childs.size();i++){
-            GumboNodeWrapper tmpChild = childs.at(i);
-            if(tmpChild.attribute("selectiongroup").contains("tree_group")){
-                parentNode->m_childItemId = tmpChild.id();
-                data->m_text = tmpChild.secondChild().firstChild().firstChild().firstChild().text();
-            }else if(tmpChild.clazz().contains("children")){
-                parentNode->m_childTextId = tmpChild.firstChild().id();
-                GumboNodeWrapperList subChilds = tmpChild.children();
-                for(int j = 0; j < subChilds.size(); j++){
-                    parseSubTreeDataNodeData(subChilds.at(j),data);
-                }
-            }
-        }
-    }else if(childs.size() == 1){
-        data->m_text = element.firstChild().secondChild().firstChild().firstChild().firstChild().text();
-    }
-    parentNode->m_childItems.push_back(data);
+    node->m_data = treeData;
 }
 
 void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *node)
@@ -1298,7 +1300,6 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                 }
             }
         }else if(dataLabel.contains(QStringLiteral("选项"))){     //表格2
-
             data->m_visible = false;
 
             GumboNodeWrapperList children = element.children();
@@ -1308,6 +1309,27 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                     data->m_geometryReferenceId = child.id();
                 }
             }
+        }
+        else if(dataLabel.contains(QStringLiteral("二级菜单"))){       //菜单选项(触发二级菜单)
+            data->m_visible = false;
+
+            GumboNodeWrapperList children = element.children();
+            for(int i = 0; i< children.size(); i++){
+                GumboNodeWrapper child = children.at(i);
+                if(child.data_label().contains(QStringLiteral("外框"))){
+                    data->m_geometryReferenceId = child.id();
+                }
+            }
+        }else if(dataLabel.contains(QStringLiteral("菜单项"))){        //菜单选项(触发二级菜单)
+            GumboNodeWrapperList children = element.children();
+            for(int i = 0; i< children.size(); i++){
+                GumboNodeWrapper child = children.at(i);
+                if(child.data_label().contains(QStringLiteral("选项"))){
+                    data->m_geometryReferenceId = child.id();
+                }
+            }
+        }else if(dataLabel.contains(QStringLiteral("分割线"))){        //菜单选项(触发二级菜单)
+            data->m_geometryReferenceId = element.firstChild().id();
         }
 
         data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();

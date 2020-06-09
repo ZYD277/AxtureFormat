@@ -9,8 +9,10 @@ MProperty::MProperty():m_kind(Unknown),m_propRect(nullptr)
 
 MProperty::~MProperty()
 {
-    delete m_propRect;
-    m_propRect = nullptr;
+    if(m_propRect){
+        delete m_propRect;
+        m_propRect = nullptr;
+    }
 }
 
 void MProperty::write(QXmlStreamWriter &writer, QString tagName)

@@ -189,7 +189,6 @@ struct PanelData : public BaseData{
     ~PanelData(){}
 
     QString m_panelDataLabel;           /*!< DynamicPanel中最外层data-label标签内容 */
-    QString m_secondSrcImageId;         /*!< 二级子菜单背景id*/
     QString m_sonPanelStateId;          /*!< 二级动态面板id*/
     QString m_panelTextId;
 
@@ -208,32 +207,19 @@ struct TableData : public BaseData{
     QString m_itemId;
 };
 
-struct TreeItemData : public BaseData{
-    TreeItemData():m_parentItem(nullptr){}
-    ~TreeItemData(){
-        m_parentItem = nullptr;
-
-        foreach(auto pp,m_childItems)
-            delete pp;
-    }
-
-    TreeItemData * m_parentItem;                /*!< 父节点 */
-    QList<TreeItemData *>   m_childItems;       /*!< 子节点 */
-    QString m_childItemId;                  /*!< 子节点id用于tree的样式*/
-    QString m_childTextId;                  /*!< 子节点处理树的文字样式 */
+struct TreeNodeData{
+    bool valid(){return (!timestamp.isEmpty() && !simpleInfo.isEmpty() && !detailInfo.isEmpty());}
+    QString timestamp;
+    QString simpleInfo;     /*!< 简要信息 */
+    QString detailInfo;     /*!< 详情信息 */
 };
 
-/*!
- * @brief tree控件数据
- */
 struct TreeData : public BaseData{
-    ~TreeData(){}
+    TreeData(){}
+    ~TreeData(){
+    }
 
-    QStringList m_dataCoIt;
-    QStringList m_colums;
-    QStringList m_items;
-
-    QString m_treeItems;
+    QList<TreeNodeData> m_treeDatas;        /*!< 树形节点信息 */
 };
 
 /*!

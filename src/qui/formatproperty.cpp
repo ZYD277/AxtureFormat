@@ -112,7 +112,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 {
     //虚拟的容器无需创建UI界面，但可能携带信号槽
     if(node->m_type == Html::R_CUSTOM_VIRTUAL_CONTAINER){
-
         createConnections(node);
         return;
     }
@@ -333,11 +332,12 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         }
 
         case Html::RTREE:{
-            Html::TreeItemData * virtualRoot = dynamic_cast<Html::TreeItemData *>(node->m_data);
+            Html::TreeData * treeData = dynamic_cast<Html::TreeData *>(node->m_data);
+
             //创建列(axure树只有一列，并且在qt ui中需要将水平表头隐藏)
             MColumn  * column = new MColumn();
             MProperty * rowProp = new MProperty();
-            rowProp->setPropString(virtualRoot->m_text);
+            rowProp->setPropString(treeData->m_text);
             column->addProperty(rowProp);
             domWidget->addColumn(column);
 
@@ -346,30 +346,38 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             hVisibleAttribute->setAttributeBool("false");
             domWidget->addAttrinute(hVisibleAttribute);
 
-            QList<Html::TreeItemData *> childs = virtualRoot->m_childItems;
-            for(int i = 0; i < childs.size(); i++){
-                Html::TreeItemData * itemData = childs.at(i);
+            MProperty * animated = new MProperty();
+            animated->setAttributeName("animated");
+            animated->setPropBool("true");
+            domWidget->addProperty(animated);
+
+            for(int i = treeData->m_treeDatas.size() - 1; i >= 0; i--){
+                Html::TreeNodeData nodeData = treeData->m_treeDatas.at(i);
+
+                //概要信息
                 MItem * item = new MItem();
 
                 MProperty * prop = new MProperty();
                 prop->setAttributeName("text");
-                prop->setPropString(itemData->m_text);
+                prop->setPropString(QString("%1 %2").arg(nodeData.timestamp).arg(nodeData.simpleInfo));
                 item->setProperty(prop);
 
-                for(int j = 0 ; j < itemData->m_childItems.size(); j++){
-                    createTreeNode(item,itemData->m_childItems.at(j));
+                //折叠信息
+                {
+                    MItem * detailItem = new MItem();
+
+                    MProperty * detailProp = new MProperty();
+                    detailProp->setAttributeName("text");
+                    detailProp->setPropString(nodeData.detailInfo);
+                    detailItem->setProperty(detailProp);
+
+                    item->addItem(detailItem);
                 }
 
                 domWidget->addItem(item);
             }
-            if(!virtualRoot->m_childItemId.isEmpty()){
-                virtualRoot->m_childItemId = virtualRoot->m_childItemId + "_div_back" + node->m_id;
-                m_selectorType.insert(virtualRoot->m_childItemId,Html::RTREE);
-            }
-            if(!virtualRoot->m_childTextId.isEmpty()){
-                virtualRoot->m_childTextId = virtualRoot->m_childTextId + "_div_text" + node->m_id;
-                m_selectorType.insert(virtualRoot->m_childTextId,Html::RTREE);
-            }
+
+            createTreeImageProp(domWidget,treeData);
 
             break;
         }
@@ -935,17 +943,9 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
 
             rect.setWidth(removePxUnit(twidth));
             rect.setHeight(removePxUnit(theight));
-            //获取二级子菜单背景尺寸位置，结合一级子菜单确定动态动态面板位置尺寸
-            if(!panelData->m_secondSrcImageId.isEmpty())
-            {
-                QString tsecondImageWidth = getCssStyle(panelData->m_secondSrcImageId,"width");
-
-                rect.setWidth(removePxUnit(twidth)+removePxUnit(tsecondImageWidth));
-                rect.setHeight(removePxUnit(theight));
-            }
 
             //获取两种控件组合的情况下，第二个控件位置尺寸
-            else if(!panelData->m_panelTextId.isEmpty())
+            if(!panelData->m_panelTextId.isEmpty())
             {
                 QString textWidth = getCssStyle(panelData->m_panelTextId,"width");
                 QString textheight = getCssStyle(panelData->m_panelTextId,"height");
@@ -1030,6 +1030,9 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             rect.setWidth(tabData->m_width);
             rect.setHeight(tabData->m_height);
         }
+    }else if(node->m_type == Html::RTREE){
+        Html::TreeData * treeData = dynamic_cast<Html::TreeData *>(node->m_data);
+        rect = QRect(treeData->m_left,treeData->m_top,treeData->m_width,treeData->m_height);
     }
 
     if(rect.left() < 0)
@@ -1236,6 +1239,13 @@ void FormatProperty::createSpinboxImageProp(RDomWidget *domWidget, Html::Spinbox
                                  .arg(upArrow).arg(upArrowOver).arg(downArrow).arg(downArrowOver));
 
         domWidget->addProperty(styleProp);
+    }else{
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("QSpinBox::up-arrow {width:0px;}" + G_NewLine +
+                                         "QSpinBox::down-arrow {width:0px;}" + G_NewLine));
+
+        domWidget->addProperty(styleProp);
     }
 }
 
@@ -1432,10 +1442,35 @@ void FormatProperty::createSrollBarStyleProp(RDomWidget *domWidget, Html::Scroll
                 .arg(findRuleByName(seg.rules,"border-radius").value);
     }
 
+    //可控制滑槽不显示纹理
+    prop += " QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {background: none;}";
+
 
     styleProp->setPropString(prop);
 
     domWidget->addProperty(styleProp);
+}
+
+void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *data)
+{
+
+    QStringList selectedNameList = data->m_srcImage.split(".");
+    if(selectedNameList.size() == 2){
+        QString selectedName = selectedNameList.at(0);
+
+        QString normalItemImage = switchImageURL(data->m_srcImage);
+        QString mouseOverImageSrc = switchImageURL(selectedName + "_mouseOver." + selectedNameList.at(1));
+
+        MProperty * styleProp = new MProperty();
+        styleProp->setAttributeName("styleSheet");
+        styleProp->setPropString(QString("QTreeView::item {border-image: url(:/%1);}" + G_NewLine +
+                                         "QTreeView::item:hover {border-image: url(:/%2);}" + G_NewLine +
+                                         "QTreeView::item:selected:hover {}"
+                                         )
+                                 .arg(normalItemImage).arg(mouseOverImageSrc));
+
+        domWidget->addProperty(styleProp);
+    }
 }
 
 /*!
@@ -1547,22 +1582,6 @@ void FormatProperty::createCurrentIndexProp(RDomWidget *domWidget,int currentInd
     layoutProp->setAttributeName("currentIndex");
     layoutProp->setPropNumber(QString::number(currentIndex));
     domWidget->addProperty(layoutProp);
-}
-
-void FormatProperty::createTreeNode(MItem * parentItem,Html::TreeItemData * textData)
-{
-    MItem * item = new MItem();
-
-    MProperty * prop = new MProperty();
-    prop->setAttributeName("text");
-    prop->setPropString(textData->m_text);
-    item->setProperty(prop);
-
-    parentItem->addItem(item);
-
-    for(int j = 0 ; j < textData->m_childItems.size(); j++){
-        createTreeNode(item,textData->m_childItems.at(j));
-    }
 }
 
 /*!

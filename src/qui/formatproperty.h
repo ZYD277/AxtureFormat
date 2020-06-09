@@ -59,6 +59,7 @@ private:
     void createSpinboxImageProp(RDomWidget * domWidget,Html::SpinboxData * data);
     void createProgressStyleProp(RDomWidget * domWidget,Html::SliderData * data);
     void createSrollBarStyleProp(RDomWidget * domWidget, Html::ScrollBarData * data, bool horizonal);
+    void createTreeImageProp(RDomWidget * domWidget, Html::TreeData * data);
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
@@ -70,8 +71,6 @@ private:
     inline void createOrientationProp(RDomWidget *domWidget, bool horizonal);
     inline void createToolTipProp(RDomWidget * domWidget,QString toolTip);
     inline void createCurrentIndexProp(RDomWidget * domWidget, int currentIndex);
-
-    void createTreeNode(MItem *parentItem, Html::TreeItemData *textData);
 
     QString switchImageURL(QString imageSrc);
 
