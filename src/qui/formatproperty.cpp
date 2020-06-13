@@ -1505,7 +1505,7 @@ void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData
             QString sectionTextColor = getCssStyle(horizontalSectionCell.id,"color");
             QString horizonalSectionImageSrc = switchImageURL(horizontalSectionCell.imageSrc);
 
-            QStringList normalNameList = horizonalSectionImageSrc.split(".");
+            QStringList normalNameList = horizontalSectionCell.imageSrc.split(".");
             QString mouseOverImageSrc;
             if(normalNameList.size() == 2){
                 mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
@@ -1523,7 +1523,7 @@ void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData
             QString sectionTextColor = getCssStyle(verticalSectionCell.id,"color");
             QString horizonalSectionImageSrc = switchImageURL(verticalSectionCell.imageSrc);
 
-            QStringList normalNameList = horizonalSectionImageSrc.split(".");
+            QStringList normalNameList = verticalSectionCell.imageSrc.split(".");
             QString mouseOverImageSrc;
             if(normalNameList.size() == 2){
                 mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));

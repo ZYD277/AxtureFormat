@@ -93,7 +93,7 @@ private:
     CSS::CssMap m_globalCss;
     CSS::CssMap m_pageCss;
 
-    QStringList m_originalResources;        /*!< 原始图片资源地址 */
+    QStringList m_originalResources;        /*!< 原始图片资源地址，会存在引用其它工程目录下的图片 */
     QStringList m_resources;                /*!< 处理后改成相对路径图片资源地址 */
 
     SelectorTypeMap m_selectorType;
