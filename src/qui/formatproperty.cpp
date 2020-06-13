@@ -150,7 +150,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RGROUP:{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
 
-            createVisibleProp(domWidget,gdata->m_visible);
+            //NOTE 20200613 默认ui中控件都是可见的，visible属性可不用设置。
+            if(!gdata->m_visible){
+                createVisibleProp(domWidget,gdata->m_visible);
+            }
 
             createConnections(node);
 
@@ -173,7 +176,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             Html::PanelData * panelData = dynamic_cast<Html::PanelData *>(node->m_data);
 
-            createVisibleProp(domWidget,panelData->m_visible);
+            if(!panelData->m_visible){
+                createVisibleProp(domWidget,panelData->m_visible);
+            }
 
             if(panelData->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,panelData->m_toolTip);
@@ -1180,6 +1185,7 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
 
     QString normalImageSrc = switchImageURL(tabData->m_tabNormalImage);
     QString selectedImageSrc = switchImageURL(tabData->m_tabSelectedImage);
+    QString tabRightBorderImageSrc = switchImageURL(tabData->m_tabRightImage);
 
     if(!normalImageSrc.isEmpty() && !selectedImageSrc.isEmpty()){
         QStringList normalNameList = tabData->m_tabNormalImage.split(".");
@@ -1197,8 +1203,9 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
                                          "QTabBar::tab:selected,QTabBar::tab:selected:hover{border-image: url(':/%1');}" + G_NewLine +
                                          "QTabBar::tab:!selected{border-image: url(':/%2');}" + G_NewLine +
                                          "QTabBar::tab:!selected:hover{border-image: url(':/%3');}" + G_NewLine +
-                                         "QTabBar::tab{%4}")
-                                 .arg(selectedImageSrc).arg(normalImageSrc).arg(mouseOverImageSrc).arg(tabStyle));
+                                         "QTabBar::tab{%4;border-right-image:url(':/%5');}")
+                                 .arg(selectedImageSrc).arg(normalImageSrc).arg(mouseOverImageSrc).arg(tabStyle)
+                                 .arg(tabRightBorderImageSrc));
         domWidget->addProperty(styleProp);
     }
 }

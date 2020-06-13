@@ -446,6 +446,11 @@ void GumboParseMethod::parseTabWidgetNodeData(GumboNodeWrapper &element,DomNode 
             }else if(headPanel.hasAttribute("selectiongroup")){
                 tabData->m_tabNormalImage = headPanel.firstChild().attribute(G_NodeHtml.SRC);
             }
+
+            //将分割线作为Tabwidget的border-right-image
+            if(headPanel.data_label().contains(QStringLiteral("分割线"))){
+                tabData->m_tabRightImage = headPanel.firstChild().attribute(G_NodeHtml.SRC);
+            }
         }
 
         //根据内容面板创建页面

@@ -294,6 +294,7 @@ struct TabWidgetData : public BaseData{
 
     QString m_tabNormalImage;   /*!< 默认tab项中背景图片 */
     QString m_tabSelectedImage; /*!< 选中tab项背景图片 */
+    QString m_tabRightImage;    /*!< tab项的右边框图片 */
 
     QString m_tabBarId;         /*!< 根据tabBarId来获取tab样式*/
     QString m_paneId;           /*!< 根据paneId来获取pane样式*/
