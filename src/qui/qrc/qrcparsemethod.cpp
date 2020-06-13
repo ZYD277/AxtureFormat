@@ -33,7 +33,8 @@ bool QrcParseMethod::startSave(QDomDocument &doc)
         foreach(const QString & fpath,iter.value()){
             QString fullpath = m_exportRootPath + QDir::separator() + fpath;
 
-            if(QFileInfo(fullpath).exists()){
+            QFileInfo fileInfo(fullpath);
+            if(fileInfo.exists() && fileInfo.isFile() && !fileInfo.isHidden()){
                 QDomElement fele = doc.createElement("file");
                 fele.appendChild(doc.createTextNode(fpath));
 
