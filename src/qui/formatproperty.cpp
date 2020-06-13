@@ -227,43 +227,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
         case Html::RTABLE:{
-            QString m_widthTable;
-            QString m_heightTable;
-            if(!node->m_data->m_srcImageId.isEmpty()){
-                CSS::CssSegment cellSegment = m_pageCss.value(node->m_data->m_srcImageId);
-                for(int i = 0;i < cellSegment.rules.size(); i++){
-                    if(cellSegment.rules.at(i).name == "width")
-                        m_widthTable = cellSegment.rules.at(i).value;
-                    else if(cellSegment.rules.at(i).name == "height")
-                        m_heightTable = cellSegment.rules.at(i).value;
-                }
-                m_widthTable = QString::number(removePxUnit(m_widthTable));
-                m_heightTable = QString::number(removePxUnit(m_heightTable));
-            }
-            MAttribute * hvisible = new MAttribute();
-            hvisible->setAttributeName("horizontalHeaderVisible");
-            hvisible->setAttributeBool("false");
-            domWidget->addAttrinute(hvisible);
-
-            MAttribute * vvisible = new MAttribute();
-            vvisible->setAttributeName("verticalHeaderVisible");
-            vvisible->setAttributeBool("false");
-            domWidget->addAttrinute(vvisible);
-
-            MAttribute * hSectionSize = new MAttribute();
-            hSectionSize->setAttributeName("horizontalHeaderDefaultSectionSize");
-            hSectionSize->setPropNumber(m_widthTable);
-            domWidget->addAttrinute(hSectionSize);
-
-            MAttribute * vhSectionSize = new MAttribute();
-            vhSectionSize->setAttributeName("verticalHeaderDefaultSectionSize");
-            vhSectionSize->setPropNumber(m_heightTable);
-            domWidget->addAttrinute(vhSectionSize);
-
-
-            QString imageSrc = node->m_data->m_srcImage;
-            if(!imageSrc.isEmpty())
-                createImageProp(domWidget,imageSrc);
+            Html::TableData * tdata = dynamic_cast<Html::TableData *>(node->m_data);
 
             //需根据表格宽度与单元格宽度相除结果，作为列数
             int cWidth = 0;
@@ -274,65 +238,94 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                     auto fresult = std::find_if(cellSegment.rules.begin(),cellSegment.rules.end(),[&](const CSS::CssRule & rule ){
                         return rule.name.toLower() == "width";
                     });
+
                     if(fresult != cellSegment.rules.end()){
                         cWidth = removePxUnit(fresult->value);
                     }
                 }
             }
 
+            //NOTE Axure中表格第一行和第一列作为Qt中的行、列表头
             if(cWidth > 0){
-                int rowCount = rect.width() / cWidth;
-                int columnCount = node->m_childs.size() / rowCount;
-
-                MAttribute * hprop = new MAttribute();
-                hprop->setAttributeName("horizontalHeaderVisible");
-                hprop->setAttributeBool("false");
-
-                MAttribute * vprop = new MAttribute();
-                vprop->setAttributeName("verticalHeaderVisible");
-                vprop->setAttributeBool("false");
-
-                for(int i = 0; i < columnCount; i++){
-                    MRow  * row = new MRow();
-
-                    MProperty * rowProp = new MProperty();
-                    rowProp->setPropString(QString("row%1").arg(i));
-                    row->addProperty(rowProp);
-
-                    domWidget->addRow(row);
-                }
-
-                for(int i = 0; i < rowCount; i++){
-                    MColumn  * column = new MColumn();
-
-                    MProperty * rowProp = new MProperty();
-                    rowProp->setPropString(QString("column%1").arg(i));
-                    column->addProperty(rowProp);
-
-                    domWidget->addColumn(column);
-                }
-
-                Html::TableData * tdata = dynamic_cast<Html::TableData *>(node->m_data);
+                int columnCount = rect.width() / cWidth;
+                int rowCount = node->m_childs.size() / columnCount;
 
                 if(!tdata->m_itemId.isEmpty()){
                     tdata->m_itemId = tdata->m_itemId + "_div_" + node->m_id;
                     m_selectorType.insert(tdata->m_itemId,Html::RTABLE);
                 }
-                for(int i = 0; i < columnCount; i++){
-                    for(int j = 0; j < rowCount; j++){
-                        MItem * item = new MItem();
 
-                        item->setAttributeRow(QString::number(i));
-                        item->setAttributeColumn(QString::number(j));
-                        MProperty * prop = new MProperty();
-                        prop->setAttributeName("text");
-                        prop->setPropString(QString(tdata->m_items.at(i*rowCount + j)));
-                        item->setProperty(prop);
+                for(int i = 0; i < rowCount; i++){
+                    for(int j = 0; j < columnCount; j++){
 
-                        domWidget->addItem(item);
+                        Html::CellData cell = tdata->m_cells.at(i*columnCount + j);
+
+                        if(i == 0 && j == 0){
+                            continue;
+                        }else if( i == 0){
+                            MColumn  * column = new MColumn();
+
+                            MProperty * columnProp = new MProperty();
+                            columnProp->setAttributeName("text");
+                            columnProp->setPropString(cell.text);
+                            column->addProperty(columnProp);
+
+                            domWidget->addColumn(column);
+                        }else if( j == 0){
+                            MRow  * row = new MRow();
+
+                            MProperty * rowProp = new MProperty();
+                            rowProp->setAttributeName("text");
+                            rowProp->setPropString(cell.text);
+                            row->addProperty(rowProp);
+
+                            domWidget->addRow(row);
+                        }else{
+                            MItem * item = new MItem();
+
+                            item->setAttributeRow(QString::number(i - 1));
+                            item->setAttributeColumn(QString::number(j - 1));
+                            MProperty * prop = new MProperty();
+                            prop->setAttributeName("text");
+                            prop->setPropString(cell.text);
+                            item->setProperty(prop);
+
+                            domWidget->addItem(item);
+                        }
                     }
                 }
+
+                QString m_cellWidth;
+                QString m_cellHeight;
+
+                if(!tdata->m_srcImageId.isEmpty()){
+                    CSS::CssSegment cellSegment = m_pageCss.value(tdata->m_srcImageId);
+                    for(int i = 0;i < cellSegment.rules.size(); i++){
+                        if(cellSegment.rules.at(i).name == "width")
+                            m_cellWidth = cellSegment.rules.at(i).value;
+                        else if(cellSegment.rules.at(i).name == "height")
+                            m_cellHeight = cellSegment.rules.at(i).value;
+                    }
+                    m_cellWidth = QString::number(removePxUnit(m_cellWidth));
+                    m_cellHeight = QString::number(removePxUnit(m_cellHeight));
+                }
+
+                MAttribute * hSectionSize = new MAttribute();
+                hSectionSize->setAttributeName("horizontalHeaderDefaultSectionSize");
+                hSectionSize->setPropNumber(m_cellWidth);
+                domWidget->addAttrinute(hSectionSize);
+
+                MAttribute * vhSectionSize = new MAttribute();
+                vhSectionSize->setAttributeName("verticalHeaderDefaultSectionSize");
+                vhSectionSize->setPropNumber(m_cellHeight);
+                domWidget->addAttrinute(vhSectionSize);
+
+                if(!tdata->m_srcImage.isEmpty()){
+                    createTableImageProp(domWidget,tdata,m_cellWidth,m_cellHeight,columnCount);
+                }
             }
+
+
             break;
         }
 
@@ -1475,6 +1468,74 @@ void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *
                                          "QTreeView::item:selected:hover {}"
                                          )
                                  .arg(normalItemImage).arg(mouseOverImageSrc));
+
+        domWidget->addProperty(styleProp);
+    }
+}
+
+void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData *data, QString hSectionSize, QString vSectionSize,
+                                          int columnCount)
+{
+    if(data->m_cells.size() < columnCount){
+        return;
+    }
+
+    QString imageSrc = switchImageURL(data->m_srcImage);
+
+    Html::CellData conrnerCell = data->m_cells.first();
+    QString cornerSrc = switchImageURL(conrnerCell.imageSrc);
+
+    if(!imageSrc.isEmpty()){
+
+        MProperty * styleProp = new MProperty();
+
+        styleProp->setAttributeName("styleSheet");
+
+        QString prop;
+
+        {
+            prop += QString("QTableWidget{border-image:url(:/%1);}" + G_NewLine +
+                            "QTableView QTableCornerButton::section {border-image: url(:/%2);}" + G_NewLine)
+                    .arg(imageSrc).arg(cornerSrc);
+        }
+
+        //水平表头
+        {
+            Html::CellData horizontalSectionCell = data->m_cells.at(2);
+            QString sectionTextColor = getCssStyle(horizontalSectionCell.id,"color");
+            QString horizonalSectionImageSrc = switchImageURL(horizontalSectionCell.imageSrc);
+
+            QStringList normalNameList = horizonalSectionImageSrc.split(".");
+            QString mouseOverImageSrc;
+            if(normalNameList.size() == 2){
+                mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
+            }
+
+            prop += QString("QHeaderView::section:horizonal{width:%1px;height:%2px;color:%3;border-image: url(:/%4);}" + G_NewLine +
+                            "QHeaderView::section:horizonal:checked {border-image: url(:/%5);}" + G_NewLine)
+                    .arg(hSectionSize).arg(vSectionSize).arg(sectionTextColor).arg(horizonalSectionImageSrc)
+                    .arg(mouseOverImageSrc);
+        }
+
+        //竖直表头
+        {
+            Html::CellData verticalSectionCell = data->m_cells.at(columnCount);
+            QString sectionTextColor = getCssStyle(verticalSectionCell.id,"color");
+            QString horizonalSectionImageSrc = switchImageURL(verticalSectionCell.imageSrc);
+
+            QStringList normalNameList = horizonalSectionImageSrc.split(".");
+            QString mouseOverImageSrc;
+            if(normalNameList.size() == 2){
+                mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
+            }
+
+            prop += QString("QHeaderView::section:vertical{width:%1px;height:%2px;color:%3;border-image: url(:/%4);}" + G_NewLine +
+                            "QHeaderView::section:vertical:checked {border-image: url(:/%5);}")
+                    .arg(hSectionSize).arg(vSectionSize).arg(sectionTextColor).arg(horizonalSectionImageSrc)
+                    .arg(mouseOverImageSrc);
+        }
+
+        styleProp->setPropString(prop);
 
         domWidget->addProperty(styleProp);
     }

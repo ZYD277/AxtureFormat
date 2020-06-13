@@ -195,6 +195,12 @@ struct PanelData : public BaseData{
     int m_currentIndex;                 /*!< 面板默认选中的索引，从0开始 */
 };
 
+struct CellData{
+    QString id;
+    QString imageSrc;
+    QString text;
+};
+
 /*!
  * @brief 表格数据
  */
@@ -203,7 +209,7 @@ struct TableData : public BaseData{
 
     int m_rows;
     int m_colums;
-    QStringList m_items;
+    QList<CellData> m_cells;
     QString m_itemId;
 };
 

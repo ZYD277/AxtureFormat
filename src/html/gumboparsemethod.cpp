@@ -1143,6 +1143,11 @@ void GumboParseMethod::parseImageNodeData(GumboNodeWrapper &element, DomNode *no
     node->m_data = data;
 }
 
+/*!
+ * @brief 解析Axure中表格控件
+ * @attention 确保所有列的宽度保持一致，否则计算列的时候会出现错误。
+ * @details Axure表格中没有表头的概念，但用户默认第一行和第一列作为表头。
+ */
 void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *node)
 {
     GumboNodeWrapperList childs = element.children();
@@ -1150,19 +1155,26 @@ void GumboParseMethod::parseTableNodeData(GumboNodeWrapper &element, DomNode *no
     node->m_data = data;
     for(int i = 0; i < childs.size(); i++){
         GumboNodeWrapper child = childs.at(i);
+
         parseTableCellNodeData(child,node);
 
         if(child.clazz().contains("table_cell"))
             data->m_itemId = child.id();
-        data->m_items.append(child.secondChild().firstChild().firstChild().firstChild().text());
+
+        CellData cellData;
+        cellData.id = child.id();
+        cellData.imageSrc = child.firstChild().attribute(G_NodeHtml.SRC);
+        cellData.text = child.secondChild().firstChild().firstChild().firstChild().text();
+
+        data->m_cells.append(cellData);
 
         GumboNodeWrapperList childImage = child.children();
-        if(childImage.size()>0){
+        if(childImage.size() > 0){
             GumboNodeWrapper image = childImage.at(0);
             if(image.clazz().contains("img")){
                 data->m_srcImage = image.attribute(G_NodeHtml.SRC);
-                if(data->m_srcImageId.isEmpty())
-                {
+
+                if(data->m_srcImageId.isEmpty()){
                     data->m_srcImageId = image.id();
                 }
             }
