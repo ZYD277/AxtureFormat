@@ -1095,6 +1095,7 @@ void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::ButtonDa
         if(normalNameList.size() == 2){
             mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
             mouseDownImageSrc = switchImageURL(normalNameList.at(0) + "_mouseDown." + normalNameList.at(1));
+            mouseSelectedImageSrc = switchImageURL(normalNameList.at(0) + "_selected." + normalNameList.at(1));
         }
     }
 
@@ -1113,7 +1114,7 @@ void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::ButtonDa
         prop += QString("QPushButton:pressed {border-image: url(:/%1)}" + G_NewLine).arg(mouseDownImageSrc);
     }
 
-    if(baseData->m_needMouseChecked && baseData->m_bChecked){
+    if(baseData->m_needMouseChecked){
         prop += QString("QPushButton:checked {border-image: url(:/%1);}").arg(mouseSelectedImageSrc);
     }
 
