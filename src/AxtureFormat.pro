@@ -17,6 +17,10 @@ SOURCES += main.cpp\
     html/htmlparser.cpp \
     qui/props/mconnection.cpp \
     qui/props/mconnections.cpp \
+    template/code/abstractcodetemplate.cpp \
+    template/code/modelswitchtemplate.cpp \
+    template/cppgenerate.cpp \
+    template/cppstruct.cpp \
     util/fileutils.cpp \
     util/rsingleton.cpp \
     util/rutil.cpp \
@@ -56,6 +60,10 @@ HEADERS  += \
     html/htmlparser.h \
     qui/props/mconnection.h \
     qui/props/mconnections.h \
+    template/code/abstractcodetemplate.h \
+    template/code/modelswitchtemplate.h \
+    template/cppgenerate.h \
+    template/cppstruct.h \
     util/fileutils.h \
     util/rsingleton.h \
     util/rutil.h \
