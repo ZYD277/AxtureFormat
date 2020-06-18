@@ -964,12 +964,15 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
         data->m_needMouseChecked = false;
     }else if(dataLabel.contains(QStringLiteral("播放")) || dataLabel.contains(QStringLiteral("暂停"))
              || dataLabel.contains(QStringLiteral("显控设置按钮")) || dataLabel.contains(QStringLiteral("台位切换按钮"))
-             || dataLabel.contains(QStringLiteral("菜单按钮"))){
+             || dataLabel.contains(QStringLiteral("菜单按钮")) || dataLabel.contains(QStringLiteral("选项"))){
         data->m_needMousePressed = false;
         data->m_needMouseChecked = false;
     }else if(dataLabel.contains(QStringLiteral("页码"))){     //‘翻页器’
         data->m_needMousePressed = false;
         data->m_bChecked = true;
+    }else if(dataLabel.contains(QStringLiteral("快退")) || dataLabel.contains(QStringLiteral("快进"))
+             || dataLabel.contains(QStringLiteral("复位"))){
+        data->m_needMouseChecked = false;
     }
     node->m_data = data;
 }
@@ -1034,6 +1037,25 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
         if(element.data_label().contains(QStringLiteral("台位切换弹出"))
                 || element.data_label().contains(QStringLiteral("显控设置弹出"))){
             data->m_visible = false;
+        }else if(element.data_label().contains(QStringLiteral("播放按钮"))){        //回放控制页面切换按钮
+
+            CXX::PlayControlCodeData * playData = new CXX::PlayControlCodeData();
+            playData->m_stackedWidgetId = element.id();
+            data->m_codeData = playData;
+
+            GumboNodeWrapperList childs = element.children();
+            for(int i = 0; i < childs.size(); i++)
+            {
+                GumboNodeWrapper child = childs.at(i);
+                GumboNodeWrapperList grandChilds = child.firstChild().children();
+                for(int j = 0; j < grandChilds.size(); j++){
+                    GumboNodeWrapper grandChild = grandChilds.at(j);
+                    QString dataLabel = grandChild.data_label();
+                    if(dataLabel.contains(QStringLiteral("播放")) || dataLabel.contains(QStringLiteral("暂停"))){
+                        playData->m_modelIds.append(grandChild.id());
+                    }
+                }
+            }
         }
     }
 

@@ -19,6 +19,7 @@ SOURCES += main.cpp\
     qui/props/mconnections.cpp \
     template/code/abstractcodetemplate.cpp \
     template/code/modelswitchtemplate.cpp \
+    template/code/playcontroltemplate.cpp \
     template/cppgenerate.cpp \
     template/cppstruct.cpp \
     util/fileutils.cpp \
@@ -62,6 +63,7 @@ HEADERS  += \
     qui/props/mconnections.h \
     template/code/abstractcodetemplate.h \
     template/code/modelswitchtemplate.h \
+    template/code/playcontroltemplate.h \
     template/cppgenerate.h \
     template/cppstruct.h \
     util/fileutils.h \

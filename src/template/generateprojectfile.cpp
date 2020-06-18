@@ -6,6 +6,7 @@
 #include "../util/rutil.h"
 #include "cppgenerate.h"
 #include "code/modelswitchtemplate.h"
+#include "code/playcontroltemplate.h"
 
 QString NEW_EMPTY = "";
 QString New_Line = "\n";
@@ -97,6 +98,17 @@ void GenerateProjectFile::outputCpp()
                 modelSwitch.setSameTypeIndex(typeIndex);
                 modelSwitch.setModelIds(switchData->m_modelIds);
                 modelSwitch.prepareOutput(&cpp);
+            }
+                break;
+
+            case CXX::PLAY_CONTROL:{
+                CXX::PlayControlCodeData * playData = dynamic_cast<CXX::PlayControlCodeData *>(codeData);
+
+                CXX::PlayControlTemplate playControl;
+                playControl.setSameTypeIndex(typeIndex);
+                playControl.setStackedId(playData->m_stackedWidgetId);
+                playControl.setModelIds(playData->m_modelIds);
+                playControl.prepareOutput(&cpp);
             }
                 break;
 

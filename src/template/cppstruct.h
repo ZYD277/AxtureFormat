@@ -12,7 +12,8 @@ namespace CXX{
 enum CodeType{
     MODEL_SWITCH,           /*!< 模式切换按钮控件 */
     TW_SWITCH,              /*!< 台位切换按钮控件 */
-    PAGE_SWITCH             /*!< 页面切换按钮控件 */
+    PAGE_SWITCH,            /*!< 页面切换按钮控件 */
+    PLAY_CONTROL            /*!< 回放控制按钮控件 */
 };
 
 /*!
@@ -34,6 +35,17 @@ struct ModelSwitchCodeData : public AbstractCppCodeData{
     ModelSwitchCodeData():AbstractCppCodeData(MODEL_SWITCH){}
     ~ModelSwitchCodeData(){}
 
+    QStringList m_modelIds;     /*!< 各个触发按钮的Id信息集合 */
+};
+
+/*!
+ * @brief 模式切换控件代码数据区
+ */
+struct PlayControlCodeData : public AbstractCppCodeData{
+    PlayControlCodeData():AbstractCppCodeData(PLAY_CONTROL){}
+    ~PlayControlCodeData(){}
+
+    QString m_stackedWidgetId;  /*!< 动态面板ID，作为按钮切换的容器 */
     QStringList m_modelIds;     /*!< 各个触发按钮的Id信息集合 */
 };
 

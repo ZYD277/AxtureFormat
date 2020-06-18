@@ -109,7 +109,7 @@ struct SignalSlotInfo{
  */
 struct BaseData{
     BaseData():m_bChecked(false),m_bDisabled(false),m_bReadOnly(false),m_bLeftToRight(true),m_visible(true)
-    ,m_left(0),m_top(0),m_width(0),m_height(0){}
+    ,m_left(0),m_top(0),m_width(0),m_height(0),m_codeData(nullptr){}
     virtual ~BaseData(){}
 
     QString m_text;             /*!< 控件显示内容 */
@@ -142,7 +142,7 @@ struct BaseData{
 
     QList<SignalSlotInfo> m_signals;      /*!< 需生成的信号槽描述信息 */
 
-
+    CXX::AbstractCppCodeData * m_codeData;      /*!< 20200617:生成代码时所需的必要信息 */
 };
 
 typedef QMap<QString,NodeType> CustControl;        //key：自定义控件名称，value：对应转换的自定义控件类型
@@ -236,12 +236,10 @@ struct TreeData : public BaseData{
  * @brief 分组数据
  */
 struct GroupData : public BaseData{
-    GroupData():m_codeData(nullptr){}
+    GroupData(){}
     ~GroupData(){}
 
     QString m_geometryReferenceId;      /*!< 自定义控件’触发弹窗‘中窗体的尺寸需要依赖子div中’框‘的尺寸 */
-
-    CXX::AbstractCppCodeData * m_codeData;      /*!< 生成代码时所需的必要信息 */
 };
 
 /*!

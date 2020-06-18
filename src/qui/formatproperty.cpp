@@ -136,6 +136,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
     if(!node->m_id.isEmpty())
         m_selectorType.insert(node->m_id,node->m_type);
 
+    if(node->m_data && node->m_data->m_codeData){
+        m_codeDatas.append(node->m_data->m_codeData);
+    }
+
     switch(node->m_type){
         case Html::RCONTAINER:{
             Html::BaseData * baseData = node->m_data;
@@ -168,10 +172,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 rect = QRect(left,top,width,height);
             }else{
                 rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
-            }
-
-            if(gdata->m_codeData){
-                m_codeDatas.append(gdata->m_codeData);
             }
 
             break;
