@@ -65,6 +65,7 @@ bool QtOutput::save(QString className,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS
         ui.endWrite();
 
         m_originalResoucesLinks = propFormat.getOriginalResources();
+        m_codeDatas = propFormat.getCodeDatas();
 
         return true;
     }

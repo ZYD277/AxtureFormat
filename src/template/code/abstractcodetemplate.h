@@ -31,6 +31,8 @@ public:
 
     virtual void prepareOutput(CppGenerate * generate) = 0;
 
+    void setSameTypeIndex(int index){m_sameTypeIndex = index;}
+
 protected:
     int m_sameTypeIndex;        /*!< 当同一个页面出现多个重复模板时，按照_1、_2进行编号 */
     CodeType m_type;

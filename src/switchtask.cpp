@@ -93,6 +93,7 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
 
                         //生成模板代码
                         GenerateProjectFile outputTemplte;
+                        outputTemplte.setCodeDatas(m_qtOutput.getCppCodeDatas());
                         outputTemplte.setOutputInfo(m_outputDir,page.switchClassName,qssFileName);
                         outputTemplte.startOutput();
 

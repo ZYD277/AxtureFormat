@@ -16,6 +16,7 @@
 #include "../html/htmlstruct.h"
 #include "../css/cssstruct.h"
 #include "qui/qtstruct.h"
+#include "../template/cppstruct.h"
 
 namespace RQt{
 
@@ -40,6 +41,8 @@ public:
     QStringList getResources(){return m_resources;}
     SelectorTypeMap getHtmlParsedResult(){return m_selectorType;}
     QString getTypeName(Html::NodeType type);
+
+    CXX::CppCodeDatas getCodeDatas(){return m_codeDatas;}
 
 private:
     typedef QMap<QString, QString> StyleMap;
@@ -95,6 +98,8 @@ private:
 
     QStringList m_originalResources;        /*!< 原始图片资源地址，会存在引用其它工程目录下的图片 */
     QStringList m_resources;                /*!< 处理后改成相对路径图片资源地址 */
+
+    CXX::CppCodeDatas m_codeDatas;          /*!< 自定义代码生成时代码集合 */
 
     SelectorTypeMap m_selectorType;
 

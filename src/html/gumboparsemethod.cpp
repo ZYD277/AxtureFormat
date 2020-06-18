@@ -173,9 +173,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapp
         //解析定制化控件(部分官方控件会包含data-label属性，需要过滤)
         if(element.hasAttribute(G_NodeHtml.DATA_LABEL)){
             QString dataLabel = element.data_label();
-            QString selectTionGroup = element.attribute(G_NodeHtml.SELECTIONGROUP);
             if(!dataLabel.contains(QStringLiteral("时间栏")))
                 m_classInfo.clear();
+
+            QString selectTionGroup = element.attribute(G_NodeHtml.SELECTIONGROUP);
 
             if(selectTionGroup.contains(QStringLiteral("按钮"))||selectTionGroup.contains(QStringLiteral("页码"))
                     ||selectTionGroup.contains(QStringLiteral("联机脱机")))
@@ -1347,6 +1348,19 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
             }
         }else if(dataLabel.contains(QStringLiteral("分割线"))){        //菜单选项(触发二级菜单)
             data->m_geometryReferenceId = element.firstChild().id();
+        }else if(dataLabel.contains(QStringLiteral("模式切换"))){
+            GumboNodeWrapperList children = element.children();
+
+            CXX::ModelSwitchCodeData * codeData = new CXX::ModelSwitchCodeData;
+            data->m_codeData = codeData;
+
+            for(int i = 0; i< children.size(); i++){
+                GumboNodeWrapper child = children.at(i);
+                QString selectionGroup = child.attribute(G_NodeHtml.SELECTIONGROUP);
+                if(!selectionGroup.isEmpty() && selectionGroup.contains(QStringLiteral("按钮"))){
+                    codeData->m_modelIds.append(child.id());
+                }
+            }
         }
 
         data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();

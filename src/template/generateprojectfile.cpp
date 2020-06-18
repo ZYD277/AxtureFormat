@@ -24,6 +24,11 @@ GenerateProjectFile::GenerateProjectFile()
 
 }
 
+void GenerateProjectFile::setCodeDatas(CXX::CppCodeDatas datas)
+{
+    m_codeDatas = datas;
+}
+
 void GenerateProjectFile::setOutputInfo(QString path, QString className,QString qssFileName)
 {
     m_projectPath = path;
@@ -70,6 +75,36 @@ void GenerateProjectFile::outputCpp()
 {
     CXX::CppGenerate cpp;
     cpp.setClssName(m_className);
+
+    QMap<CXX::CodeType,int> t_typeStatics;
+
+    //生成插件对应的代码
+    foreach (CXX::AbstractCppCodeData * codeData, m_codeDatas) {
+
+        if(t_typeStatics.contains(codeData->m_type)){
+            t_typeStatics.operator [](codeData->m_type)++;
+        }else{
+            t_typeStatics.insert(codeData->m_type,1);
+        }
+
+        int typeIndex = t_typeStatics.value(codeData->m_type);
+
+        switch(codeData->m_type){
+            case CXX::MODEL_SWITCH:{
+                CXX::ModelSwitchCodeData * switchData = dynamic_cast<CXX::ModelSwitchCodeData *>(codeData);
+
+                CXX::ModelSwitchTemplate modelSwitch;
+                modelSwitch.setSameTypeIndex(typeIndex);
+                modelSwitch.setModelIds(switchData->m_modelIds);
+                modelSwitch.prepareOutput(&cpp);
+            }
+                break;
+
+            default:break;
+        }
+
+        delete codeData;
+    }
 
     //head
     {

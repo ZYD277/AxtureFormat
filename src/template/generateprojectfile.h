@@ -11,12 +11,14 @@
 #define GEMERATEPROJECTFILE_H
 
 #include <QString>
+#include "cppstruct.h"
 
 class GenerateProjectFile
 {
 public:
     GenerateProjectFile();
 
+    void setCodeDatas(CXX::CppCodeDatas datas);
     void setOutputInfo(QString path, QString className, QString qssFileName);
 
     void startOutput();
@@ -32,6 +34,8 @@ private:
     QString m_projectPath;
     QString m_className;
     QString m_qssFileName;
+
+    CXX::CppCodeDatas m_codeDatas;
 };
 
 #endif // GEMERATEPROJECTFILE_H

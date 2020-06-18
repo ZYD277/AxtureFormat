@@ -170,6 +170,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
             }
 
+            if(gdata->m_codeData){
+                m_codeDatas.append(gdata->m_codeData);
+            }
+
             break;
         }
         case Html::RDYNAMIC_PANEL:{

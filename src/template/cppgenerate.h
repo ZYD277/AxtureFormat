@@ -12,6 +12,7 @@
 
 #include <QString>
 #include <QMap>
+#include <QSet>
 
 #include "cppstruct.h"
 
@@ -30,7 +31,7 @@ public:
     void addPrivateFun(QString func){m_privateFuns.append(func);}
     void addPrivateMember(QString member){m_privateMembers.append(member);}
 
-    void addInclude(QString includeHead){m_includes.append(includeHead);}
+    void addInclude(QString includeHead){m_includes.insert(includeHead);}
 
     void addConstructInitCode(QString code){m_constructInitCode.append(code);}
     void addFunImplement(QString code){m_funImplements.append(code);}
@@ -43,7 +44,7 @@ private:
     QStringList m_privateFuns;          /*!< 私有函数列表 */
     QStringList m_privateMembers;       /*!< 私有成员变量列表 */
 
-    QStringList m_includes;             /*!< 所需要包含的头文件列表 */
+    QSet<QString> m_includes;             /*!< 所需要包含的头文件列表 */
 
     QStringList m_constructInitCode;    /*!< 构造函数初始化时执行的代码 */
     QStringList m_funImplements;        /*!< 函数实现代码 */

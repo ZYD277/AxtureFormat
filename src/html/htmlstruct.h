@@ -5,6 +5,8 @@
 #include <QStringList>
 #include <QSharedPointer>
 
+#include "../template/cppstruct.h"
+
 namespace Html{
 
 struct NodeHtml{
@@ -139,6 +141,8 @@ struct BaseData{
     QString m_dataLabel;            /*!< 元素的data-label属性值 */
 
     QList<SignalSlotInfo> m_signals;      /*!< 需生成的信号槽描述信息 */
+
+
 };
 
 typedef QMap<QString,NodeType> CustControl;        //key：自定义控件名称，value：对应转换的自定义控件类型
@@ -232,10 +236,12 @@ struct TreeData : public BaseData{
  * @brief 分组数据
  */
 struct GroupData : public BaseData{
-    GroupData(){}
+    GroupData():m_codeData(nullptr){}
     ~GroupData(){}
 
     QString m_geometryReferenceId;      /*!< 自定义控件’触发弹窗‘中窗体的尺寸需要依赖子div中’框‘的尺寸 */
+
+    CXX::AbstractCppCodeData * m_codeData;      /*!< 生成代码时所需的必要信息 */
 };
 
 /*!
