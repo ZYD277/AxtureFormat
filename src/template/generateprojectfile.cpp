@@ -7,6 +7,7 @@
 #include "cppgenerate.h"
 #include "code/modelswitchtemplate.h"
 #include "code/playcontroltemplate.h"
+#include "code/pageswitchtemplate.h"
 
 QString NEW_EMPTY = "";
 QString New_Line = "\n";
@@ -98,6 +99,16 @@ void GenerateProjectFile::outputCpp()
                 modelSwitch.setSameTypeIndex(typeIndex);
                 modelSwitch.setModelIds(switchData->m_modelIds);
                 modelSwitch.prepareOutput(&cpp);
+            }
+                break;
+
+            case CXX::PAGE_SWITCH:{
+                CXX::PageSwitchCodeData * switchData = dynamic_cast<CXX::PageSwitchCodeData *>(codeData);
+
+                CXX::PageSwitchTemplate pageSwitch;
+                pageSwitch.setSameTypeIndex(typeIndex);
+                pageSwitch.setIds(switchData->m_leftPage,switchData->m_rightPage,switchData->m_pageIds);
+                pageSwitch.prepareOutput(&cpp);
             }
                 break;
 

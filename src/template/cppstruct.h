@@ -49,6 +49,18 @@ struct PlayControlCodeData : public AbstractCppCodeData{
     QStringList m_modelIds;     /*!< 各个触发按钮的Id信息集合 */
 };
 
+/*!
+ * @brief 页面切换代码区
+ */
+struct PageSwitchCodeData : public AbstractCppCodeData{
+    PageSwitchCodeData():AbstractCppCodeData(PAGE_SWITCH){}
+    ~PageSwitchCodeData(){}
+
+    QStringList m_pageIds;      /*!< 页码按钮ID */
+    QString m_leftPage;         /*!< 左、右翻页码 */
+    QString m_rightPage;
+};
+
 }
 
 

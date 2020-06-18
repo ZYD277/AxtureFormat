@@ -971,7 +971,8 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
         data->m_needMousePressed = false;
         data->m_bChecked = true;
     }else if(dataLabel.contains(QStringLiteral("快退")) || dataLabel.contains(QStringLiteral("快进"))
-             || dataLabel.contains(QStringLiteral("复位"))){
+             || dataLabel.contains(QStringLiteral("复位")) || dataLabel.contains(QStringLiteral("左"))
+             || dataLabel.contains(QStringLiteral("右"))){
         data->m_needMouseChecked = false;
     }
     node->m_data = data;
@@ -1381,6 +1382,35 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                 QString selectionGroup = child.attribute(G_NodeHtml.SELECTIONGROUP);
                 if(!selectionGroup.isEmpty() && selectionGroup.contains(QStringLiteral("按钮"))){
                     codeData->m_modelIds.append(child.id());
+                }
+            }
+        }else if(dataLabel.contains(QStringLiteral("分页"))){     //分页控件
+            CXX::PageSwitchCodeData * pdata = new CXX::PageSwitchCodeData;
+            data->m_codeData = pdata;
+
+            GumboNodeWrapperList children = element.children();
+
+            for(int i = 0; i< children.size(); i++){
+                GumboNodeWrapper child = children.at(i);
+                QString selectionGroup = child.attribute(G_NodeHtml.SELECTIONGROUP);
+                if(!selectionGroup.isEmpty() && selectionGroup.contains(QStringLiteral("页码"))){
+                    pdata->m_pageIds.append(child.id());
+                }else if(child.data_label().contains(QStringLiteral("左翻"))){
+                    GumboNodeWrapperList grandChilds = child.children();
+                    for(int j = 0; j < grandChilds.size(); j++){
+                        GumboNodeWrapper grand = grandChilds.at(j);
+                        if(grand.data_label().contains(QStringLiteral("左"))){
+                            pdata->m_leftPage = grand.id();
+                        }
+                    }
+                }else if(child.data_label().contains(QStringLiteral("右翻"))){
+                    GumboNodeWrapperList grandChilds = child.children();
+                    for(int j = 0; j < grandChilds.size(); j++){
+                        GumboNodeWrapper grand = grandChilds.at(j);
+                        if(grand.data_label().contains(QStringLiteral("右"))){
+                            pdata->m_rightPage = grand.id();
+                        }
+                    }
                 }
             }
         }
