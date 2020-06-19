@@ -31,7 +31,7 @@
 ClientOperate::ClientOperate(QWidget *parent) :
     QMainWindow(parent),cssBaseFileName("styles.css"),jsBaseFileName("document.js"),jsSinglePageFileName("data.js"),
     ui(new Ui::ClientOperate),m_dirPathButtGroup(nullptr),m_viewDelegate(nullptr),m_model(nullptr),
-    m_pool(new ThreadPool(5)),m_b_mouseActive(false)
+    m_pool(new ThreadPool(5)),m_b_mouseActive(false),m_bTableMultiState(false)
 {
     ui->setupUi(this);
     setWindowTitle(QStringLiteral("原型转换工具"));
@@ -188,12 +188,48 @@ bool ClientOperate::eventFilter(QObject *watched, QEvent *event)
             }
             default:break;
         }
+    }else if(watched == ui->tableView){
+        switch (event->type()) {
+            case QEvent::KeyPress:{
+                QKeyEvent * kevent = dynamic_cast<QKeyEvent *>(event);
+                if(kevent){
+                    if(kevent->modifiers() == Qt::CTRL && !m_bTableMultiState){
+                        ui->tableView->setSelectionMode(QAbstractItemView::MultiSelection);
+                        m_bTableMultiState = true;
+                    }
+                }
+            }
+                break;
+
+            case QEvent::KeyRelease:{
+                QKeyEvent * kevent = dynamic_cast<QKeyEvent *>(event);
+                if(kevent){
+                    if(kevent->modifiers() != Qt::CTRL && m_bTableMultiState){
+                        ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+                        m_bTableMultiState = false;
+                    }
+                }
+            }
+                break;
+
+            case QEvent::FocusOut:{
+                ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+                m_bTableMultiState = false;
+            }
+                break;
+
+            default:
+                break;
+        }
     }
+
     return QWidget::eventFilter(watched,event);
 }
 
 /*!
  * @brief 显示表格右键操作菜单
+ * @details 1.在单选模式下，可查看对应的文件、工程
+ *          2.在多选模式下，只可进行删除操作
  */
 void ClientOperate::showTableContextMenu(QPoint point)
 {
@@ -203,32 +239,48 @@ void ClientOperate::showTableContextMenu(QPoint point)
     if(!modelIndex.isValid() || modelIndex.row() < 0 && modelIndex.row() >= m_pageList.size())
         return;
 
-    AxurePage page = m_pageList.at(modelIndex.row());
+    QModelIndexList selectedList = ui->tableView->selectionModel()->selectedIndexes();
+    QStringList t_selectedRows;
+    for(QModelIndex index : selectedList){
+        if(!t_selectedRows.contains(QString::number(index.row())))
+            t_selectedRows.append(QString::number(index.row()));
+    }
 
     QMenu * menu = new QMenu(ui->tableView);
 
-    QAction * openHtmlAction = new QAction();
-    openHtmlAction->setData(page.htmlFilePath);
-    openHtmlAction->setIcon(QIcon(":/icon/image/html.png"));
-    openHtmlAction->setText(QStringLiteral("打开"));
-    connect(openHtmlAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
-    menu->addAction(openHtmlAction);
+    if(t_selectedRows.size() == 1){
+        AxurePage page = m_pageList.at(modelIndex.row());
 
-    QAction * openAxureAction = new QAction();
-    openAxureAction->setData(page.axureProjectPath);
-    openAxureAction->setIcon(QIcon(":/icon/image/project.png"));
-    openAxureAction->setText(QStringLiteral("打开Axure工程"));
-    connect(openAxureAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
-    menu->addAction(openAxureAction);
+        QAction * openHtmlAction = new QAction();
+        openHtmlAction->setData(page.htmlFilePath);
+        openHtmlAction->setIcon(QIcon(":/icon/image/html.png"));
+        openHtmlAction->setText(QStringLiteral("打开"));
+        connect(openHtmlAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
+        menu->addAction(openHtmlAction);
 
-    if(page.outputDir.size() > 0){
-        menu->addSeparator();
-        QAction * openOutputAction = new QAction();
-        openOutputAction->setData(page.outputDir);
-        openOutputAction->setIcon(QIcon(":/icon/image/qt.png"));
-        openOutputAction->setText(QStringLiteral("查看转换文件"));
-        connect(openOutputAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
-        menu->addAction(openOutputAction);
+        QAction * openAxureAction = new QAction();
+        openAxureAction->setData(page.axureProjectPath);
+        openAxureAction->setIcon(QIcon(":/icon/image/project.png"));
+        openAxureAction->setText(QStringLiteral("打开Axure工程"));
+        connect(openAxureAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
+        menu->addAction(openAxureAction);
+
+        if(page.outputDir.size() > 0){
+            menu->addSeparator();
+            QAction * openOutputAction = new QAction();
+            openOutputAction->setData(page.outputDir);
+            openOutputAction->setIcon(QIcon(":/icon/image/qt.png"));
+            openOutputAction->setText(QStringLiteral("查看转换文件"));
+            connect(openOutputAction,SIGNAL(triggered(bool)),this,SLOT(openHtml(bool)));
+            menu->addAction(openOutputAction);
+        }
+    }else{
+        QAction * deleteRowsAction = new QAction();
+        deleteRowsAction->setData(t_selectedRows.join("_"));
+        deleteRowsAction->setIcon(QIcon(":/icon/image/batch_delete.png"));
+        deleteRowsAction->setText(QStringLiteral("批量删除"));
+        connect(deleteRowsAction,SIGNAL(triggered(bool)),this,SLOT(batchDeleteRows(bool)));
+        menu->addAction(deleteRowsAction);
     }
 
     menu->exec(QCursor::pos());
@@ -299,7 +351,7 @@ void ClientOperate::initView()
 
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setFocusPolicy(Qt::NoFocus);
+    ui->tableView->setFocusPolicy(Qt::ClickFocus);
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     ui->tableView->setModel(m_model);
@@ -317,6 +369,8 @@ void ClientOperate::initView()
     ui->tableView->setColumnWidth(T_Open,Table_Icon_Width);
     ui->tableView->setColumnWidth(T_Delete,Table_Icon_Width);
     ui->tableView->setColumnWidth(T_Switch,Table_Icon_Width);
+
+    ui->tableView->installEventFilter(this);
 
     connect(m_viewDelegate,SIGNAL(viewFile(QString)),this,SLOT(viewFile(QString)));
     connect(m_viewDelegate,SIGNAL(deleteFile(QString)),this,SLOT(deletFileData(QString)));
@@ -781,7 +835,7 @@ void ClientOperate::viewFile(QString filePath)
 
 /**
  * @brief 删除一行数据
- * @param filePath 删除行文件名
+ * @param pageId 待删除文件ID
  */
 void ClientOperate::deletFileData(QString pageId)
 {
@@ -794,6 +848,39 @@ void ClientOperate::deletFileData(QString pageId)
 
         if(iter != m_pageList.end()){
             m_pageList.erase(iter);
+            updateTableModel();
+        }
+    }
+}
+
+/*!
+ * @brief 批量删除选中行记录
+ */
+void ClientOperate::batchDeleteRows(bool)
+{
+    QAction * action = dynamic_cast<QAction *>(QObject::sender());
+    if(action){
+        int result = QMessageBox::question(this,QStringLiteral("提示"),QStringLiteral("是否删除选中记录?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
+
+        if(result == QMessageBox::Yes){
+            QStringList rows = action->data().toString().split("_");
+
+            //行的顺序不一定是顺序的
+            QList<QString> t_pageIds;
+            for(QString row : rows){
+                t_pageIds.append(m_pageList.at(row.toInt()).id);
+            }
+
+            for(QString pageId : t_pageIds){
+                auto iter =std::find_if(m_pageList.begin(),m_pageList.end(),[&pageId](const AxurePage & page){
+                    return page.id == pageId;
+                });
+
+                if(iter != m_pageList.end()){
+                    m_pageList.erase(iter);
+                }
+            }
+
             updateTableModel();
         }
     }

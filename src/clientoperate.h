@@ -50,6 +50,7 @@ private slots:
 
     void viewFile(QString filePath);
     void deletFileData(QString pageId);
+    void batchDeleteRows(bool);
     void switchLineHtmlFile(QString pageId);
 
     void startSwitchFiles();
@@ -138,6 +139,8 @@ private:
     QMenu * m_recentMenu;
     QStringList m_recentProjects;
     QList<QAction *> m_recentActions;
+
+    bool m_bTableMultiState;        /*!< 表格是否处于多选择状态下 */
 };
 #endif // CLIENTOPERATE_H
 

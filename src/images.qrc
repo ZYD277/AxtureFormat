@@ -10,6 +10,7 @@
         <file>image/qt.png</file>
         <file>image/project.png</file>
         <file>image/watermark.png</file>
+        <file>image/batch_delete.png</file>
     </qresource>
     <qresource prefix="/style">
         <file>stylesheet.txt</file>
