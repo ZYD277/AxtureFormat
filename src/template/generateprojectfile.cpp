@@ -9,6 +9,7 @@
 #include "code/playcontroltemplate.h"
 #include "code/pageswitchtemplate.h"
 #include "code/twswitchtemplate.h"
+#include "code/mutexbuttontemplate.h"
 
 QString NEW_EMPTY = "";
 QString New_Line = "\n";
@@ -131,6 +132,16 @@ void GenerateProjectFile::outputCpp()
                 playControl.setStackedId(playData->m_stackedWidgetId);
                 playControl.setModelIds(playData->m_modelIds);
                 playControl.prepareOutput(&cpp);
+            }
+                break;
+
+            case CXX::MUTEX_BUTTON:{
+                CXX::MutexButtonCodeData * mutexData = dynamic_cast<CXX::MutexButtonCodeData *>(codeData);
+
+                CXX::MutexButtonTemplate mutexButton;
+                mutexButton.setSameTypeIndex(typeIndex);
+                mutexButton.setMutexButtonIds(mutexData->m_buttIds);
+                mutexButton.prepareOutput(&cpp);
             }
                 break;
 

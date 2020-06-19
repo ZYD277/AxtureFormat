@@ -13,7 +13,8 @@ enum CodeType{
     MODEL_SWITCH,           /*!< 模式切换按钮控件 */
     TW_SWITCH,              /*!< 台位切换按钮控件 */
     PAGE_SWITCH,            /*!< 页面切换按钮控件 */
-    PLAY_CONTROL            /*!< 回放控制按钮控件 */
+    PLAY_CONTROL,           /*!< 回放控制按钮控件 */
+    MUTEX_BUTTON            /*!< 互斥按钮控件 */
 };
 
 /*!
@@ -73,6 +74,16 @@ struct TWSwitchCodeData : public AbstractCppCodeData{
 
     QString m_twContainerId;    /*!< 台位切换容器ID */
     QString m_twPopButtId;      /*!< 台位弹出按钮id */
+};
+
+/*!
+ * @brief 互斥按钮控件代码数据区
+ */
+struct MutexButtonCodeData : public AbstractCppCodeData{
+    MutexButtonCodeData():AbstractCppCodeData(MUTEX_BUTTON){}
+    ~MutexButtonCodeData(){}
+
+    QStringList m_buttIds;     /*!< 互斥按钮的Id信息集合 */
 };
 
 

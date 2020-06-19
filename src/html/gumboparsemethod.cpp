@@ -1440,6 +1440,16 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                     }
                 }
             }
+        }else if(dataLabel.contains(QStringLiteral("互斥按钮"))){
+            GumboNodeWrapperList children = element.children();
+
+            CXX::MutexButtonCodeData * mutexData = new CXX::MutexButtonCodeData;
+            data->m_codeData = mutexData;
+
+            for(int i = 0; i< children.size(); i++){
+                GumboNodeWrapper child = children.at(i);
+                mutexData->m_buttIds.append(child.id());
+            }
         }
 
         data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();

@@ -19,6 +19,7 @@ SOURCES += main.cpp\
     qui/props/mconnections.cpp \
     template/code/abstractcodetemplate.cpp \
     template/code/modelswitchtemplate.cpp \
+    template/code/mutexbuttontemplate.cpp \
     template/code/pageswitchtemplate.cpp \
     template/code/playcontroltemplate.cpp \
     template/code/twswitchtemplate.cpp \
@@ -65,6 +66,7 @@ HEADERS  += \
     qui/props/mconnections.h \
     template/code/abstractcodetemplate.h \
     template/code/modelswitchtemplate.h \
+    template/code/mutexbuttontemplate.h \
     template/code/pageswitchtemplate.h \
     template/code/playcontroltemplate.h \
     template/code/twswitchtemplate.h \
