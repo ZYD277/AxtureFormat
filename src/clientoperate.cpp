@@ -421,7 +421,7 @@ void ClientOperate::generateTask(AxurePage &page)
     SwitchTask * task = new SwitchTask;
     connect(task,SIGNAL(updateProgress(SwitchProgress)),this,SLOT(updateProgress(SwitchProgress)),Qt::QueuedConnection);
     m_pool->enqueue([&](SwitchTask * switchTask,AxurePage & pp,QString outPath){
-        switchTask->initTask(pp,outPath);
+        switchTask->initTask(pp,outPath,ui->generateCode->isChecked());
         delete switchTask;
     },task,page,outDir);
 }

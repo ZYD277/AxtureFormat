@@ -22,7 +22,13 @@ SwitchTask::~SwitchTask()
 
 }
 
-void SwitchTask::initTask(AxurePage page, QString outputDir)
+/*!
+ * @brief 初始化任务参数信息
+ * @param[in] page 当前转换页面信息
+ * @param[in] outputDir 页面输出目录
+ * @param[in] generateCode 是否生成控件辅助控制代码
+ */
+void SwitchTask::initTask(AxurePage page, QString outputDir,bool generateCode)
 {
     m_page = page;
 
@@ -95,7 +101,7 @@ void SwitchTask::initTask(AxurePage page, QString outputDir)
                         GenerateProjectFile outputTemplte;
                         outputTemplte.setCodeDatas(m_qtOutput.getCppCodeDatas());
                         outputTemplte.setOutputInfo(m_outputDir,page.switchClassName,qssFileName);
-                        outputTemplte.startOutput();
+                        outputTemplte.startOutput(generateCode);
 
                         tproj = P_Finish;
                         updataProcessBar(tproj,error,QStringLiteral("转换结束"));

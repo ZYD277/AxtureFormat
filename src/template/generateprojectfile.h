@@ -21,11 +21,11 @@ public:
     void setCodeDatas(CXX::CppCodeDatas datas);
     void setOutputInfo(QString path, QString className, QString qssFileName);
 
-    void startOutput();
+    void startOutput(bool generateCode);
 
 private:
     void outputProFile();
-    void outputCpp();
+    void outputCpp(bool generateCode);
     void outputMain();
 
     void writeToFile(QString & content,QString fileName);

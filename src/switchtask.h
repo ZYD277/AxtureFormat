@@ -23,7 +23,7 @@ public:
     SwitchTask();
     ~SwitchTask();
 
-    void initTask(AxurePage page, QString outputDir);
+    void initTask(AxurePage page, QString outputDir, bool generateCode);
 
 signals:
     void updateProgress(SwitchProgress prog);

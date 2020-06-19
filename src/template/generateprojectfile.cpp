@@ -40,10 +40,10 @@ void GenerateProjectFile::setOutputInfo(QString path, QString className,QString 
     m_qssFileName = qssFileName;
 }
 
-void GenerateProjectFile::startOutput()
+void GenerateProjectFile::startOutput(bool generateCode)
 {
     outputProFile();
-    outputCpp();
+    outputCpp(generateCode);
     outputMain();
 }
 
@@ -75,80 +75,82 @@ void GenerateProjectFile::outputProFile()
     writeToFile(content,fileName);
 }
 
-void GenerateProjectFile::outputCpp()
+void GenerateProjectFile::outputCpp(bool generateCode)
 {
     CXX::CppGenerate cpp;
     cpp.setClssName(m_className);
 
-    QMap<CXX::CodeType,int> t_typeStatics;
+    if(generateCode){
+        QMap<CXX::CodeType,int> t_typeStatics;
 
-    //生成插件对应的代码
-    foreach (CXX::AbstractCppCodeData * codeData, m_codeDatas) {
+        //生成插件对应的代码
+        foreach (CXX::AbstractCppCodeData * codeData, m_codeDatas) {
 
-        if(t_typeStatics.contains(codeData->m_type)){
-            t_typeStatics.operator [](codeData->m_type)++;
-        }else{
-            t_typeStatics.insert(codeData->m_type,1);
+            if(t_typeStatics.contains(codeData->m_type)){
+                t_typeStatics.operator [](codeData->m_type)++;
+            }else{
+                t_typeStatics.insert(codeData->m_type,1);
+            }
+
+            int typeIndex = t_typeStatics.value(codeData->m_type);
+
+            switch(codeData->m_type){
+                case CXX::MODEL_SWITCH:{
+                    CXX::ModelSwitchCodeData * switchData = dynamic_cast<CXX::ModelSwitchCodeData *>(codeData);
+
+                    CXX::ModelSwitchTemplate modelSwitch;
+                    modelSwitch.setSameTypeIndex(typeIndex);
+                    modelSwitch.setModelIds(switchData->m_modelIds);
+                    modelSwitch.prepareOutput(&cpp);
+                }
+                    break;
+
+                case CXX::TW_SWITCH:{
+                    CXX::TWSwitchCodeData * twSwitchData = dynamic_cast<CXX::TWSwitchCodeData *>(codeData);
+
+                    CXX::TwSwitchTemplate twSwitch;
+                    twSwitch.setSameTypeIndex(typeIndex);
+                    twSwitch.setIds(twSwitchData->m_twPopButtId,twSwitchData->m_twContainerId,twSwitchData->m_buttContainerId,twSwitchData->m_buttIds);
+                    twSwitch.prepareOutput(&cpp);
+                }
+                    break;
+
+                case CXX::PAGE_SWITCH:{
+                    CXX::PageSwitchCodeData * switchData = dynamic_cast<CXX::PageSwitchCodeData *>(codeData);
+
+                    CXX::PageSwitchTemplate pageSwitch;
+                    pageSwitch.setSameTypeIndex(typeIndex);
+                    pageSwitch.setIds(switchData->m_leftPage,switchData->m_rightPage,switchData->m_pageIds);
+                    pageSwitch.prepareOutput(&cpp);
+                }
+                    break;
+
+                case CXX::PLAY_CONTROL:{
+                    CXX::PlayControlCodeData * playData = dynamic_cast<CXX::PlayControlCodeData *>(codeData);
+
+                    CXX::PlayControlTemplate playControl;
+                    playControl.setSameTypeIndex(typeIndex);
+                    playControl.setStackedId(playData->m_stackedWidgetId);
+                    playControl.setModelIds(playData->m_modelIds);
+                    playControl.prepareOutput(&cpp);
+                }
+                    break;
+
+                case CXX::MUTEX_BUTTON:{
+                    CXX::MutexButtonCodeData * mutexData = dynamic_cast<CXX::MutexButtonCodeData *>(codeData);
+
+                    CXX::MutexButtonTemplate mutexButton;
+                    mutexButton.setSameTypeIndex(typeIndex);
+                    mutexButton.setMutexButtonIds(mutexData->m_buttIds);
+                    mutexButton.prepareOutput(&cpp);
+                }
+                    break;
+
+                default:break;
+            }
+
+            delete codeData;
         }
-
-        int typeIndex = t_typeStatics.value(codeData->m_type);
-
-        switch(codeData->m_type){
-            case CXX::MODEL_SWITCH:{
-                CXX::ModelSwitchCodeData * switchData = dynamic_cast<CXX::ModelSwitchCodeData *>(codeData);
-
-                CXX::ModelSwitchTemplate modelSwitch;
-                modelSwitch.setSameTypeIndex(typeIndex);
-                modelSwitch.setModelIds(switchData->m_modelIds);
-                modelSwitch.prepareOutput(&cpp);
-            }
-                break;
-
-            case CXX::TW_SWITCH:{
-                CXX::TWSwitchCodeData * twSwitchData = dynamic_cast<CXX::TWSwitchCodeData *>(codeData);
-
-                CXX::TwSwitchTemplate twSwitch;
-                twSwitch.setSameTypeIndex(typeIndex);
-                twSwitch.setIds(twSwitchData->m_twPopButtId,twSwitchData->m_twContainerId,twSwitchData->m_buttContainerId,twSwitchData->m_buttIds);
-                twSwitch.prepareOutput(&cpp);
-            }
-                break;
-
-            case CXX::PAGE_SWITCH:{
-                CXX::PageSwitchCodeData * switchData = dynamic_cast<CXX::PageSwitchCodeData *>(codeData);
-
-                CXX::PageSwitchTemplate pageSwitch;
-                pageSwitch.setSameTypeIndex(typeIndex);
-                pageSwitch.setIds(switchData->m_leftPage,switchData->m_rightPage,switchData->m_pageIds);
-                pageSwitch.prepareOutput(&cpp);
-            }
-                break;
-
-            case CXX::PLAY_CONTROL:{
-                CXX::PlayControlCodeData * playData = dynamic_cast<CXX::PlayControlCodeData *>(codeData);
-
-                CXX::PlayControlTemplate playControl;
-                playControl.setSameTypeIndex(typeIndex);
-                playControl.setStackedId(playData->m_stackedWidgetId);
-                playControl.setModelIds(playData->m_modelIds);
-                playControl.prepareOutput(&cpp);
-            }
-                break;
-
-            case CXX::MUTEX_BUTTON:{
-                CXX::MutexButtonCodeData * mutexData = dynamic_cast<CXX::MutexButtonCodeData *>(codeData);
-
-                CXX::MutexButtonTemplate mutexButton;
-                mutexButton.setSameTypeIndex(typeIndex);
-                mutexButton.setMutexButtonIds(mutexData->m_buttIds);
-                mutexButton.prepareOutput(&cpp);
-            }
-                break;
-
-            default:break;
-        }
-
-        delete codeData;
     }
 
     //head
