@@ -110,6 +110,11 @@ QString FormatProperty::getTypeName(Html::NodeType type)
  */
 void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *node,QRect parentRect)
 {
+    //自动代码生成
+    if(node->m_data && node->m_data->m_codeData){
+        m_codeDatas.append(node->m_data->m_codeData);
+    }
+
     //虚拟的容器无需创建UI界面，但可能携带信号槽
     if(node->m_type == Html::R_CUSTOM_VIRTUAL_CONTAINER){
         createConnections(node);
@@ -135,10 +140,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
     if(!node->m_id.isEmpty())
         m_selectorType.insert(node->m_id,node->m_type);
-
-    if(node->m_data && node->m_data->m_codeData){
-        m_codeDatas.append(node->m_data->m_codeData);
-    }
 
     switch(node->m_type){
         case Html::RCONTAINER:{

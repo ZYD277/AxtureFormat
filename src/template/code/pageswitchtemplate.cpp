@@ -1,4 +1,4 @@
-#include "pageswitchtemplate.h"
+﻿#include "pageswitchtemplate.h"
 
 #include "../cppgenerate.h"
 
@@ -11,14 +11,14 @@ PageSwitchTemplate::PageSwitchTemplate():AbstractCodeTemplate(PAGE_SWITCH)
 
 void PageSwitchTemplate::prepareOutput(CppGenerate *generate)
 {
+    generate->addInclude("#include <QPushButton>");
+    generate->addInclude("#include <QList>");
+
     QString t_slotName = QString("switchPage_%1(bool flag)").arg(m_sameTypeIndex);
     generate->addPrivateSlot(QString("void %1;").arg(t_slotName));
 
     QString t_pageSlotName = QString("pageSwitch_%1()").arg(m_sameTypeIndex);
     generate->addPrivateSlot(QString("void %1;").arg(t_pageSlotName));
-
-    generate->addInclude("#include <QPushButton>");
-    generate->addInclude("#include <QList>");
 
     QString t_baseMemberName = QString("m_pageButts_%1").arg(m_sameTypeIndex);
     generate->addPrivateMember(QString("QList<QPushButton *> %1;").arg(t_baseMemberName));

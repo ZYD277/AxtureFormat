@@ -61,6 +61,21 @@ struct PageSwitchCodeData : public AbstractCppCodeData{
     QString m_rightPage;
 };
 
+/*!
+ * @brief 台位切换控件代码数据区
+ */
+struct TWSwitchCodeData : public AbstractCppCodeData{
+    TWSwitchCodeData():AbstractCppCodeData(TW_SWITCH){}
+    ~TWSwitchCodeData(){}
+
+    QList<QPair<QString, QString> > m_buttIds;      /*!< 各个台位触发按钮的Id信息集合:key:id,value:索引编号 */
+    QString m_buttContainerId;  /*!< 台位切换按钮外层容器id */
+
+    QString m_twContainerId;    /*!< 台位切换容器ID */
+    QString m_twPopButtId;      /*!< 台位弹出按钮id */
+};
+
+
 }
 
 

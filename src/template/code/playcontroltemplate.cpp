@@ -1,4 +1,4 @@
-#include "playcontroltemplate.h"
+﻿#include "playcontroltemplate.h"
 
 #include "../cppgenerate.h"
 

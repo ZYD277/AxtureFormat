@@ -21,6 +21,7 @@ SOURCES += main.cpp\
     template/code/modelswitchtemplate.cpp \
     template/code/pageswitchtemplate.cpp \
     template/code/playcontroltemplate.cpp \
+    template/code/twswitchtemplate.cpp \
     template/cppgenerate.cpp \
     template/cppstruct.cpp \
     util/fileutils.cpp \
@@ -66,6 +67,7 @@ HEADERS  += \
     template/code/modelswitchtemplate.h \
     template/code/pageswitchtemplate.h \
     template/code/playcontroltemplate.h \
+    template/code/twswitchtemplate.h \
     template/cppgenerate.h \
     template/cppstruct.h \
     util/fileutils.h \

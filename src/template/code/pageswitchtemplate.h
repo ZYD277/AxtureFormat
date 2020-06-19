@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  *  @brief     翻页控件代码生成
  *  @details
  *  @author    wey

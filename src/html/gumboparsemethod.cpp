@@ -570,6 +570,9 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
         QString twId;           /*!< 台位切换id */
         QString twPopId;
 
+        QString twTitleId;      /*!< 台位标题 */
+        QList<QPair<QString,QString>> buttSwitchIds;      /*!< 台位切换按钮组:key:id,value:索引编号 */
+
         for(GumboNodeWrapper node : childs){
             if(node.data_label().contains(QStringLiteral("显控设置按钮"))){
                 xkId = node.id();
@@ -579,6 +582,19 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
                 twId = node.id();
             }else if(node.data_label().contains(QStringLiteral("台位切换弹出"))){
                 twPopId = node.id();
+
+                GumboNodeWrapperList grandChilds = node.firstChild().firstChild().children();
+                for(GumboNodeWrapper grandChild : grandChilds){
+                    if(grandChild.attribute(G_NodeHtml.SELECTIONGROUP).contains(QStringLiteral("按钮"))){
+                        QRegExp exp("(\\d+)");
+                        int index = 0;
+                        if((index = exp.indexIn(grandChild.data_label(),index) != -1)){
+                            buttSwitchIds.append(qMakePair(grandChild.id(),exp.cap(1)));
+                        }
+                    }
+                }
+            }else if(node.data_label().contains(QStringLiteral("台位标题"))){
+                twTitleId = node.id();
             }
         }
 
@@ -599,6 +615,17 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
             signalInfo.m_slot = "setVisible(bool)";
             data->m_signals.append(signalInfo);
         }
+
+        {
+            CXX::TWSwitchCodeData * twData = new CXX::TWSwitchCodeData();
+            data->m_codeData = twData;
+
+            twData->m_twPopButtId = twId;
+            twData->m_buttContainerId = twPopId;
+            twData->m_twContainerId = twTitleId;
+            twData->m_buttIds = buttSwitchIds;
+        }
+
     }else if(dataLabel.contains(QStringLiteral("表格菜单"))){
         GumboNodeWrapperList children = element.children();
 
