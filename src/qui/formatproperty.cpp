@@ -1202,9 +1202,8 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
                                          "QTabBar::tab:selected,QTabBar::tab:selected:hover{border-image: url(':/%1');}" + G_NewLine +
                                          "QTabBar::tab:!selected{border-image: url(':/%2');}" + G_NewLine +
                                          "QTabBar::tab:!selected:hover{border-image: url(':/%3');}" + G_NewLine +
-                                         "QTabBar::tab{%4;border-right-image:url(':/%5');}")
-                                 .arg(selectedImageSrc).arg(normalImageSrc).arg(mouseOverImageSrc).arg(tabStyle)
-                                 .arg(tabRightBorderImageSrc));
+                                         "QTabBar::tab{%4;}")
+                                 .arg(selectedImageSrc).arg(normalImageSrc).arg(mouseOverImageSrc).arg(tabStyle));
         domWidget->addProperty(styleProp);
     }
 }

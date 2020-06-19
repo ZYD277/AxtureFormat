@@ -999,7 +999,7 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
         data->m_bChecked = true;
     }else if(dataLabel.contains(QStringLiteral("快退")) || dataLabel.contains(QStringLiteral("快进"))
              || dataLabel.contains(QStringLiteral("复位")) || dataLabel.contains(QStringLiteral("左"))
-             || dataLabel.contains(QStringLiteral("右"))){
+             || dataLabel.contains(QStringLiteral("右")) || dataLabel.contains(QStringLiteral("文件夹"))){
         data->m_needMouseChecked = false;
     }
     node->m_data = data;
