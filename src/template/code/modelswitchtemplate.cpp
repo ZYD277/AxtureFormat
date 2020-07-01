@@ -36,7 +36,8 @@ void ModelSwitchTemplate::prepareOutput(CppGenerate *generate)
     QString code = ConcatNewLine(QString("void %1::%2").arg(generate->getClassName()).arg(t_slotName));
     code += ConcatNewLine("{");
     code += ConcatNewLine("    QPushButton * tsend = dynamic_cast<QPushButton*>(QObject::sender());");
-    code += ConcatNewLine("    for(QPushButton * butt : "+t_baseMemberName+"){");
+    code += ConcatNewLine("    for(int i = 0; i < %1.size(); i++ ){").arg(t_baseMemberName);
+    code += ConcatNewLine("        QPushButton * butt = %1.at(i);").arg(t_baseMemberName);
     code += ConcatNewLine("        if(butt != tsend){");
     code += ConcatNewLine("            butt->setChecked(false);");
     code += ConcatNewLine("        }else{");

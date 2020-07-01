@@ -36,7 +36,8 @@ void MutexButtonTemplate::prepareOutput(CppGenerate *generate)
     QString code = ConcatNewLine(QString("void %1::%2").arg(generate->getClassName()).arg(t_slotName));
     code += ConcatNewLine("{");
     code += ConcatNewLine("    QPushButton * senderButt = dynamic_cast<QPushButton*>(QObject::sender());");
-    code += ConcatNewLine("    for(QPushButton * butt : " + t_baseMemberName + "){");
+    code += ConcatNewLine("    for(int i = 0; i < %1.size(); i++){").arg(t_baseMemberName);
+    code += ConcatNewLine("        QPushButton * butt = %1.at(i);").arg(t_baseMemberName);
     code += ConcatNewLine("        if(butt != senderButt)");
     code += ConcatNewLine("            butt->setDisabled(flag);");
     code += ConcatNewLine("    }");
