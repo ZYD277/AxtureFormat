@@ -22,6 +22,7 @@ SOURCES += main.cpp\
     template/code/mutexbuttontemplate.cpp \
     template/code/pageswitchtemplate.cpp \
     template/code/playcontroltemplate.cpp \
+    template/code/tablewidgetstyletemplate.cpp \
     template/code/twswitchtemplate.cpp \
     template/cppgenerate.cpp \
     template/cppstruct.cpp \
@@ -69,6 +70,7 @@ HEADERS  += \
     template/code/mutexbuttontemplate.h \
     template/code/pageswitchtemplate.h \
     template/code/playcontroltemplate.h \
+    template/code/tablewidgetstyletemplate.h \
     template/code/twswitchtemplate.h \
     template/cppgenerate.h \
     template/cppstruct.h \

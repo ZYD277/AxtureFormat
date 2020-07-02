@@ -14,7 +14,8 @@ enum CodeType{
     TW_SWITCH,              /*!< 台位切换按钮控件 */
     PAGE_SWITCH,            /*!< 页面切换按钮控件 */
     PLAY_CONTROL,           /*!< 回放控制按钮控件 */
-    MUTEX_BUTTON            /*!< 互斥按钮控件 */
+    MUTEX_BUTTON,           /*!< 互斥按钮控件 */
+    CUSTOM_TABLE_WIDGET     /*!< 自定义表格样式 */
 };
 
 /*!
@@ -84,6 +85,19 @@ struct MutexButtonCodeData : public AbstractCppCodeData{
     ~MutexButtonCodeData(){}
 
     QStringList m_buttIds;     /*!< 互斥按钮的Id信息集合 */
+};
+
+/*!
+ * @brief 表格样式表代码数据区
+ */
+struct TableStyleCodeData : public AbstractCppCodeData{
+    TableStyleCodeData():AbstractCppCodeData(CUSTOM_TABLE_WIDGET){}
+    ~TableStyleCodeData(){}
+
+    QString m_tableId;          /*!< 表格的id */
+    QString m_tableStyle;       /*!< 表格样式 */
+    QString m_horizontalStyle;  /*!< 水平表头样式 */
+    QString m_verticalStyle;    /*!< 竖直表头样式 */
 };
 
 

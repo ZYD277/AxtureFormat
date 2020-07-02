@@ -10,6 +10,7 @@
 #include "code/pageswitchtemplate.h"
 #include "code/twswitchtemplate.h"
 #include "code/mutexbuttontemplate.h"
+#include "code/tablewidgetstyletemplate.h"
 
 QString NEW_EMPTY = "";
 QString New_Line = "\n";
@@ -143,6 +144,16 @@ void GenerateProjectFile::outputCpp(bool generateCode)
                     mutexButton.setSameTypeIndex(typeIndex);
                     mutexButton.setMutexButtonIds(mutexData->m_buttIds);
                     mutexButton.prepareOutput(&cpp);
+                }
+                    break;
+
+                case CXX::CUSTOM_TABLE_WIDGET:{
+                    CXX::TableStyleCodeData * tableData = dynamic_cast<CXX::TableStyleCodeData *>(codeData);
+
+                    CXX::TableWidgetStyleTemplate tableStyle;
+                    tableStyle.setSameTypeIndex(typeIndex);
+                    tableStyle.setTableStyleData(tableData);
+                    tableStyle.prepareOutput(&cpp);
                 }
                     break;
 

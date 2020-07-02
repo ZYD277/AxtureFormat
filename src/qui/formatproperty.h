@@ -63,7 +63,7 @@ private:
     void createProgressStyleProp(RDomWidget * domWidget,Html::SliderData * data);
     void createSrollBarStyleProp(RDomWidget * domWidget, Html::ScrollBarData * data, bool horizonal);
     void createTreeImageProp(RDomWidget * domWidget, Html::TreeData * data);
-    void createTableImageProp(RDomWidget * domWidget, Html::TableData *data, QString hSectionSize, QString vSectionSize, int columnCount);
+    void createTableCodeData(Html::DomNode *node, Html::TableData *data, QString hSectionSize, QString vSectionSize, int columnCount);
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);

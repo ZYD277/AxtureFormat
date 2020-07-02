@@ -326,7 +326,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 domWidget->addAttrinute(vhSectionSize);
 
                 if(!tdata->m_srcImage.isEmpty()){
-                    createTableImageProp(domWidget,tdata,m_cellWidth,m_cellHeight,columnCount);
+                    createTableCodeData(node,tdata,m_cellWidth,m_cellHeight,columnCount);
                 }
             }
 
@@ -1478,7 +1478,11 @@ void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *
     }
 }
 
-void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData *data, QString hSectionSize, QString vSectionSize,
+/*!
+  @details 因Qt4和Qt5在ui中对表格的样式支持不一致，为了保持统一，取消从ui中直接设置样式， @n
+           转而使用代码控制
+ */
+void FormatProperty::createTableCodeData(Html::DomNode *node, Html::TableData *data, QString hSectionSize, QString vSectionSize,
                                           int columnCount)
 {
     if(data->m_cells.size() < columnCount){
@@ -1492,15 +1496,12 @@ void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData
 
     if(!imageSrc.isEmpty()){
 
-        MProperty * styleProp = new MProperty();
+        CXX::TableStyleCodeData * tableData = new CXX::TableStyleCodeData();
 
-        styleProp->setAttributeName("styleSheet");
-
-        QString prop;
+        tableData->m_tableId = node->m_id;
 
         {
-            prop += QString("QTableWidget{border-image:url(:/%1);}" + G_NewLine +
-                            "QTableView QTableCornerButton::section {border-image: url(:/%2);}" + G_NewLine)
+            tableData->m_tableStyle = QString("QTableWidget{border-image:url(:/%1);} QTableView QTableCornerButton::section {border-image: url(:/%2);}")
                     .arg(imageSrc).arg(cornerSrc);
         }
 
@@ -1516,8 +1517,7 @@ void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData
                 mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
             }
 
-            prop += QString("QHeaderView::section:horizonal{width:%1px;height:%2px;color:%3;border-image: url(:/%4);}" + G_NewLine +
-                            "QHeaderView::section:horizonal:checked {border-image: url(:/%5);}" + G_NewLine)
+            tableData->m_horizontalStyle = QString("QHeaderView::section:horizonal{width:%1px;height:%2px;color:%3;border-image: url(:/%4);} QHeaderView::section:horizonal:checked {border-image: url(:/%5);}")
                     .arg(hSectionSize).arg(vSectionSize).arg(sectionTextColor).arg(horizonalSectionImageSrc)
                     .arg(mouseOverImageSrc);
         }
@@ -1534,15 +1534,12 @@ void FormatProperty::createTableImageProp(RDomWidget *domWidget, Html::TableData
                 mouseOverImageSrc = switchImageURL(normalNameList.at(0) + "_mouseOver." + normalNameList.at(1));
             }
 
-            prop += QString("QHeaderView::section:vertical{width:%1px;height:%2px;color:%3;border-image: url(:/%4);}" + G_NewLine +
-                            "QHeaderView::section:vertical:checked {border-image: url(:/%5);}")
+            tableData->m_verticalStyle = QString("QHeaderView::section:vertical{width:%1px;height:%2px;color:%3;border-image: url(:/%4);} QHeaderView::section:vertical:checked {border-image: url(:/%5);}")
                     .arg(hSectionSize).arg(vSectionSize).arg(sectionTextColor).arg(horizonalSectionImageSrc)
                     .arg(mouseOverImageSrc);
         }
 
-        styleProp->setPropString(prop);
-
-        domWidget->addProperty(styleProp);
+        m_codeDatas.append(tableData);
     }
 }
 
