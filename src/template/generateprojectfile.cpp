@@ -81,20 +81,22 @@ void GenerateProjectFile::outputCpp(bool generateCode)
     CXX::CppGenerate cpp;
     cpp.setClssName(m_className);
 
-    if(generateCode){
-        QMap<CXX::CodeType,int> t_typeStatics;
 
-        //生成插件对应的代码
-        foreach (CXX::AbstractCppCodeData * codeData, m_codeDatas) {
+    QMap<CXX::CodeType,int> t_typeStatics;
 
-            if(t_typeStatics.contains(codeData->m_type)){
-                t_typeStatics.operator [](codeData->m_type)++;
-            }else{
-                t_typeStatics.insert(codeData->m_type,1);
-            }
+    //生成插件对应的代码
+    foreach (CXX::AbstractCppCodeData * codeData, m_codeDatas) {
 
-            int typeIndex = t_typeStatics.value(codeData->m_type);
+        if(t_typeStatics.contains(codeData->m_type)){
+            t_typeStatics.operator [](codeData->m_type)++;
+        }else{
+            t_typeStatics.insert(codeData->m_type,1);
+        }
 
+        int typeIndex = t_typeStatics.value(codeData->m_type);
+
+
+        if(generateCode){
             switch(codeData->m_type){
                 case CXX::MODEL_SWITCH:{
                     CXX::ModelSwitchCodeData * switchData = dynamic_cast<CXX::ModelSwitchCodeData *>(codeData);
@@ -146,22 +148,21 @@ void GenerateProjectFile::outputCpp(bool generateCode)
                     mutexButton.prepareOutput(&cpp);
                 }
                     break;
-
-                case CXX::CUSTOM_TABLE_WIDGET:{
-                    CXX::TableStyleCodeData * tableData = dynamic_cast<CXX::TableStyleCodeData *>(codeData);
-
-                    CXX::TableWidgetStyleTemplate tableStyle;
-                    tableStyle.setSameTypeIndex(typeIndex);
-                    tableStyle.setTableStyleData(tableData);
-                    tableStyle.prepareOutput(&cpp);
-                }
-                    break;
-
                 default:break;
             }
-
-            delete codeData;
         }
+
+        //表格默认使用代码生成
+        if(codeData->m_type == CXX::CUSTOM_TABLE_WIDGET){
+            CXX::TableStyleCodeData * tableData = dynamic_cast<CXX::TableStyleCodeData *>(codeData);
+
+            CXX::TableWidgetStyleTemplate tableStyle;
+            tableStyle.setSameTypeIndex(typeIndex);
+            tableStyle.setTableStyleData(tableData);
+            tableStyle.prepareOutput(&cpp);
+        }
+
+        delete codeData;
     }
 
     //head
