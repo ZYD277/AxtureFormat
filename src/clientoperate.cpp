@@ -470,8 +470,16 @@ void ClientOperate::showWarnings(QString content)
 
 void ClientOperate::generateTask(AxurePage &page)
 {
-    QString outName = "/" + QFileInfo(page.htmlFilePath).path().split("/").last() + "_qt";
-    QString outDir = ui->createOutDirRadioBtn->isChecked() ? ui->createOutDirLedit->text() + outName:QFileInfo(page.htmlFilePath).path() + "_qt";
+    QString outDir;
+
+    if(ui->generateCode->isChecked()){
+        QString outName = "/" + QFileInfo(page.htmlFilePath).path().split("/").last() + "_qt_src";
+        outDir = ui->createOutDirRadioBtn->isChecked() ? ui->createOutDirLedit->text() + outName:QFileInfo(page.htmlFilePath).path() + "_qt_src";
+    }else{
+        QString outName = "/" + QFileInfo(page.htmlFilePath).path().split("/").last() + "_qt";
+        outDir = ui->createOutDirRadioBtn->isChecked() ? ui->createOutDirLedit->text() + outName:QFileInfo(page.htmlFilePath).path() + "_qt";
+    }
+
     SwitchTask * task = new SwitchTask;
     connect(task,SIGNAL(updateProgress(SwitchProgress)),this,SLOT(updateProgress(SwitchProgress)),Qt::QueuedConnection);
     m_pool->enqueue([&](SwitchTask * switchTask,AxurePage & pp,QString outPath){
