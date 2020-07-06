@@ -222,6 +222,8 @@ struct TreeNodeData{
     QString timestamp;
     QString simpleInfo;     /*!< 简要信息 */
     QString detailInfo;     /*!< 详情信息 */
+
+    QString simpleInfoId;   /*!< 简要信息Id，用于提取color信息 */
 };
 
 struct TreeData : public BaseData{

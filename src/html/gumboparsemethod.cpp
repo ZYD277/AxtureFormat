@@ -1283,6 +1283,7 @@ void GumboParseMethod::parseTreeNodeData(GumboNodeWrapper &element, DomNode *nod
                     tdata.timestamp = grand.secondChild().firstChild().firstChild().firstChild().text();
                 }else if(grand.data_label().contains(QStringLiteral("缩略信息"))){
                     tdata.simpleInfo = grand.secondChild().firstChild().firstChild().firstChild().text();
+                    tdata.simpleInfoId = grand.id();
                 }else if(grand.data_label().contains(QStringLiteral("悬浮显示"))){
                     treeData->m_srcImage = grand.firstChild().attribute(G_NodeHtml.SRC);
                 }

@@ -354,6 +354,17 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             animated->setPropBool("true");
             domWidget->addProperty(animated);
 
+            MProperty * verticalScrollBar = new MProperty();
+            verticalScrollBar->setAttributeName("verticalScrollBarPolicy");
+            verticalScrollBar->setPropEnum("Qt::ScrollBarAlwaysOff");
+            domWidget->addProperty(verticalScrollBar);
+
+            MProperty * horizontalScrollBar = new MProperty();
+            horizontalScrollBar->setAttributeName("horizontalScrollBarPolicy");
+            horizontalScrollBar->setPropEnum("Qt::ScrollBarAlwaysOff");
+            domWidget->addProperty(horizontalScrollBar);
+
+            QString firstSimpleNodeId;
             for(int i = treeData->m_treeDatas.size() - 1; i >= 0; i--){
                 Html::TreeNodeData nodeData = treeData->m_treeDatas.at(i);
 
@@ -364,6 +375,9 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 prop->setAttributeName("text");
                 prop->setPropString(QString("%1 %2").arg(nodeData.timestamp).arg(nodeData.simpleInfo));
                 item->setProperty(prop);
+
+                if(firstSimpleNodeId.isEmpty())
+                    firstSimpleNodeId = nodeData.simpleInfoId;
 
                 //折叠信息
                 {
@@ -380,7 +394,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 domWidget->addItem(item);
             }
 
-            createTreeImageProp(domWidget,treeData);
+            createTreeImageProp(domWidget,treeData,firstSimpleNodeId);
 
             break;
         }
@@ -1456,8 +1470,9 @@ void FormatProperty::createSrollBarStyleProp(RDomWidget *domWidget, Html::Scroll
     domWidget->addProperty(styleProp);
 }
 
-void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *data)
+void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *data,QString textColorId)
 {
+    CSS::CssSegment simpleTextRules = m_pageCss.value(textColorId);
 
     QStringList selectedNameList = data->m_srcImage.split(".");
     if(selectedNameList.size() == 2){
@@ -1470,9 +1485,10 @@ void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *
         styleProp->setAttributeName("styleSheet");
         styleProp->setPropString(QString("QTreeView::item {border-image: url(:/%1);}" + G_NewLine +
                                          "QTreeView::item:hover {border-image: url(:/%2);}" + G_NewLine +
-                                         "QTreeView::item:selected:hover {}"
+                                         "QTreeView::item:selected:hover {}" + G_NewLine +
+                                         "QTreeView{background-color:rgba(0,0,0,0);border:none;color:%3;}"
                                          )
-                                 .arg(normalItemImage).arg(mouseOverImageSrc));
+                                 .arg(normalItemImage).arg(mouseOverImageSrc).arg(findRuleByName(simpleTextRules.rules,"color").value));
 
         domWidget->addProperty(styleProp);
     }

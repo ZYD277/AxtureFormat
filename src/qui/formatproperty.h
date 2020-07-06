@@ -62,7 +62,7 @@ private:
     void createSpinboxImageProp(RDomWidget * domWidget,Html::SpinboxData * data);
     void createProgressStyleProp(RDomWidget * domWidget,Html::SliderData * data);
     void createSrollBarStyleProp(RDomWidget * domWidget, Html::ScrollBarData * data, bool horizonal);
-    void createTreeImageProp(RDomWidget * domWidget, Html::TreeData * data);
+    void createTreeImageProp(RDomWidget * domWidget, Html::TreeData * data, QString textColorId);
     void createTableCodeData(Html::DomNode *node, Html::TableData *data, QString hSectionSize, QString vSectionSize, int columnCount);
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
