@@ -103,7 +103,7 @@ void GumboParseMethod::parseBody(GumboNodeWrapper &bodyNode)
     parseDiv(baseDiv,body);
 }
 
-void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
+void GumboParseMethod::parseDiv(GumboNodeWrapper divNode, DomNode *parentNode)
 {
     GumboNodeWrapperList childNodeList = divNode.children();
     for(int i = 0; i < childNodeList.size(); i++){
@@ -116,7 +116,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
             node->m_class = childEle.clazz();
             node->m_style = childEle.style();
 
-            parseNodeData(childEle,ttype,node);
+            parseNodeData(childEle,ttype,node,parentNode);
             establishRelation(parentNode,node);
 
             QString dataLabel = divNode.data_label();
@@ -155,7 +155,7 @@ void GumboParseMethod::parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode)
  * @param[in] parentElement 父节点
  * @return 若能解析则返回对应控件类型，否则返回无效
  */
-NodeType GumboParseMethod::getNodeType(GumboNodeWrapper &element, GumboNodeWrapper parentElement)
+NodeType GumboParseMethod::getNodeType(GumboNodeWrapper element, GumboNodeWrapper parentElement)
 {
     //TODO 20200112 容器节点如何检测？？？？
     if(element.valid()){
@@ -351,11 +351,12 @@ void GumboParseMethod::establishRelation(DomNode *parentNode, DomNode *childNode
  * @param[in] element 待解析的确定的元素节点
  * @param[in] type 元素类型
  * @param[in] node 元素节点
+ * @param[in] parentNode 元素父节点
  */
-void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node)
+void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node, DomNode *parentNode)
 {
     switch(type){
-        case RCONTAINER:parseContainerNodeData(element,node);break;
+        case RCONTAINER:parseContainerNodeData(element,node,parentNode);break;
         case RUNMENUBUTTON:
         case RBUTTON:parseButtonNodeData(element,node);break;
         case RCHECKBOX:
@@ -384,7 +385,7 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     }
 }
 
-void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode *node)
+void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode *node,DomNode *parentNode)
 {
     //解析定制控件‘系统控制区’中第一个子div的data-label值为‘外框’
     BaseData * data = new BaseData();
@@ -395,6 +396,27 @@ void GumboParseMethod::parseContainerNodeData(GumboNodeWrapper &element, DomNode
         data->m_srcImage = element.firstChild().attribute(G_NodeHtml.SRC);
         if(!(data->m_srcImage.isEmpty())){
             data->m_srcImageId = element.firstChild().id();
+
+            //NOTE 20201229 右键垂直菜单的尺寸依赖“外框”和其子图形节点
+            if(element.parent().valid()){
+                QString dlabel = element.parent().data_label();
+                //右键垂直菜单以及二级菜单框
+                if(dlabel.contains(QStringLiteral("右键垂直菜单"))){
+                    data->m_geometryDepend.enable = true;
+                    data->m_geometryDepend.dependGeometryId = data->m_srcImageId;
+                    data->m_geometryDepend.operates.insert(P_LEFT,CustomPositionOperate(true,O_ADD));
+                    data->m_geometryDepend.operates.insert(P_TOP,CustomPositionOperate(true,O_ADD));
+                    data->m_geometryDepend.operates.insert(P_WIDTH,CustomPositionOperate(true,O_REPLACE));
+                    data->m_geometryDepend.operates.insert(P_HEIGHT,CustomPositionOperate(true,O_REPLACE));
+                }else if(dlabel.contains(QStringLiteral("二级菜单"))){
+                    data->m_geometryDepend.enable = true;
+                    data->m_geometryDepend.dependGeometryId = data->m_srcImageId;
+                    data->m_geometryDepend.operates.insert(P_LEFT,CustomPositionOperate(false,O_ADD,0));
+                    data->m_geometryDepend.operates.insert(P_TOP,CustomPositionOperate(false,O_ADD,0));
+                    data->m_geometryDepend.operates.insert(P_WIDTH,CustomPositionOperate(true,O_REPLACE));
+                    data->m_geometryDepend.operates.insert(P_HEIGHT,CustomPositionOperate(true,O_REPLACE));
+                }
+            }
         }
     }
 
@@ -667,6 +689,7 @@ void GumboParseMethod::parseCustomVirtualContainer(GumboNodeWrapper &element, Do
         data->m_signals.append(sinfo);
     }else if(dataLabel.contains(QStringLiteral("右键垂直菜单"))){   //右键垂直菜单
         data->m_visible = true;
+        data->m_dataLabel = element.data_label();
 
         GumboNodeWrapperList children = element.children();
         for(int i = 0; i< children.size(); i++){
@@ -1310,7 +1333,8 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
     QString dataLabel = element.data_label();
 
     //自定义控件窗体
-    if(dataLabel.contains(QStringLiteral("窗体"))){
+    if(dataLabel.contains(QStringLiteral("窗体")))
+    {
         if(!dataLabel.contains(QStringLiteral("可见"))){
             data->m_visible = false;
         }
@@ -1387,6 +1411,15 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                 GumboNodeWrapper child = children.at(i);
                 if(child.data_label().contains(QStringLiteral("外框"))){
                     data->m_geometryReferenceId = child.id();
+
+                    if(!(child.firstChild().attribute(G_NodeHtml.SRC).isEmpty())){
+                        data->m_geometryDepend.enable = true;
+                        data->m_geometryDepend.dependGeometryId = child.firstChild().id();
+                        data->m_geometryDepend.operates.insert(P_LEFT,CustomPositionOperate(true,O_ADD));
+                        data->m_geometryDepend.operates.insert(P_TOP,CustomPositionOperate(true,O_ADD));
+                        data->m_geometryDepend.operates.insert(P_WIDTH,CustomPositionOperate(false,O_ADD));
+                        data->m_geometryDepend.operates.insert(P_HEIGHT,CustomPositionOperate(true,O_REPLACE));
+                    }
                 }
             }
         }else if(dataLabel.contains(QStringLiteral("菜单项"))){        //菜单选项(触发二级菜单)
@@ -1395,6 +1428,26 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                 GumboNodeWrapper child = children.at(i);
                 if(child.data_label().contains(QStringLiteral("选项"))){
                     data->m_geometryReferenceId = child.id();
+                }
+            }
+
+            //只对二级菜单有效，一级菜单不需设置
+            if(!element.parent().data_label().contains(QStringLiteral("右键垂直菜单"))){
+                //NOTE 20201229 二级菜单项需要加上偏移量
+                GumboNodeWrapperList brothers = element.parent().children();
+                for(int i = 0; i < brothers.size(); i++){
+                    GumboNodeWrapper tmpBro = brothers.at(i);
+                    if(tmpBro.data_label().contains(QStringLiteral("外框"))){
+                        if(!(tmpBro.firstChild().attribute(G_NodeHtml.SRC).isEmpty())){
+                            data->m_geometryDepend.enable = true;
+                            data->m_geometryDepend.dependGeometryId = tmpBro.firstChild().id();
+                            data->m_geometryDepend.operates.insert(P_LEFT,CustomPositionOperate(true,O_SUB));
+                            data->m_geometryDepend.operates.insert(P_TOP,CustomPositionOperate(true,O_IGNORE));
+                            data->m_geometryDepend.operates.insert(P_WIDTH,CustomPositionOperate(false,O_ADD,0));
+                            data->m_geometryDepend.operates.insert(P_HEIGHT,CustomPositionOperate(false,O_ADD,0));
+                        }
+                        break;
+                    }
                 }
             }
         }else if(dataLabel.contains(QStringLiteral("分割线"))){        //菜单选项(触发二级菜单)

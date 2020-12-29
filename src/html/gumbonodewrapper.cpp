@@ -73,6 +73,13 @@ GumboNodeWrapperList GumboNodeWrapper::children()
     });
 }
 
+GumboNodeWrapper GumboNodeWrapper::parent()
+{
+    if(m_node->parent)
+        return GumboNodeWrapper(m_node->parent);
+    return GumboNodeWrapper();
+}
+
 /*!
  * @brief 获取第一个元素子节点
  * @attention 若不存在子节点则返回空

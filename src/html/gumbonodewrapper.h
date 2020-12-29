@@ -32,6 +32,7 @@ public:
     GumboNodeWrapperList elementsByTagName(QString tagName);
     GumboNodeWrapperList children();
 
+    GumboNodeWrapper parent();
     GumboNodeWrapper firstChild();
     GumboNodeWrapper secondChild();
     GumboNodeWrapper lastChild();

@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = AxtureFormat
 TEMPLATE = app
+CONFIG += debug_and_release
 
 
 SOURCES += main.cpp\
@@ -119,7 +120,12 @@ RC_ICONS = logo.ico
 DEPENDLIB_PATH=$$PWD/../3rdPartyLib/
 
 INCLUDEPATH+="$$DEPENDLIB_PATH/include/gumbo"
-LIBS+="$$DEPENDLIB_PATH/lib/shared/debug/gumbo.lib"
+
+CONFIG(debug, debug|release) {
+    LIBS+="$$DEPENDLIB_PATH/lib/shared/2013/debug/gumbo.lib"
+}else{
+    LIBS+="$$DEPENDLIB_PATH/lib/shared/2013/release/gumbo.lib"
+}
 
 RESOURCES += \
     images.qrc

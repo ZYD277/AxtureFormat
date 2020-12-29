@@ -48,7 +48,7 @@ public:
      * @param[in] rootNode 文档根节点
      * @return bool 是否解析成功
      */
-    virtual bool  startParse(QDomNode & /*rootNode*/){return true;}
+    virtual bool  startParse(const QDomNode & /*rootNode*/){return true;}
 
     /*!
      * @brief 保存xml文件信息

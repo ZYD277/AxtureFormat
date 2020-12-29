@@ -35,16 +35,16 @@ private:
     bool parseFile(RTextFile * file);
 
     void parseBody(GumboNodeWrapper &bodyNode);
-    void parseDiv(GumboNodeWrapper &divNode, DomNode *parentNode);
+    void parseDiv(GumboNodeWrapper divNode, DomNode *parentNode);
 
-    NodeType getNodeType(GumboNodeWrapper &element, GumboNodeWrapper parentElement);
+    NodeType getNodeType(GumboNodeWrapper element, GumboNodeWrapper parentElement);
 
     void printBody(DomNode *node);
     inline void establishRelation(DomNode *parentNode,DomNode *childNode);
 
     //解析特定控件
-    void parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node);
-    void parseContainerNodeData(GumboNodeWrapper &element, DomNode *node);
+    void parseNodeData(GumboNodeWrapper &element, NodeType type, DomNode *node,DomNode *parentNode);
+    void parseContainerNodeData(GumboNodeWrapper &element, DomNode *node, DomNode *parentNode);
     void parseButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseRadioButtonNodeData(GumboNodeWrapper &element, DomNode *node);
     void parseDynamicPanelNodeData(GumboNodeWrapper &element, DomNode *node);

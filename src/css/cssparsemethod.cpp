@@ -431,7 +431,7 @@ bool CssParseMethod::removeComments(QString & originData)
         return false;
 
     while(commentQueue.size() > 0){
-        MultiComment & com = commentQueue.pop();
+        MultiComment com = commentQueue.pop();
         originData = originData.remove(com.startPos,com.endPos - com.startPos + 1);
     }
 

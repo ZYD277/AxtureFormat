@@ -28,7 +28,7 @@ private:
     void outputCpp(bool generateCode);
     void outputMain();
 
-    void writeToFile(QString & content,QString fileName);
+    void writeToFile(QString content, QString fileName);
 
 private:
     QString m_projectPath;

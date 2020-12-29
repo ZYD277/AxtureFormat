@@ -902,6 +902,62 @@ FormatProperty::StyleMap FormatProperty::extractCssRule(Html::DomNode *node)
  */
 QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::DomNode *node, QRect &parentRect)
 {
+    //处理尺寸依赖的计算
+    auto processGeometryReference = [&](Html::DomNode * tmpNode,QRect & rectResult){
+        Html::GeometryReferenceDesc geoDesc = tmpNode->m_data->m_geometryDepend;
+        CSS::CssSegment dependCSS = m_pageCss.value(geoDesc.dependGeometryId);
+
+        QMap<QString,QString> dependMap;
+        foreach(const CSS::CssRule & crule,dependCSS.rules){
+            dependMap.insert(crule.name,crule.value);
+        }
+
+        double dLeft = removePxUnit(dependMap.value("left"));
+        double dTop = removePxUnit(dependMap.value("top"));
+        double dWidth = removePxUnit(dependMap.value("width"));
+        double dHeight = removePxUnit(dependMap.value("height"));
+
+        auto calcVal = [](int myVal,int referenceVal,Html::CustomPositionOperate & operate){
+            double val = myVal;
+
+            double opereateVal = operate.useReferenceGeo ? referenceVal : operate.customGeoVal;
+
+            if(operate.opereate == Html::O_ADD){
+                val = myVal + opereateVal;
+            }else if(operate.opereate == Html::O_SUB){
+                val = myVal - opereateVal;
+            }else if(operate.opereate == Html::O_REPLACE){
+                val = opereateVal;
+            }
+
+            return val;
+        };
+
+        if(geoDesc.operates.contains(Html::P_LEFT)){
+            Html::CustomPositionOperate operate = geoDesc.operates.value(Html::P_LEFT);
+            rectResult.setX(calcVal(rectResult.x(),dLeft,operate));
+        }
+
+        if(geoDesc.operates.contains(Html::P_TOP)){
+            Html::CustomPositionOperate operate = geoDesc.operates.value(Html::P_TOP);
+            if(operate.opereate != Html::O_OFFSET){
+                rectResult.setY(calcVal(rectResult.y(),dTop,operate));
+            }else{
+                rectResult.moveTopLeft(QPoint(rectResult.x(),rectResult.top() - dTop));
+            }
+        }
+
+        if(geoDesc.operates.contains(Html::P_WIDTH)){
+            Html::CustomPositionOperate operate = geoDesc.operates.value(Html::P_WIDTH);
+            rectResult.setWidth(calcVal(rectResult.width(),dWidth,operate));
+        }
+
+        if(geoDesc.operates.contains(Html::P_HEIGHT)){
+            Html::CustomPositionOperate operate = geoDesc.operates.value(Html::P_HEIGHT);
+            rectResult.setHeight(calcVal(rectResult.height(),dHeight,operate));
+        }
+    };
+
     QRect rect(removePxUnit(cssMap.value("left")),removePxUnit(cssMap.value("top")),
                removePxUnit(cssMap.value("width")),removePxUnit(cssMap.value("height")));
 
@@ -915,6 +971,10 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             int height = removePxUnit(findRuleByName(rules,"height").value);
 
             rect = QRect(left,top,width,height);
+
+            if(node->m_data->m_geometryDepend.enable){
+                processGeometryReference(node,rect);
+            }
         }else{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
             rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
@@ -1000,7 +1060,6 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
         rect.setWidth(removePxUnit(twidth));
         rect.setHeight(removePxUnit(theight));
     }
-
     else if(node->m_type == Html::RRADIO_BUTTON || node->m_type == Html::RCHECKBOX)
     {
         if(rect.width() == 0 || rect.height() == 0){
@@ -1050,6 +1109,12 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
     }else if(node->m_type == Html::RTREE){
         Html::TreeData * treeData = dynamic_cast<Html::TreeData *>(node->m_data);
         rect = QRect(treeData->m_left,treeData->m_top,treeData->m_width,treeData->m_height);
+    }else if(node->m_type == Html::RCONTAINER){
+        //NOTE 20201229 解决“右键垂直菜单”尺寸由子控件“外框”和背景图片两者计算产生
+        if(node->m_data->m_geometryDepend.enable){
+
+            processGeometryReference(node,rect);
+        }
     }
 
     if(rect.left() < 0)

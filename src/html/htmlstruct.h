@@ -4,6 +4,7 @@
 #include <QString>
 #include <QStringList>
 #include <QSharedPointer>
+#include <QMap>
 
 #include "../template/cppstruct.h"
 
@@ -104,6 +105,43 @@ struct SignalSlotInfo{
     QString m_slot;
 };
 
+enum PositionType{
+    P_LEFT,
+    P_TOP,
+    P_WIDTH,
+    P_HEIGHT
+};
+
+enum PositionOperate{
+    O_ADD,          /*!< 用依赖控件的属性【加上】当前自身的属性 */
+    O_SUB,          /*!< 用依赖控件的属性【减去】当前自身的属性 */
+    O_REPLACE,      /*!< 用依赖控件的属性【替换】当前自身的属性 */
+    O_OFFSET,       /*!< 用依赖控件的属性【偏移】当前自身的属性 */
+    O_IGNORE        /*!< 忽略依赖控件的属性 */
+};
+
+struct CustomPositionOperate{
+    CustomPositionOperate(bool useReference,PositionOperate op,int customVal = 0):useReferenceGeo(useReference),opereate(op),customGeoVal(customVal){}
+    CustomPositionOperate():useReferenceGeo(true),customGeoVal(0){}
+    bool useReferenceGeo;       /*!< true:使用引用者的属性；false:使用自定义的属性 */
+    PositionOperate opereate;
+    int customGeoVal;           /*!< useReferenceGeo为false时，此属性有效 */
+};
+
+/*!
+ * @brief 控件尺寸引用描述
+ * @details 在如“右键垂直菜单中”，其真实的尺寸是由“外框”子元素和图片元素计算而来
+ * @example 若控件A的Geometry由B和C计算而来，B为主依赖，C为辅依赖。从B的视角来观察，
+ *      1.若rect中的left属性依赖B和C的相加，那么会产生一个依赖操作及qMakepair(P_LEFT,O_ADD);
+ *      2.若rect的width属性由C指定，那么会产生一个依赖操作即qMakepair(P_WIDTH,O_REPLACE);
+ */
+struct GeometryReferenceDesc{
+    GeometryReferenceDesc():enable(false){}
+    bool enable;
+    QString dependGeometryId;        /*!< 依赖的控件ID */
+    QMap<PositionType,CustomPositionOperate>  operates;       /*!< 产生依赖时，如何将自身的 尺寸和依赖的尺寸进行计算 */
+};
+
 /*!
  * @brief 控件基础通用属性
  */
@@ -138,6 +176,7 @@ struct BaseData{
     int m_height;
 
     QStringList m_referenceIds;     /*!< 当前控件的样式需要引用其它ID的样式，可参考自定义控件‘输入框’中 */
+    GeometryReferenceDesc m_geometryDepend;     /*!< 控件尺寸计算依赖规则描述 */
     QString m_dataLabel;            /*!< 元素的data-label属性值 */
 
     QList<SignalSlotInfo> m_signals;      /*!< 需生成的信号槽描述信息 */

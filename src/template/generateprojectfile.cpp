@@ -203,7 +203,7 @@ void GenerateProjectFile::outputMain()
     writeToFile(content,fileName);
 }
 
-void GenerateProjectFile::writeToFile(QString &content, QString fileName)
+void GenerateProjectFile::writeToFile(QString content, QString fileName)
 {
     QFile proFile(fileName);
     if(proFile.open(QFile::WriteOnly)){
