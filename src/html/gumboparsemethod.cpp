@@ -737,8 +737,9 @@ void GumboParseMethod::parseProgreesBarNodeData(GumboNodeWrapper &element,DomNod
                       data->m_handleId = grandChild.firstChild().firstChild().id();
                       data->m_srcImage = grandChild.firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
                   }else if(grandDataLabel.contains(QStringLiteral("选中"))){ //handle:hover
-                      data->m_pressedHandleId = grandChild.firstChild().firstChild().id();
-                      data->m_checkedImage = grandChild.firstChild().firstChild().firstChild().attribute(G_NodeHtml.SRC);
+                      //WARNING 20201230 此处需要axure页面中设置一个标识，用来提示较大图片
+                      data->m_pressedHandleId = grandChild.firstChild().secondChild().id();
+                      data->m_checkedImage = grandChild.firstChild().secondChild().firstChild().attribute(G_NodeHtml.SRC);
                   }
             }
         }

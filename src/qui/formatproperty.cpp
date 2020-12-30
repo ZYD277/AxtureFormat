@@ -1361,20 +1361,25 @@ void FormatProperty::createProgressStyleProp(RDomWidget *domWidget, Html::Slider
 
         handleHeight = findRuleByName(seg.rules,"height").value;
 
-        prop += QString("QSlider::handle:%1 {image: url(:/%2); width:%3; height: %4;border-radius: 1px;}" + G_NewLine)
+        prop += QString("QSlider::handle:%1 {image: url(:/%2); width:%3; height: %4; margin:%5; border-radius: 1px; padding:0px %6px;}" + G_NewLine)
                 .arg(direction)
                 .arg(switchImageURL(data->m_srcImage))
                 .arg(findRuleByName(seg.rules,"width").value)
-                .arg(handleHeight);
+                .arg(handleHeight)
+                .arg(QString("-%1px").arg(removePxUnit(handleHeight)/2))
+                .arg(removePxUnit(handleHeight)/2 + 1);
 
 
         seg = m_pageCss.value(data->m_pressedHandleId);
 
-        prop += QString("QSlider::handle:%1:hover {image: url(:/%2); width:%3; height: %4;border-radius: 1px;}" + G_NewLine)
+        QString tmpHeight = findRuleByName(seg.rules,"height").value;
+
+        prop += QString("QSlider::handle:%1:hover {image: url(:/%2); width:%3; height: %4; margin:%5; border-radius: 1px;}" + G_NewLine)
                 .arg(direction)
                 .arg(switchImageURL(data->m_checkedImage))
                 .arg(findRuleByName(seg.rules,"width").value)
-                .arg(findRuleByName(seg.rules,"height").value);
+                .arg(tmpHeight)
+                .arg(QString("-%1px").arg(removePxUnit(tmpHeight)/2));
     }
 
     //add-line和groove
@@ -1385,7 +1390,7 @@ void FormatProperty::createProgressStyleProp(RDomWidget *domWidget, Html::Slider
         prop += QString("QSlider::groove:%1 {background: %2; height: %3;border-radius: 1px;padding-left:-1px;padding-right:-1px;}" + G_NewLine)
                 .arg(direction)
                 .arg(switchCssRgbaToQt(findRuleByName(seg.rules,"background-color").value))
-                .arg(handleHeight);
+                .arg(findRuleByName(seg.rules,"height").value);
     }
 
 
