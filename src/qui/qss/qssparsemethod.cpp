@@ -181,7 +181,7 @@ void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
                     if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i))) == Html::RTREE
                                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABLE)){
 
-                        /*!< 设计的子节点和主节点的查找*/
+                        /*!< 设计的子节点和主节点的查找 */
                         QStringList selectorNames = divList.at(i).split("_div_");
                         QString selectorName = seg.selectorName;
 
@@ -223,7 +223,6 @@ void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
                     else if(m_ruleSize != 0 && (m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RCHECKBOX
                                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RRADIO_BUTTON
                                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RDROPLIST
-                                           ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSPINBOX
                                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RPROGRESSBAR
                                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RSCROLLBAR
                                            ||m_selectorType.values().at(qssList.indexOf(divList.at(i)))  == Html::RTABWIDGET))
@@ -260,19 +259,6 @@ void QSSParseMethod::generateCss(RTextFile *file,CSS::CssMap &cssMap)
                                     {
                                         QString back = selectorNames.at(1);
                                         selectorName = formatProperty.getTypeName(Html::RDROPLIST) + "#" + back.remove("back");
-                                    }
-                                    break;
-                                }
-                                case Html::RSPINBOX:{
-                                    if(selectorNames.at(1).contains("spinbox"))
-                                    {
-                                        QString spinBox = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinBox.remove("spinbox");
-                                    }
-                                    else if(selectorNames.at(1).contains("text"))
-                                    {
-                                        QString spinText = selectorNames.at(1);
-                                        selectorName = formatProperty.getTypeName(Html::RSPINBOX) + "#" + spinText.remove("text");
                                     }
                                     break;
                                 }

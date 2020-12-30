@@ -674,16 +674,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
         case Html::RSPINBOX:{
             Html::SpinboxData *spinBox = static_cast<Html::SpinboxData *>(node->m_data);
 
-            if(!spinBox->m_sinBoxTextId.isEmpty()){
-                QString m_sinBoxTextId = spinBox->m_sinBoxTextId + "_div_text" + node->m_id;
-                m_selectorType.insert(m_sinBoxTextId,Html::RSPINBOX);
-            }
-
-            if(!spinBox->m_spinBoxId.isEmpty()){
-                QString m_spinbox = spinBox->m_spinBoxId + "_div_spinbox" + node->m_id;
-                m_selectorType.insert(m_spinbox,Html::RSPINBOX);
-            }
-
             createSpinboxImageProp(domWidget,spinBox);
 
             MProperty * miniMum = new MProperty();
@@ -834,6 +824,7 @@ void FormatProperty::processNodeStyle(Html::DomNode *node)
                 }
 
                 m_pageCss.remove(inputId);
+				m_pageCss.remove(node->m_id + "_div");			//NOTE 20201230 在axure9中，比axure8多出来一个_div节点
 
                 QString divId = referenceId + "_div";
                 if(m_pageCss.contains(divId)){
@@ -845,6 +836,7 @@ void FormatProperty::processNodeStyle(Html::DomNode *node)
 
                 break;
             }
+
             default:break;
         }
     }
@@ -1313,24 +1305,47 @@ void FormatProperty::createSpinboxImageProp(RDomWidget *domWidget, Html::Spinbox
     QString upArrowOver = switchImageURL(data->m_upArrowMouseOverImage);
     QString downArrowOver = switchImageURL(data->m_downArrowMouseOverImage);
 
+	CSS::CssSegment divCss = m_pageCss.value(data->m_spinBoxId + "_div");
+	CSS::CssSegment inputCss = m_pageCss.value(data->m_sinBoxTextId + "_input");
+
+	CSS::CssSegment divCssHover = m_pageCss.value(data->m_spinBoxId + ":hover");
+
+	//NOTE 20201230 此处CSS样式表中包含多个border-width属性，取最后设置那个
+	CSS::Rules rules = findRulesByName(divCss.rules, "border-width");
+	QString borderWidth;
+	if (rules.size() > 0)
+		borderWidth = rules.last().value;
+
+	QString prop;
+	prop += QString("QSpinBox{background-color:%1; border-color:%2;border-width:%3;color:%4;border-style:%5}" + G_NewLine)
+			.arg(switchCssRgbaToQt(findRuleByName(divCss.rules, "background-color").value))
+			.arg(switchCssRgbaToQt(findRuleByName(divCss.rules, "border-color").value))
+			.arg(borderWidth)
+			.arg(findRuleByName(inputCss.rules,"color").value)
+			.arg(findRuleByName(divCss.rules, "border-style").value);
+
+	prop += QString("QSpinBox:hover{border-color:%1;border-width:%2;border-style:%3;}" + G_NewLine)
+			.arg(switchCssRgbaToQt(findRuleByName(divCssHover.rules, "border-color").value))
+			.arg(borderWidth)
+			.arg(findRuleByName(divCssHover.rules, "border-style").value);
+
+	//上下箭头
+	MProperty * styleProp = new MProperty();
+	styleProp->setAttributeName("styleSheet");
     if(!upArrow.isEmpty() && !downArrow.isEmpty() && !upArrowOver.isEmpty() && !downArrowOver.isEmpty()){
-        MProperty * styleProp = new MProperty();
-        styleProp->setAttributeName("styleSheet");
-        styleProp->setPropString(QString("QSpinBox::up-arrow {image:url(:/%1);}" + G_NewLine +
+		prop += QString("QSpinBox::up-arrow {image:url(:/%1);}" + G_NewLine +
                                          "QSpinBox::up-arrow:hover {image: url(:/%2);}" + G_NewLine +
                                          "QSpinBox::down-arrow {image: url(:/%3);}" + G_NewLine +
                                          "QSpinBox::down-arrow:hover {image: url(:/%4);}")
-                                 .arg(upArrow).arg(upArrowOver).arg(downArrow).arg(downArrowOver));
-
-        domWidget->addProperty(styleProp);
+                                 .arg(upArrow).arg(upArrowOver).arg(downArrow).arg(downArrowOver);
     }else{
-        MProperty * styleProp = new MProperty();
-        styleProp->setAttributeName("styleSheet");
-        styleProp->setPropString(QString("QSpinBox::up-arrow {width:0px;}" + G_NewLine +
-                                         "QSpinBox::down-arrow {width:0px;}" + G_NewLine));
-
-        domWidget->addProperty(styleProp);
+		prop += QString("QSpinBox::up-arrow {width:0px;}" + G_NewLine +
+                                         "QSpinBox::down-arrow {width:0px;}" + G_NewLine);
     }
+
+	styleProp->setPropString(prop);
+
+	domWidget->addProperty(styleProp);
 }
 
 void FormatProperty::createProgressStyleProp(RDomWidget *domWidget, Html::SliderData *data)

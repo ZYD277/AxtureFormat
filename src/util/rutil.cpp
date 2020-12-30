@@ -235,6 +235,7 @@ QString RUtil::switchBytesUnit(quint64 bytes)
 
 QSize RUtil::screenSize(int num)
 {
+	return QSize(1920,1080);
     if(num >= 0 && num < qApp->desktop()->screenCount())
     {
         return qApp->desktop()->screen(num)->size();
