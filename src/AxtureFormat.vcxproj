@@ -1,0 +1,361 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{346F294C-A528-3AAF-9C70-8E33BC63D288}</ProjectGuid>
+    <RootNamespace>AxtureFormat</RootNamespace>
+    <Keyword>QtVS_v303</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.17763.0</WindowsTargetPlatformMinVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' or !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+    <OutputDirectory>release\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>release\</IntermediateDirectory>
+    <PrimaryOutput>AxtureFormat</PrimaryOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+    <OutputDirectory>debug\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>debug\</IntermediateDirectory>
+    <PrimaryOutput>AxtureFormat</PrimaryOutput>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\..\$(SolutionName)_build\$(Configuration)\</OutDir>
+    <IntDir>..\..\$(SolutionName)_build\$(Configuration)_$(BaseIntermediateOutputPath)</IntDir>
+    <TargetName>AxtureFormat</TargetName>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IncludePath>$(SolutionDir)\3rdPartyLib\include\gumbo;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\3rdPartyLib\lib\shared\$(DefaultQtVersion)\$(Configuration);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\..\$(SolutionName)_build\$(Configuration)\</OutDir>
+    <IntDir>..\..\$(SolutionName)_build\$(Configuration)_$(BaseIntermediateOutputPath)</IntDir>
+    <TargetName>AxtureFormat</TargetName>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>$(SolutionDir)\3rdPartyLib\lib\shared\$(DefaultQtVersion)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <QtInstall>msvc2017</QtInstall>
+    <QtModules>core;xml;gui;widgets</QtModules>
+  </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <QtInstall>msvc2017</QtInstall>
+    <QtModules>core;xml;gui;widgets</QtModules>
+  </PropertyGroup>
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
+    <Import Project="$(QtMsBuild)\qt.props" />
+  </ImportGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;.;..\3rdPartyLib\include\gumbo;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Include;release;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_USING_V140_SDK71_;_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;_ATL_XP_TARGETING;QT_NO_DEBUG;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <ProgramDataBaseFileName>
+      </ProgramDataBaseFileName>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>gumbo.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib;C:\opensslx86\lib;C:\Utils\my_sql\mysql-5.6.11-win32\lib;C:\Utils\postgresqlx86\pgsql\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <LinkIncremental>false</LinkIncremental>
+      <OutputFile>$(OutDir)\AxtureFormat.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_USING_V140_SDK71_;_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;_ATL_XP_TARGETING;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_GUI_LIB;QT_XML_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <QtMoc>
+      <CompilerFlavor>msvc</CompilerFlavor>
+      <Include>$(IntDir)moc_predefs.h</Include>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
+      <DynamicSource>output</DynamicSource>
+      <QtMocDir>$(IntDir)moc\</QtMocDir>
+      <QtMocFileName>moc_%(Filename).cpp</QtMocFileName>
+    </QtMoc>
+    <QtRcc>
+      <InitFuncName>images</InitFuncName>
+      <Compression>default</Compression>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <QtRccDir>$(IntDir)rcc</QtRccDir>
+      <QtRccFileName>qrc_%(Filename).cpp</QtRccFileName>
+    </QtRcc>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <QtUicDir>$(IntDir)uic</QtUicDir>
+      <QtUicFileName>ui_%(Filename).h</QtUicFileName>
+    </QtUic>
+    <PostBuildEvent>
+      <Command>$(QtDllPath)\windeployqt.exe $(TargetDir)$(AssemblyName).$(OutputType)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;.;..\3rdPartyLib\include\gumbo;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Include;debug;/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_USING_V140_SDK71_;_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;_ATL_XP_TARGETING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)\3rdPartyLib\lib\shared\$(DefaultQtVersion)\$(Configuration)\gumbo.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib;C:\opensslx86\lib;C:\Utils\my_sql\mysql-5.6.11-win32\lib;C:\Utils\postgresqlx86\pgsql\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <OutputFile>$(OutDir)\AxtureFormat.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_USING_V140_SDK71_;_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;_ATL_XP_TARGETING;QT_WIDGETS_LIB;QT_GUI_LIB;QT_XML_LIB;QT_CORE_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <QtMoc>
+      <CompilerFlavor>msvc</CompilerFlavor>
+      <Include>../$(Configuration)/moc_predefs.h</Include>
+      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
+      <DynamicSource>output</DynamicSource>
+      <QtMocFileName>moc_%(Filename).cpp</QtMocFileName>
+    </QtMoc>
+    <QtRcc>
+      <Compression>default</Compression>
+      <InitFuncName>images</InitFuncName>
+      <ExecutionDescription>Rcc'ing %(Identity)...</ExecutionDescription>
+      <QtRccFileName>qrc_%(Filename).cpp</QtRccFileName>
+    </QtRcc>
+    <QtUic>
+      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
+      <QtUicDir>$(IntDir)uic\</QtUicDir>
+      <QtUicFileName>ui_%(Filename).h</QtUicFileName>
+    </QtUic>
+    <PostBuildEvent>
+      <Command>$(QtDllPath)\windeployqt.exe $(TargetDir)$(AssemblyName).$(OutputType)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="template\code\abstractcodetemplate.cpp" />
+    <ClCompile Include="clientoperate.cpp" />
+    <ClCompile Include="template\cppgenerate.cpp" />
+    <ClCompile Include="template\cppstruct.cpp" />
+    <ClCompile Include="css\cssparsemethod.cpp" />
+    <ClCompile Include="css\cssparser.cpp" />
+    <ClCompile Include="css\cssstruct.cpp" />
+    <ClCompile Include="qui\exportui.cpp" />
+    <ClCompile Include="util\fileutils.cpp" />
+    <ClCompile Include="qui\formatproperty.cpp" />
+    <ClCompile Include="template\generateprojectfile.cpp" />
+    <ClCompile Include="global.cpp" />
+    <ClCompile Include="html\gumbonodewrapper.cpp" />
+    <ClCompile Include="html\gumboparsemethod.cpp" />
+    <ClCompile Include="head.cpp" />
+    <ClCompile Include="html\htmlparser.cpp" />
+    <ClCompile Include="html\htmlstruct.cpp" />
+    <ClCompile Include="logoutputer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="qui\props\mattribute.cpp" />
+    <ClCompile Include="qui\props\mcolumn.cpp" />
+    <ClCompile Include="qui\props\mconnection.cpp" />
+    <ClCompile Include="qui\props\mconnections.cpp" />
+    <ClCompile Include="qui\props\mdomresource.cpp" />
+    <ClCompile Include="qui\props\mdomwidget.cpp" />
+    <ClCompile Include="qui\props\mitem.cpp" />
+    <ClCompile Include="template\code\modelswitchtemplate.cpp" />
+    <ClCompile Include="qui\props\mproperty.cpp" />
+    <ClCompile Include="qui\props\mrect.cpp" />
+    <ClCompile Include="qui\props\mrow.cpp" />
+    <ClCompile Include="template\code\mutexbuttontemplate.cpp" />
+    <ClCompile Include="template\code\pageswitchtemplate.cpp" />
+    <ClCompile Include="template\code\playcontroltemplate.cpp" />
+    <ClCompile Include="qui\qrc\qrcoutput.cpp" />
+    <ClCompile Include="qui\qrc\qrcparsemethod.cpp" />
+    <ClCompile Include="qui\qss\qssoutput.cpp" />
+    <ClCompile Include="qui\qss\qssparsemethod.cpp" />
+    <ClCompile Include="qui\qtoutput.cpp" />
+    <ClCompile Include="qui\qtstruct.cpp" />
+    <ClCompile Include="util\rsingleton.cpp" />
+    <ClCompile Include="util\rutil.cpp" />
+    <ClCompile Include="switchtask.cpp" />
+    <ClCompile Include="template\code\tablewidgetstyletemplate.cpp" />
+    <ClCompile Include="util\threadpool.cpp" />
+    <ClCompile Include="template\code\twswitchtemplate.cpp" />
+    <ClCompile Include="viewdelegate.cpp" />
+    <ClCompile Include="viewmodel.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="template\code\abstractcodetemplate.h" />
+    <QtMoc Include="clientoperate.h">
+    </QtMoc>
+    <ClInclude Include="template\cppgenerate.h" />
+    <ClInclude Include="template\cppstruct.h" />
+    <ClInclude Include="css\cssparsemethod.h" />
+    <QtMoc Include="css\cssparser.h">
+    </QtMoc>
+    <ClInclude Include="css\cssstruct.h" />
+    <ClInclude Include="qui\exportui.h" />
+    <QtMoc Include="util\fileutils.h">
+    </QtMoc>
+    <ClInclude Include="qui\formatproperty.h" />
+    <ClInclude Include="template\generateprojectfile.h" />
+    <ClInclude Include="global.h" />
+    <ClInclude Include="html\gumbonodewrapper.h" />
+    <ClInclude Include="html\gumboparsemethod.h" />
+    <ClInclude Include="head.h" />
+    <QtMoc Include="html\htmlparser.h">
+    </QtMoc>
+    <ClInclude Include="html\htmlstruct.h" />
+    <QtMoc Include="logoutputer.h">
+    </QtMoc>
+    <ClInclude Include="qui\props\mattribute.h" />
+    <ClInclude Include="qui\props\mcolumn.h" />
+    <ClInclude Include="qui\props\mconnection.h" />
+    <ClInclude Include="qui\props\mconnections.h" />
+    <ClInclude Include="qui\props\mdomresource.h" />
+    <ClInclude Include="qui\props\mdomwidget.h" />
+    <ClInclude Include="qui\props\mitem.h" />
+    <ClInclude Include="template\code\modelswitchtemplate.h" />
+    <ClInclude Include="qui\props\mproperty.h" />
+    <ClInclude Include="qui\props\mrect.h" />
+    <ClInclude Include="qui\props\mrow.h" />
+    <ClInclude Include="template\code\mutexbuttontemplate.h" />
+    <ClInclude Include="template\code\pageswitchtemplate.h" />
+    <ClInclude Include="template\code\playcontroltemplate.h" />
+    <ClInclude Include="qui\qrc\qrcoutput.h" />
+    <ClInclude Include="qui\qrc\qrcparsemethod.h" />
+    <ClInclude Include="qui\qss\qssoutput.h" />
+    <ClInclude Include="qui\qss\qssparsemethod.h" />
+    <ClInclude Include="qui\qtoutput.h" />
+    <ClInclude Include="qui\qtstruct.h" />
+    <ClInclude Include="util\rsingleton.h" />
+    <ClInclude Include="util\rutil.h" />
+    <QtMoc Include="switchtask.h">
+    </QtMoc>
+    <ClInclude Include="template\code\tablewidgetstyletemplate.h" />
+    <ClInclude Include="util\threadpool.h" />
+    <ClInclude Include="template\code\twswitchtemplate.h" />
+    <QtMoc Include="viewdelegate.h">
+    </QtMoc>
+    <QtMoc Include="viewmodel.h">
+    </QtMoc>
+    <ClInclude Include="util\windumpfile.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="debug\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus /D_USING_V140_SDK71_ -Zi -MDd -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;debug\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\moc_predefs.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="release\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl -Bx"$(QTDIR)\bin\qmake.exe" -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus /D_USING_V140_SDK71_ -O2 -MD -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E $(QTDIR)\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;release\moc_predefs.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generate moc_predefs.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">release\moc_predefs.h;%(Outputs)</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="clientoperate.ui">
+    </QtUic>
+    <QtUic Include="logoutputer.ui">
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="image\active.png" />
+    <None Include="image\batch_delete.png" />
+    <None Include="image\clear.png" />
+    <None Include="image\html.png" />
+    <QtRcc Include="images.qrc">
+    </QtRcc>
+    <None Include="image\new_delete.png" />
+    <None Include="image\new_open.png" />
+    <None Include="image\new_switch.png" />
+    <None Include="image\normal.png" />
+    <None Include="image\project.png" />
+    <None Include="image\qt.png" />
+    <None Include="stylesheet.txt" />
+    <None Include="image\watermark.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include=".\AxtureFormat_resource.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
