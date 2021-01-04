@@ -57,7 +57,7 @@
     <IntDir>..\..\$(SolutionName)_build\$(Configuration)_$(BaseIntermediateOutputPath)</IntDir>
     <TargetName>AxtureFormat</TargetName>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    <IncludePath>$(SolutionDir)\3rdPartyLib\include\gumbo;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Qt\Qt5.12.10\5.12.10\msvc2017\include;$(SolutionDir)\3rdPartyLib\include\gumbo;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\3rdPartyLib\lib\shared\$(DefaultQtVersion)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
