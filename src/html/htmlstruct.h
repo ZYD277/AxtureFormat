@@ -83,7 +83,15 @@ enum NodeType{
     RUNMENUBUTTON,          /*!< 菜单选项无触发按钮 */
     /***********识别自定义控件************/
     R_CUSTOM_TEXT_FIELD,                /*!< 自定义元件-输入框 */
-    R_CUSTOM_VIRTUAL_CONTAINER          /*!< 自定义容器，此容器不会转换成Qt控件，但会携带信号槽等信息。 */
+    R_CUSTOM_VIRTUAL_CONTAINER,          /*!< 自定义容器，此容器不会转换成Qt控件，但会携带信号槽等信息。 */
+    R_CUSTOM_RBUTTON,                   /*!< 自定义元件-下拉框按钮 */
+    R_CUSTOM_KEYBOARD_RFIELD,                 /*!< 自定义元件-带有虚拟盘的输入框 */
+    R_CUSTOM_BIDIRECTIONAL_SLIDER,                /*!< 自定义元件-双向滚动条 */
+    R_CUSTOM_FLOATING_WINDOW,                /*!< 自定义元件-悬浮窗 */
+    R_CUSTOM_FOLDINGCONTROLS,              /*!< 自定义元件-折叠控件 */
+    R_CUSTOM_SWITCH_BUTTON,					/*!< 自制开关按钮 */
+
+
 };
 
 /*!
@@ -103,6 +111,15 @@ struct SignalSlotInfo{
     QString m_signal;
     QString m_receiver;
     QString m_slot;
+};
+
+/*!
+ * @brief 控件提升
+ */
+struct ControlImproveInfo{
+    QString m_newClass;
+    QString m_extends;
+    QString m_headFileName;
 };
 
 enum PositionType{
@@ -141,6 +158,37 @@ struct GeometryReferenceDesc{
     QString dependGeometryId;        /*!< 依赖的控件ID */
     QMap<PositionType,CustomPositionOperate>  operates;       /*!< 产生依赖时，如何将自身的 尺寸和依赖的尺寸进行计算 */
 };
+///////选项弹出信息框////////////////////////
+///**
+// * @brief 选项按钮组
+// */
+//struct OptionButtonInfo{
+//    OptionButtonInfo(){}
+//    QString m_Id;  /*!< 背景边框ID */
+//    QString buttonText;  /*!< 标题文本 */
+//};
+
+///**
+// * @brief 功能按钮组
+// */
+//struct FunctionButtonInfo{
+//    FunctionButtonInfo(){}
+//    QString m_Id;  /*!< 控件ID */
+//    QString m_backImgSrc;
+//    QString buttonText;  /*!< 标题文本 */
+//};
+
+/**
+ * @brief 选项弹出框信息
+ */
+struct OptionPopupWindow{
+    OptionPopupWindow():enable(false){}
+    bool enable;
+    QString backgroundID;  /*!< 背景边框ID */
+    QString titleID;  /*!< 标题ID */
+    QString titleText;  /*!< 标题文本 */
+    NodeType titleType;  /*!< 标题类型 */
+};
 
 /*!
  * @brief 控件基础通用属性
@@ -157,6 +205,7 @@ struct BaseData{
     QString m_srcImage;         /*!< 正常状态背景图片*/
     QString m_srcImageId;       /*!< 正常状态背景图片控件id */
     QString m_checkedImage;     /*!< 选中状态图片 */
+    QString m_checkedId;
     QString m_unCheckedImage;   /*!< 未选中状态图片 */
     QString m_partiallyCheckedImage;   /*!< 半选中状态图片：主要用于checkox */
 
@@ -175,11 +224,15 @@ struct BaseData{
     int m_width;
     int m_height;
 
+    QString m_childPageID;       /*!< 子页面ID，用于处理特殊的组合控件*/
+
     QStringList m_referenceIds;     /*!< 当前控件的样式需要引用其它ID的样式，可参考自定义控件‘输入框’中 */
     GeometryReferenceDesc m_geometryDepend;     /*!< 控件尺寸计算依赖规则描述 */
     QString m_dataLabel;            /*!< 元素的data-label属性值 */
 
     QList<SignalSlotInfo> m_signals;      /*!< 需生成的信号槽描述信息 */
+
+    QList<ControlImproveInfo> m_controlImproveInfos; /*!< 控件提升的需要信息 */
 
     CXX::AbstractCppCodeData * m_codeData;      /*!< 20200617:生成代码时所需的必要信息 */
 };
@@ -345,10 +398,33 @@ struct TabWidgetData : public BaseData{
 
     QString m_tabNormalImage;   /*!< 默认tab项中背景图片 */
     QString m_tabSelectedImage; /*!< 选中tab项背景图片 */
+	QString m_tabBackStyleID;	 /*!< 当背景不为图片时获取使用样式 */
     QString m_tabRightImage;    /*!< tab项的右边框图片 */
 
     QString m_tabBarId;         /*!< 根据tabBarId来获取tab样式*/
     QString m_paneId;           /*!< 根据paneId来获取pane样式*/
+};
+
+/*!
+ * @brief custom按钮
+ */
+struct dropDownButton : public ButtonData{
+    dropDownButton(){}
+
+    //下拉框按钮
+    OptionPopupWindow optionPopupInfo;  /*!< 选项弹出信息 */
+    QString m_dropDownImgOpen;      /*!< 下拉背景打开 */
+    QString m_dropDownImgClose;      /*!< 下拉背景关闭 */
+
+    QString m_dropDownIconOpen;      /*!< 下拉图表打开 */
+    QString m_dropDownIconClose;     /*!< 下拉图表关闭 */
+
+    QString m_dropDownOpenID;     /*!< 下拉按钮打开ID */
+    QString m_dropDownCloseID;     /*!< 下拉按钮关闭ID */
+
+    int optionsBoxW;     /*!< 选项弹出框宽 */
+    int optionsBoxH;
+
 };
 
 /*!

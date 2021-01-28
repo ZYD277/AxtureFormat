@@ -12,12 +12,14 @@
 #include "props/mattribute.h"
 #include "props/mconnection.h"
 #include "props/mconnections.h"
+#include "props/mcontrolimproves.h"
+#include "props/mcontrolimprove.h"
 
 namespace RQt{
 
 QString G_NewLine = "\r\n";
 
-FormatProperty::FormatProperty():m_conns(nullptr)
+FormatProperty::FormatProperty():m_conns(nullptr),m_controlImproves(nullptr)
 {
 
 }
@@ -96,6 +98,13 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::RSLIDER:return QString("QSlider");break;
         case Html::RTABWIDGET:return QString("QTabWidget");break;
 
+        case Html::R_CUSTOM_RBUTTON:return QString("MyPushButton");break;
+        case Html::R_CUSTOM_KEYBOARD_RFIELD:return QString("MyLineEdit");break;
+        case Html::R_CUSTOM_BIDIRECTIONAL_SLIDER:return QString("MyScrollBar");break;
+        case Html::R_CUSTOM_FLOATING_WINDOW:return QString("MyFloatingWindow");break;
+        case Html::R_CUSTOM_FOLDINGCONTROLS:return QString("MyFoldingControl");break;
+        case Html::R_CUSTOM_SWITCH_BUTTON:return QString("MySwitchButton");break;
+
         default:return QString();break;
     }
 }
@@ -110,10 +119,12 @@ QString FormatProperty::getTypeName(Html::NodeType type)
  */
 void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *node,QRect parentRect)
 {
+
     //自动代码生成
-    if(node->m_data && node->m_data->m_codeData){
-        m_codeDatas.append(node->m_data->m_codeData);
-    }
+    createCodeDatas(node);
+
+    //判断有无控件提升
+    createControlImprove(node);
 
     //虚拟的容器无需创建UI界面，但可能携带信号槽
     if(node->m_type == Html::R_CUSTOM_VIRTUAL_CONTAINER){
@@ -152,6 +163,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             break;
         }
+        case Html::R_CUSTOM_BIDIRECTIONAL_SLIDER:
         case Html::RGROUP:{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
 
@@ -196,6 +208,11 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 createDomWidget(domWidget,node->m_childs.at(i),rect);
             }
 
+            if(panelData->m_dataLabel.contains(QStringLiteral("下拉按钮"))
+                    ||panelData->m_dataLabel.contains(QStringLiteral("开关下拉按钮"))){
+                createConnections(node);
+            }
+
             createCurrentIndexProp(domWidget,panelData->m_currentIndex);
 
             break;
@@ -235,24 +252,37 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             Html::TableData * tdata = dynamic_cast<Html::TableData *>(node->m_data);
 
             //需根据表格宽度与单元格宽度相除结果，作为列数
-            int cWidth = 0;
-            if(node->m_childs.size() > 0){
-                QString subCellId = node->m_childs.first()->m_id;
-                CSS::CssSegment cellSegment = m_pageCss.value(subCellId);
-                if(cellSegment.rules.size() > 0){
-                    auto fresult = std::find_if(cellSegment.rules.begin(),cellSegment.rules.end(),[&](const CSS::CssRule & rule ){
-                        return rule.name.toLower() == "width";
-                    });
+//            int cWidth = 0;
+//            if(node->m_childs.size() > 0){
+//                QString subCellId = node->m_childs.first()->m_id;
+//                CSS::CssSegment cellSegment = m_pageCss.value(subCellId);
+//                if(cellSegment.rules.size() > 0){
+//                    auto fresult = std::find_if(cellSegment.rules.begin(),cellSegment.rules.end(),[&](const CSS::CssRule & rule ){
+//                        return rule.name.toLower() == "width";
+//                    });
 
-                    if(fresult != cellSegment.rules.end()){
-                        cWidth = removePxUnit(fresult->value);
-                    }
+//                    if(fresult != cellSegment.rules.end()){
+//                        cWidth = removePxUnit(fresult->value);
+//                    }
+//                }
+//            }
+            int maxColumnCount = 0;
+            int lastTop = 0;
+            for(int i = 0 ;i < node->m_childs.size(); i ++){
+				CSS::CssSegment childSegment = m_pageCss.value(node->m_childs.at(i)->m_id);
+                int top = removePxUnit(findRuleByName(childSegment.rules,"top").value);
+
+                if(top != lastTop && i != 0){
+                    maxColumnCount = i;
+                    break;
                 }
+                lastTop = top;
             }
 
             //NOTE Axure中表格第一行和第一列作为Qt中的行、列表头
-            if(cWidth > 0){
-                int columnCount = rect.width() / cWidth;
+            //20210120修改表格为隐藏表格头，按行添加数据，表格的每行，每列宽度使用代码手动修改
+            if(maxColumnCount > 0){
+                int columnCount = maxColumnCount;
                 int rowCount = node->m_childs.size() / columnCount;
 
                 if(!tdata->m_itemId.isEmpty()){
@@ -260,14 +290,48 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                     m_selectorType.insert(tdata->m_itemId,Html::RTABLE);
                 }
 
+                MAttribute *horizontalHeader = new MAttribute();
+                horizontalHeader->setAttributeName("horizontalHeaderVisible");
+                horizontalHeader->setAttributeBool("false");
+                domWidget->addAttrinute(horizontalHeader);
+
+                MAttribute *verticalHeader = new MAttribute();
+                verticalHeader->setAttributeName("verticalHeaderVisible");
+                verticalHeader->setAttributeBool("false");
+                domWidget->addAttrinute(verticalHeader);
+
+                QList<CXX::TabRowInfo> tabRowInfos;
+                QList<CXX::TabColumnInfo> abColumnInfos;
+
+                auto setRowHeight = [&](QString curID,int number){
+
+                    CXX::TabRowInfo t_tabRowInfo;
+                    t_tabRowInfo.m_rowNumbers = number;
+                    t_tabRowInfo.m_height = removePxUnit(getCssStyle(curID,"height"));
+
+                    return t_tabRowInfo;
+                };
+
+                auto setColumnWidth = [&](QString curID,int number){
+
+                    CXX::TabColumnInfo t_tabColumnInfo;
+                    t_tabColumnInfo.m_columnNumbers = number;
+                    t_tabColumnInfo.m_width = removePxUnit(getCssStyle(curID,"width"));
+
+                    return t_tabColumnInfo;
+
+                };
                 for(int i = 0; i < rowCount; i++){
                     for(int j = 0; j < columnCount; j++){
 
                         Html::CellData cell = tdata->m_cells.at(i*columnCount + j);
 
-                        if(i == 0 && j == 0){
+                        /*if(i == 0 && j == 0){
                             continue;
-                        }else if( i == 0){
+                        }else*/ if( i == 0){
+
+                            abColumnInfos.append(setColumnWidth(cell.id,j));
+
                             MColumn  * column = new MColumn();
 
                             MProperty * columnProp = new MProperty();
@@ -276,8 +340,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                             column->addProperty(columnProp);
 
                             domWidget->addColumn(column);
-                        }else if( j == 0){
+                        }if( j == 0){
                             MRow  * row = new MRow();
+
+                            tabRowInfos.append(setRowHeight(cell.id,i));
 
                             MProperty * rowProp = new MProperty();
                             rowProp->setAttributeName("text");
@@ -285,20 +351,36 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                             row->addProperty(rowProp);
 
                             domWidget->addRow(row);
-                        }else{
-                            MItem * item = new MItem();
+                        }/*else{
+//                            MItem * item = new MItem();
 
-                            item->setAttributeRow(QString::number(i - 1));
-                            item->setAttributeColumn(QString::number(j - 1));
-                            MProperty * prop = new MProperty();
-                            prop->setAttributeName("text");
-                            prop->setPropString(cell.text);
-                            item->setProperty(prop);
+//                            item->setAttributeRow(QString::number(i - 1));
+//                            item->setAttributeColumn(QString::number(j - 1));
+//                            MProperty * prop = new MProperty();
+//                            prop->setAttributeName("text");
+//                            prop->setPropString(cell.text);
+//                            item->setProperty(prop);
 
-                            domWidget->addItem(item);
-                        }
+//                            domWidget->addItem(item);
+                        }*/
+
+                        MItem * item = new MItem();
+
+                        item->setAttributeRow(QString::number(i));
+                        item->setAttributeColumn(QString::number(j ));
+                        MProperty * prop = new MProperty();
+                        prop->setAttributeName("text");
+                        prop->setPropString(cell.text);
+                        item->setProperty(prop);
+
+                        domWidget->addItem(item);
                     }
                 }
+
+                CXX::TableStyleCodeData * tableData = new CXX::TableStyleCodeData();
+                tableData->m_tableId = node->m_id;
+                tableData->m_tabRowInfos = tabRowInfos;
+                tableData->m_tabColumnInfos = abColumnInfos;
 
                 QString m_cellWidth;
                 QString m_cellHeight;
@@ -325,9 +407,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                 vhSectionSize->setPropNumber(m_cellHeight);
                 domWidget->addAttrinute(vhSectionSize);
 
-                if(!tdata->m_srcImage.isEmpty()){
-                    createTableCodeData(node,tdata,m_cellWidth,m_cellHeight,columnCount);
-                }
+                if(!tdata->m_srcImage.isEmpty())
+                    createTableCodeData(node,tdata,m_cellWidth,m_cellHeight,columnCount,tableData);
+
+                m_codeDatas.append(tableData);
             }
 
 
@@ -399,6 +482,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
         case Html::RTEXT_FIELD:
+        case Html::R_CUSTOM_KEYBOARD_RFIELD:
         case Html::R_CUSTOM_TEXT_FIELD:{
             Html::TextFieldData * textData = dynamic_cast<Html::TextFieldData *>(node->m_data);
 
@@ -406,6 +490,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             createReadonlyProp(domWidget,textData->m_bReadOnly);
             createEnableProp(domWidget,textData->m_bDisabled);
             createToolTipProp(domWidget,textData->m_toolTip);
+
+            if(!textData->m_srcImage.isEmpty()){
+                createLineEditImageProp(domWidget,textData);
+            }
 
             MProperty * echoModeProp = new MProperty;
             echoModeProp->setAttributeName("echoMode");
@@ -425,6 +513,8 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             if(textData->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,textData->m_toolTip);
+
+
 
             break;
         }
@@ -657,13 +747,23 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
         case Html::RTEXT_AREA:{
 
+        Html::BaseData * baseData = node->m_data;
+
             createReadonlyProp(domWidget,node->m_data->m_bReadOnly);
-            createEnableProp(domWidget,node->m_data->m_bDisabled);
 
             MProperty * currentRow = new MProperty();
             currentRow->setAttributeName("plainText");
             currentRow->setPropString(node->m_data->m_text);
             domWidget->addProperty(currentRow);
+
+            createEnableProp(domWidget,node->m_data->m_bDisabled);
+
+            if(baseData->m_dataLabel.contains(QStringLiteral("设置"))){
+                MProperty * VScrollBarHide = new MProperty();
+                VScrollBarHide->setAttributeName("verticalScrollBarPolicy");
+                VScrollBarHide->setPropEnum("Qt::ScrollBarAlwaysOff");
+                domWidget->addProperty(VScrollBarHide);
+            }
 
             if(node->m_data->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,node->m_data->m_toolTip);
@@ -729,7 +829,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
                     createDomWidget(domWidget,node->m_childs.at(i),rect);
                 }
 
-                createTabWidgetImageProp(domWidget,tabData);
+				if(tabData->m_tabSelectedImage.isEmpty())
+					createTabWidgetStyleSheet(domWidget,tabData);
+				else
+					createTabWidgetImageProp(domWidget,tabData);
             }
             break;
        }
@@ -756,6 +859,23 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             break;
         }
+        case Html::R_CUSTOM_RBUTTON:{
+            Html::ButtonData * buttData = dynamic_cast<Html::ButtonData *>(node->m_data);
+
+            MProperty * cursorShape = new MProperty;
+            cursorShape->setAttributeName("cursor");
+            cursorShape->setProCursor("PointingHandCursor");
+            domWidget->addProperty(cursorShape);
+
+            if(!buttData->m_srcImage.isEmpty()){
+                createCustomButtonImageProp(domWidget,buttData);
+            }
+
+            createTextProp(domWidget,buttData->m_text);
+
+                break;
+           }
+
         default:break;
     }
 
@@ -836,7 +956,6 @@ void FormatProperty::processNodeStyle(Html::DomNode *node)
 
                 break;
             }
-
             default:break;
         }
     }
@@ -1039,18 +1158,33 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             }
         }
     }
-    //修改RIMAGE和RLABEL类型的位置尺寸为背景图片的
-    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)) && (!node->m_data->m_srcImageId.isEmpty()))
-    {
-        QString twidth = getCssStyle(node->m_data->m_srcImageId,"width");
-        QString theight = getCssStyle(node->m_data->m_srcImageId,"height");
-        QString tleft = getCssStyle(node->m_data->m_srcImageId,"left");
-        QString ttop = getCssStyle(node->m_data->m_srcImageId,"top");
+    //下拉按钮等自制控件动态面板大小依据按钮和弹窗设置大小
+    if(node->m_type == Html::RDYNAMIC_PANEL && !node->m_data->m_childPageID.isEmpty()){
 
-        rect.setLeft(rect.left() + removePxUnit(tleft));
-        rect.setTop(rect.top() + removePxUnit(ttop));
-        rect.setWidth(removePxUnit(twidth));
-        rect.setHeight(removePxUnit(theight));
+        int twidth = removePxUnit(getCssStyle(node->m_data->m_childPageID,"width"));
+        int theight = removePxUnit(getCssStyle(node->m_data->m_childPageID,"height"));
+
+        rect.setWidth(twidth > node->m_data->m_width ? twidth: node->m_data->m_width);
+        rect.setHeight(theight > node->m_data->m_height ? theight : theight + node->m_data->m_height);
+
+    }
+    //修改RIMAGE和RLABEL类型的位置尺寸为背景图片的
+    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)))
+    {
+        if(!node->m_data->m_srcImageId.isEmpty()){
+            QString twidth = getCssStyle(node->m_data->m_srcImageId,"width");
+            QString theight = getCssStyle(node->m_data->m_srcImageId,"height");
+            QString tleft = getCssStyle(node->m_data->m_srcImageId,"left");
+            QString ttop = getCssStyle(node->m_data->m_srcImageId,"top");
+
+            rect.setLeft(rect.left() + removePxUnit(tleft));
+            rect.setTop(rect.top() + removePxUnit(ttop));
+            rect.setWidth(removePxUnit(twidth));
+            rect.setHeight(removePxUnit(theight));
+        }else{
+            rect = QRect(node->m_data->m_left,node->m_data->m_top,node->m_data->m_width,node->m_data->m_height);
+        }
+
     }
     else if(node->m_type == Html::RRADIO_BUTTON || node->m_type == Html::RCHECKBOX)
     {
@@ -1107,12 +1241,69 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
 
             processGeometryReference(node,rect);
         }
+    }else if(node->m_type == Html::R_CUSTOM_RBUTTON){
+        Html::ButtonData * buttonData = dynamic_cast<Html::ButtonData *>(node->m_data);
+        if(buttonData){
+            rect.setWidth(buttonData->m_width);
+            rect.setHeight(buttonData->m_height);
+        }
+    }else if(node->m_type == Html::R_CUSTOM_KEYBOARD_RFIELD){
+        Html::TextFieldData * inputBoxData = dynamic_cast<Html::TextFieldData *>(node->m_data);
+        if(inputBoxData){
+
+            QString twidth = getCssStyle(inputBoxData->m_textId,"width");
+            QString theight = getCssStyle(inputBoxData->m_textId,"height");
+
+            rect.setWidth(removePxUnit(twidth));
+            rect.setHeight(removePxUnit(theight));
+        }
+    }else if(node->m_type == Html::R_CUSTOM_BIDIRECTIONAL_SLIDER){
+        Html::GroupData * customScrolldata = dynamic_cast<Html::GroupData *>(node->m_data);
+        if(customScrolldata){
+
+            rect.setLeft(customScrolldata->m_left);
+            rect.setTop(customScrolldata->m_top);
+            rect.setWidth(customScrolldata->m_width);
+            rect.setHeight(customScrolldata->m_height);
+
+        }
+    }else if(node->m_type == Html::R_CUSTOM_SWITCH_BUTTON){
+        Html::GroupData * button = dynamic_cast<Html::GroupData *>(node->m_data);
+        if(button){
+
+            QString twidth = getCssStyle(button->m_checkedId,"width");
+            QString theight = getCssStyle(button->m_checkedId,"height");
+
+            if(rect.width() <= 0)
+                rect.setWidth(removePxUnit(twidth));
+            if(rect.height() <=0)
+                rect.setHeight(removePxUnit(theight));
+
+        }
     }
 
-    if(rect.left() < 0)
+    if(rect.left() < 0){
+        rect.setWidth(rect.width() - rect.left());
         rect.setLeft(0);
+    }
+    if(rect.top() < 0){
+        rect.setHeight(rect.height() - rect.top());
+        rect.setTop(0);
+    }
+
+    getMaxWindowSize(rect);
 
     return rect;
+}
+
+/**
+ * @brief 获取当前窗口的最大尺寸
+ * @return较大的尺寸
+ */
+void FormatProperty::getMaxWindowSize(QRect rect)
+{
+    m_maxWindowSize.setHeight(m_maxWindowSize.height() > (rect.top() + rect.height()) ? m_maxWindowSize.height() : (rect.top() + rect.height()));
+    m_maxWindowSize.setWidth(m_maxWindowSize.width() > (rect.left() + rect.width()) ? m_maxWindowSize.width() : (rect.left() + rect.width()));
 }
 
 int FormatProperty::removePxUnit(QString valueWithUnit)
@@ -1199,6 +1390,54 @@ void FormatProperty::createButtonImageProp(RDomWidget *domWidget, Html::ButtonDa
     domWidget->addProperty(styleProp);
 }
 
+/*!
+ * @attention 按钮若设置了背景图片，则需要添加正常背景、悬停、按下、选中四种状态背景；
+ *            若按钮被选中，其背景图片已经加入了_selected，在计算其它状态图片时，需先移除
+ */
+void FormatProperty::createCustomButtonImageProp(RDomWidget *domWidget, Html::ButtonData *baseData)
+{
+    QString normalImageSrc;
+    QString mouseSelectedImageSrc;
+
+    normalImageSrc = switchImageURL(baseData->m_srcImage);
+    mouseSelectedImageSrc = switchImageURL(baseData->m_checkedImage);
+
+
+    MProperty * styleProp = new MProperty();
+    styleProp->setAttributeName("styleSheet");
+
+
+    QString prop = QString("QPushButton {border-image: url(:/%1);}" + G_NewLine)
+                        .arg(normalImageSrc);
+
+    prop += QString("QPushButton:checked {border-image: url(:/%1);}").arg(mouseSelectedImageSrc);
+
+    styleProp->setPropString(prop);
+
+    domWidget->addProperty(styleProp);
+}
+
+/*!
+ * @attention 部分自定义输入框如果设置了背景图片就手动添加
+ */
+void FormatProperty::createLineEditImageProp(RDomWidget *domWidget, Html::TextFieldData *baseData)
+{
+    QString normalImageSrc;
+
+    normalImageSrc = switchImageURL(baseData->m_srcImage);
+
+    MProperty * styleProp = new MProperty();
+    styleProp->setAttributeName("styleSheet");
+
+
+    QString prop = QString("QLineEdit {border-image: url(:/%1);}" + G_NewLine)
+                        .arg(normalImageSrc);
+
+    styleProp->setPropString(prop);
+
+    domWidget->addProperty(styleProp);
+}
+
 void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,Html::BaseData * baseData,QString widgetName)
 {
     QString checkImageSrc = switchImageURL(baseData->m_checkedImage);
@@ -1239,7 +1478,7 @@ void FormatProperty::createRadioBtnImageProp(RDomWidget *domWidget,Html::BaseDat
 /*!
  * @brief 创建QTabWidget中tab相关的样式属性
  * @attention 包括选中、mouseover时以及未选中时状态
- * @param[in] tabData tab页面数据
+ * @param[in] tabData tab页面数据createTabWidgetStyleSheet
  */
 void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData * tabData)
 {
@@ -1279,6 +1518,150 @@ void FormatProperty::createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWi
     }
 }
 
+/*!
+ * @brief 创建QTabWidget中tab相关的样式属性
+ * @attention 包括选中、mouseover时以及未选中时状态
+ * @param[in] tabData tab页面数据createTabWidgetStyleSheet
+ */
+void FormatProperty::createTabWidgetStyleSheet(RDomWidget *domWidget, Html::TabWidgetData * tabData)
+{
+	//提取’选项卡‘中tab的样式信息
+	QStringList tabStyleIDList;
+	auto iter = m_pageCss.begin();
+	while (iter != m_pageCss.end()){
+		QString name = iter.key();
+		if (name.contains(tabData->m_tabBarId))
+			tabStyleIDList << name;
+		iter++;
+	}
+
+	CSS::CssSegment tabStyleSegment = m_pageCss.value(tabData->m_tabBackStyleID);
+	CSS::CssSegment tabStyleSegment_over;
+	CSS::CssSegment tabStyleSegment_select;
+	CSS::CssSegment tabStyleSegment_pressed;
+
+
+	for (QString tabStyleID : tabStyleIDList) {
+		if (tabStyleID.contains(":hover"))
+			tabStyleSegment_over = m_pageCss.value(tabStyleID);
+		else if(tabStyleID.contains(":pressed"))
+			tabStyleSegment_pressed = m_pageCss.value(tabStyleID);
+		else if(tabStyleID.contains(":checked"))
+			tabStyleSegment_select = m_pageCss.value(tabStyleID);
+	}
+
+	auto getTabStateStyle = [&](CSS::CssSegment styleSegment) {
+		QString style;
+		for (CSS::CssRule rule : styleSegment.rules) {
+			if (rule.name != "left" && rule.name != "top" && !rule.name.contains("box-shadow")) {
+				if (rule.value.contains("gradient"))
+					rule.value = gradientSwitchToQss(rule.value);
+				style += QString("%1:%2;").arg(rule.name).arg(rule.value);
+			}
+		}
+		return style;
+	};
+
+	MProperty * styleProp = new MProperty();
+	styleProp->setAttributeName("styleSheet");
+
+	styleProp->setPropString(QString("QTabWidget::pane{ border: none;}" + G_NewLine +
+		"QTabBar::tab:selected,QTabBar::tab:selected:hover{%1}" + G_NewLine +
+		"QTabBar::tab:!selected{%2}" + G_NewLine +
+		"QTabBar::tab:!selected:hover{%3}" + G_NewLine +
+		"QTabBar::tab:pressed{%4}" + G_NewLine +
+		"QTabBar::tab{%5}")
+		.arg(getTabStateStyle(tabStyleSegment_select)).arg(getTabStateStyle(tabStyleSegment))
+		.arg(getTabStateStyle(tabStyleSegment_over)).arg(getTabStateStyle(tabStyleSegment_pressed))
+		.arg(getTabStateStyle(tabStyleSegment)));
+	domWidget->addProperty(styleProp);
+}
+/**
+* @brief 获取简单的渐变背景
+*/
+QString FormatProperty::gradientSwitchToQss(QString value)
+{
+    QStringList list = value.split(QRegExp("\\s+"));
+	QStringList m_rgbList;
+	QString t_rgb;
+
+	QStringList rangeList;
+	QString rangel;
+
+	QString gradientDirection;
+	std::for_each(list.begin(), list.end(), [&](QString graduatedInfo) {
+		if (graduatedInfo.contains("gradient"))
+		{
+			if (graduatedInfo.contains(","))
+			{
+				graduatedInfo = graduatedInfo.remove(QChar(','), Qt::CaseInsensitive);
+				QStringList t_filtration = graduatedInfo.split("(");
+				std::for_each(t_filtration.begin(), t_filtration.end(), [&](QString filtrationDirection) {
+					if (filtrationDirection.contains("deg"))
+					{
+						gradientDirection = filtrationDirection;
+					}
+				});
+			}
+		}
+		else if (graduatedInfo.contains("%"))
+		{
+			if (graduatedInfo.contains(")"))
+			{
+				graduatedInfo.remove(QChar(')'), Qt::CaseInsensitive);
+			}
+			rangel = rangel + graduatedInfo;
+		}
+		else
+		{
+			if (graduatedInfo.contains(")"))
+			{
+				t_rgb = t_rgb + graduatedInfo;
+				m_rgbList.append(t_rgb);
+				t_rgb.clear();
+			}
+			else
+				t_rgb = t_rgb + graduatedInfo;
+		}
+	});
+	rangeList = rangel.split(",");
+
+	QStringList rangeFloats;
+	std::for_each(rangeList.begin(), rangeList.end(), [&](QString graduatedRange) {
+		if (graduatedRange.contains("%"))
+		{
+			float rangeFloat = (graduatedRange.left(graduatedRange.indexOf("%")).toInt()) / float(100);
+			rangeFloats.append(QString::number(rangeFloat));
+		}
+	});
+	QString graduatedInfo;
+	if (rangeFloats.size() == m_rgbList.size())
+	{
+		for (int i = 0; i < rangeFloats.size(); i++)
+		{
+			QString t_stopFloat = rangeFloats.at(i);
+			QString t_rgbInfo = m_rgbList.at(i);
+			QString t_graduatedInfo = QString(" stop:%1 %2,").arg(t_stopFloat).arg(t_rgbInfo);
+			graduatedInfo += t_graduatedInfo;
+		}
+	}
+
+	int xDirection;
+	int yDirection;
+	if ((gradientDirection == "90deg") || (gradientDirection == "270deg"))
+	{
+		xDirection = 1;
+		yDirection = 0;
+	}
+	else if ((gradientDirection == "180deg") || (gradientDirection == "0deg"))
+	{
+		xDirection = 0;
+		yDirection = 1;
+	}
+	value = QString(" qlineargradient(spread:pad, x1:0, y1:0, x2:%1, y2:%2, %3)").arg(QString::number(xDirection))
+		.arg(QString::number(yDirection)).arg(graduatedInfo);
+	return value;
+}
 void FormatProperty::createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage)
 {
     imageSrc = switchImageURL(imageSrc);
@@ -1584,7 +1967,7 @@ void FormatProperty::createTreeImageProp(RDomWidget *domWidget, Html::TreeData *
            转而使用代码控制
  */
 void FormatProperty::createTableCodeData(Html::DomNode *node, Html::TableData *data, QString hSectionSize, QString vSectionSize,
-                                          int columnCount)
+                                         int columnCount, CXX::TableStyleCodeData *tableData)
 {
     if(data->m_cells.size() < columnCount){
         return;
@@ -1597,7 +1980,7 @@ void FormatProperty::createTableCodeData(Html::DomNode *node, Html::TableData *d
 
     if(!imageSrc.isEmpty()){
 
-        CXX::TableStyleCodeData * tableData = new CXX::TableStyleCodeData();
+//        CXX::TableStyleCodeData * tableData = new CXX::TableStyleCodeData();
 
         tableData->m_tableId = node->m_id;
 
@@ -1640,7 +2023,7 @@ void FormatProperty::createTableCodeData(Html::DomNode *node, Html::TableData *d
                     .arg(mouseOverImageSrc);
         }
 
-        m_codeDatas.append(tableData);
+//        m_codeDatas.append(tableData);
     }
 }
 
@@ -1650,6 +2033,9 @@ void FormatProperty::createTableCodeData(Html::DomNode *node, Html::TableData *d
  */
 QString FormatProperty::switchImageURL(QString imageSrc)
 {
+    if(imageSrc.isEmpty())
+        return imageSrc;
+
     m_originalResources.append(imageSrc);
 
     int firstSplitPos = imageSrc.indexOf("/");
@@ -1862,6 +2248,310 @@ void FormatProperty::replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS:
     },newRule);
 }
 
+/**
+ * @brief 设置自动生成代码。
+ * @details 自定义控件需要代码辅助完成一定功能
+ * @param node
+ */
+void FormatProperty::createCodeDatas(Html::DomNode *node)
+{
+    auto setLocation = [&](QString m_id){
+        CXX::Location t_location;
+        t_location.m_width = removePxUnit(getCssStyle(m_id,"width"));
+        t_location.m_height = removePxUnit(getCssStyle(m_id,"height"));
+        t_location.m_top = removePxUnit(getCssStyle(m_id,"top"));
+        t_location.m_left = removePxUnit(getCssStyle(m_id,"left"));
+
+        return t_location;
+    };
+
+    auto setBaseInfo = [&](CXX::BaseInfo &baseInfo,Html::NodeType controlType){
+
+        baseInfo.m_location = setLocation(baseInfo.m_ID);
+
+		QString styleID = baseInfo.m_ID + "_div";
+
+        if(controlType != Html::RINVALID)
+            m_selectorType.insert(baseInfo.m_ID,controlType);
+
+        if(!baseInfo.m_srcImg.isEmpty()){
+			styleID = baseInfo.m_ID;
+            addCustomControlBgImg(baseInfo.m_srcImg);
+            baseInfo.m_srcImg = switchImageURL(baseInfo.m_srcImg);
+        }
+
+        CSS::CssSegment t_segment;
+        if(m_pageCss.contains(styleID)){
+            t_segment = m_pageCss.value(styleID);
+        }
+        for(CSS::CssRule rule : t_segment.rules){
+            if (rule.name == "color")
+                baseInfo.m_textInfo.m_color = rule.value;
+            if (rule.name.contains("background-color"))
+                baseInfo.m_style = rule.value;
+            if(rule.name.contains("font-family"))
+                baseInfo.m_textInfo.m_font = rule.value;
+        }
+
+        return baseInfo;
+    };
+
+    auto setBaseInfos = [&](QList<CXX::BaseInfo> &baseInfos){
+        for(int i = 0; i < baseInfos.size(); i++){
+            CXX::BaseInfo baseInfo = baseInfos.at(i);
+            baseInfos.replace(i,setBaseInfo(baseInfo,Html::RLABEL));
+        }
+    };
+
+    if(node->m_data && node->m_data->m_codeData){
+        //处理手动添加的背景图片路径问题
+        if(node->m_type == Html::R_CUSTOM_RBUTTON){
+            CXX::DropDownButtonData * dropDownBtnData = dynamic_cast<CXX::DropDownButtonData *>(node->m_data->m_codeData);
+
+            setBaseInfo(dropDownBtnData->m_triggerBtnClose.m_iconInfo,Html::RINVALID);
+            setBaseInfo(dropDownBtnData->m_triggerBtnClose.m_buttonInfo,Html::RINVALID);
+
+            setBaseInfo(dropDownBtnData->m_triggerBtnOpen.m_iconInfo,Html::RINVALID);
+            setBaseInfo(dropDownBtnData->m_triggerBtnOpen.m_buttonInfo,Html::RINVALID);
+
+            setBaseInfo(dropDownBtnData->m_optionPopUp.m_border.m_baseInfo,Html::RLABEL);
+            setBaseInfo(dropDownBtnData->m_optionPopUp.m_titleInfo.m_baseInfo,Html::RLABEL);
+
+            auto dealWithBtnInfo = [&](CXX::ButtonGroup &curBtnGroup){
+
+                for(int i = 0; i < curBtnGroup.m_buttons.size(); i++){
+                    CXX::ButtonInfo buttonInfo = curBtnGroup.m_buttons.at(i);
+                    buttonInfo.m_baseInfo = setBaseInfo(buttonInfo.m_baseInfo,Html::RBUTTON);
+
+                    curBtnGroup.m_buttons.replace(i,buttonInfo);
+                }
+            };
+
+            dealWithBtnInfo(dropDownBtnData->m_optionPopUp.m_optionBtnGroup);
+            dealWithBtnInfo(dropDownBtnData->m_optionPopUp.m_exitBtnGroup);
+
+
+        }else if(node->m_type == Html::R_CUSTOM_KEYBOARD_RFIELD){
+            //将自定义控件用到的样式ID包保留，将背景图片路径转换到生成路径。
+            CXX::KeyBoardInputBoxData * inputTextBoxData = dynamic_cast<CXX::KeyBoardInputBoxData *>(node->m_data->m_codeData);
+            inputTextBoxData->m_triggerInputBox.m_baseAtrribute.m_srcImage = switchImageURL(inputTextBoxData->m_triggerInputBox.m_baseAtrribute.m_srcImage);
+            m_selectorType.insert(inputTextBoxData->m_triggerInputBox.m_baseAtrribute.m_ID,Html::RTEXT_FIELD);
+
+            inputTextBoxData->m_virtualKeyGroup.m_baseAtrribute.m_srcImage = switchImageURL(inputTextBoxData->m_virtualKeyGroup.m_baseAtrribute.m_srcImage);
+            m_selectorType.insert(inputTextBoxData->m_virtualKeyGroup.m_baseAtrribute.m_ID,Html::RBOX);
+
+            m_selectorType.insert(inputTextBoxData->m_virtualKeyGroup.m_ID,Html::RBOX);
+
+            inputTextBoxData->m_virtualKeyGroup.m_title.m_baseAtrribute.m_srcImage = switchImageURL(inputTextBoxData->m_virtualKeyGroup.m_title.m_baseAtrribute.m_srcImage);
+            m_selectorType.insert(inputTextBoxData->m_virtualKeyGroup.m_title.m_baseAtrribute.m_ID,Html::RTEXT_FIELD);
+
+            inputTextBoxData->m_virtualKeyGroup.m_baseAtrribute.m_location = setLocation(inputTextBoxData->m_virtualKeyGroup.m_baseAtrribute.m_ID);
+
+            inputTextBoxData->m_virtualKeyGroup.m_title.m_location = setLocation(inputTextBoxData->m_virtualKeyGroup.m_title.m_baseAtrribute.m_ID);
+
+            auto changeImg = [&](QList<CXX::BUTTON> &buttonsInfos){
+                for(int i = 0; i < buttonsInfos.size(); i++){
+                    CXX::BUTTON t_buttnInfo = buttonsInfos.at(i);
+                    //设置按钮位置坐标
+                    CXX::Location t_location;
+                    t_location.m_width = removePxUnit(getCssStyle(t_buttnInfo.m_baseAtrribute.m_ID,"width"));
+                    t_location.m_height = removePxUnit(getCssStyle(t_buttnInfo.m_baseAtrribute.m_ID,"height"));
+                    t_location.m_top = removePxUnit(getCssStyle(t_buttnInfo.m_baseAtrribute.m_ID,"top"));
+                    t_location.m_left = removePxUnit(getCssStyle(t_buttnInfo.m_baseAtrribute.m_ID,"left"));
+
+                    t_buttnInfo.m_location = t_location;
+
+                    m_selectorType.insert(t_buttnInfo.m_baseAtrribute.m_ID,Html::RBUTTON);
+                    addCustomControlBgImg(t_buttnInfo.m_baseAtrribute.m_srcImage);
+                    t_buttnInfo.m_baseAtrribute.m_srcImage = switchImageURL(t_buttnInfo.m_baseAtrribute.m_srcImage);
+                    if(t_buttnInfo.deleteBtn){
+                        t_buttnInfo.m_baseAtrribute.m_iconInfo.m_location  = setLocation(t_buttnInfo.m_baseAtrribute.m_iconInfo.m_ID);
+                        t_buttnInfo.m_baseAtrribute.m_iconInfo.m_srcIcon = switchImageURL(t_buttnInfo.m_baseAtrribute.m_iconInfo.m_srcIcon);
+                    }
+
+                    buttonsInfos.replace(i,t_buttnInfo);
+
+                }
+            };
+
+            inputTextBoxData->m_virtualKeyGroup.m_keyGroup.m_baseAtrribute.m_srcImage = switchImageURL(inputTextBoxData->m_virtualKeyGroup.m_keyGroup.m_baseAtrribute.m_srcImage);
+            m_selectorType.insert(inputTextBoxData->m_virtualKeyGroup.m_keyGroup.m_baseAtrribute.m_ID,Html::RBOX);
+            changeImg(inputTextBoxData->m_virtualKeyGroup.m_keyGroup.m_keyBtns);
+
+            inputTextBoxData->m_virtualKeyGroup.m_tailGroup.m_baseAtrribute.m_srcImage = switchImageURL(inputTextBoxData->m_virtualKeyGroup.m_tailGroup.m_baseAtrribute.m_srcImage);
+            m_selectorType.insert(inputTextBoxData->m_virtualKeyGroup.m_tailGroup.m_baseAtrribute.m_ID,Html::RBOX);
+            changeImg(inputTextBoxData->m_virtualKeyGroup.m_tailGroup.m_quitBtns);
+
+        }else if(node->m_type == Html::R_CUSTOM_BIDIRECTIONAL_SLIDER){
+            CXX::BidirectionalSlider * customScrollBarData = dynamic_cast<CXX::BidirectionalSlider *>(node->m_data->m_codeData);
+
+            setBaseInfos(customScrollBarData->m_rectangularsInfo);
+
+            setBaseInfos(customScrollBarData->m_leftScrollBar.m_srcImgs);
+
+            setBaseInfos(customScrollBarData->m_rightScrollBar.m_srcImgs);
+
+        }else if(node->m_type == Html::R_CUSTOM_FLOATING_WINDOW){
+            CXX::FloatingWindow * floatingWindowData = dynamic_cast<CXX::FloatingWindow *>(node->m_data->m_codeData);
+
+            floatingWindowData->m_location = setLocation(floatingWindowData->m_ID);
+            setBaseInfos(floatingWindowData->m_floatButton.m_srcImgs);//悬浮按钮
+            floatingWindowData->m_mainWidget.m_location = setLocation(floatingWindowData->m_mainWidget.m_id);
+            floatingWindowData->m_mainWidget.m_srcImg = switchImageURL(floatingWindowData->m_mainWidget.m_srcImg);
+
+            for(int i = 0; i < floatingWindowData->m_mainWidget.m_switchButtons.size();i++){
+                CXX::SwitchButton t_switchButton = floatingWindowData->m_mainWidget.m_switchButtons.at(i);
+                setBaseInfo(t_switchButton.m_closeState,Html::RINVALID);
+                setBaseInfo(t_switchButton.m_openState,Html::RINVALID);
+
+                t_switchButton.m_location = setLocation(t_switchButton.m_id);
+
+                floatingWindowData->m_mainWidget.m_switchButtons.replace(i,t_switchButton);
+            }
+
+        }else if(node->m_type == Html::R_CUSTOM_FOLDINGCONTROLS){
+            CXX::FoldingControls * foldingControlData = dynamic_cast<CXX::FoldingControls *>(node->m_data->m_codeData);
+
+
+            foldingControlData->m_location = setLocation(foldingControlData->m_ID);
+
+            for(int i = 0; i < foldingControlData->m_informations.size();i++){
+                CXX::Information t_information = foldingControlData->m_informations.at(i);
+                setBaseInfos(t_information.m_foldingInfo.m_information);
+                setBaseInfos(t_information.m_unFoldInfo.m_information);
+
+                t_information.m_unFoldInfo.m_parentLocation = setLocation(t_information.m_unFoldInfo.m_parentID);
+
+                foldingControlData->m_informations.replace(i,t_information);
+            }
+
+        }else if(node->m_type == Html::R_CUSTOM_SWITCH_BUTTON){
+            CXX::customSwitchButton * customSwitchBtn = dynamic_cast<CXX::customSwitchButton *>(node->m_data->m_codeData);
+            setBaseInfo(customSwitchBtn->m_closeState,Html::RBUTTON);
+            setBaseInfo(customSwitchBtn->m_openState,Html::RBUTTON);
+
+
+            auto setStyle = [&](QString oldID,QString newID){
+                if(m_pageCss.contains(oldID)){
+                    m_pageCss.operator [](oldID).selectorName = newID;
+
+                    m_pageCss.insert(newID,m_pageCss.value(oldID));
+                    m_pageCss.remove(oldID);
+                }
+            };
+
+            QString newCheckedID = customSwitchBtn->m_closeState.m_ID + ":checked";
+            setStyle(customSwitchBtn->m_openState.m_ID,newCheckedID);
+
+            customSwitchBtn->m_location = setLocation(customSwitchBtn->m_ID);
+
+            QString firstLabelID;
+
+            if(customSwitchBtn->m_lineEdits.size() > 0)
+                setBaseInfos(customSwitchBtn->m_lineEdits);
+            if(customSwitchBtn->m_textParagraphs.size() > 0){
+                firstLabelID = customSwitchBtn->m_textParagraphs.at(0).m_ID;
+                setBaseInfos(customSwitchBtn->m_textParagraphs);
+            }
+
+            /*!< 默认使用第一个文本段落的样式作为输入框的样式 */
+            for(CXX::BaseInfo t_baseInfo : customSwitchBtn->m_lineEdits){
+
+                if(m_pageCss.contains(firstLabelID)){
+                    m_pageCss.operator [](firstLabelID).selectorName = t_baseInfo.m_ID;
+
+                    m_pageCss.insert(t_baseInfo.m_ID,m_pageCss.value(firstLabelID));
+                }
+            }
+
+        }
+        m_codeDatas.append(node->m_data->m_codeData);
+
+    }
+}
+
+/**
+ * @brief 获取自定义控件不同状态下的绘图样式(目前提取文字颜色，和背景颜色(背景渐变色暂不处理))
+ * @param twSwitchData存放提取结果
+ */
+void FormatProperty::getDrawStyle(CXX::DropDownButtonData * twSwitchData)
+{
+	//QStringList t_closeStyleIDList;
+	//QStringList t_openStyleIDList;
+
+	//auto iter = m_pageCss.begin();
+	//while (iter != m_pageCss.end()) {
+	//	QString name = iter.key();
+	//	if (name.contains(twSwitchData->m_closeStateID))
+	//		t_closeStyleIDList << name;
+	//	if (name.contains(twSwitchData->m_openStateID))
+	//		t_openStyleIDList << name;
+	//	iter++;
+	//}
+
+	////有的ID使用_dev设置样式，有的使用自身ID设置样式，所以没有dev的改为ID样式作为dev样式
+	//auto changeDevStyle = [&](QStringList &currentList, QString currentID) {
+	//	if (!currentList.contains(currentID + "_div")) {
+	//		currentList << currentID + "_div";
+
+	//		if (m_pageCss.contains(currentID)) {
+	//			QString newSelectedId = currentID + "_div";
+
+	//			m_pageCss.operator [](currentID).selectorName = newSelectedId;
+
+	//			m_pageCss.insert(newSelectedId, m_pageCss.value(currentID));
+	//			m_pageCss.remove(currentID);
+	//		}
+	//	}
+	//};
+	//changeDevStyle(t_closeStyleIDList, twSwitchData->m_closeStateID);
+	//changeDevStyle(t_openStyleIDList, twSwitchData->m_openStateID);
+
+	//auto filterStyle = [&](QStringList styleIDList, QMap<QString, QPair<QString, QString>> &curStytles) {
+	//	for (QString styleID : styleIDList) {
+
+	//		auto getColor = [&](CSS::CssSegment segment) {
+	//			QString t_fontColor;
+	//			QString t_bgColor;
+	//			for (CSS::CssRule rule : segment.rules) {
+	//				if (rule.name == "color")
+	//					t_fontColor = rule.value;
+	//				if (rule.name.contains("background"))
+	//					t_bgColor = rule.value;
+	//			}
+	//			return qMakePair(t_bgColor, t_fontColor);
+	//		};
+
+	//		if (styleID.contains("_div")) {
+	//			curStytles.insert("default", getColor(m_pageCss.value(styleID)));
+	//		}
+	//		else if (styleID.contains(":hover")) {
+	//			curStytles.insert("hover", getColor(m_pageCss.value(styleID)));
+
+	//		}
+	//		else if (styleID.contains(":pressed")) {
+	//			curStytles.insert("pressed", getColor(m_pageCss.value(styleID)));
+
+	//		}
+	//		else if (styleID.contains(":checked")) {
+	//			curStytles.insert("checked", getColor(m_pageCss.value(styleID)));
+	//		}
+	//	}
+	//};
+
+	//filterStyle(t_closeStyleIDList, twSwitchData->m_closeStateStytles);
+	//filterStyle(t_openStyleIDList, twSwitchData->m_openStateStytles);
+}
+
+void FormatProperty::addCustomControlBgImg(QString srcImg)
+{
+    QStringList t_list = srcImg.split(".");
+    if(t_list.size() == 2){
+        switchImageURL(t_list.at(0) + "_mouseOver." + t_list.at(1));
+        switchImageURL(t_list.at(0) + "_mouseDown." + t_list.at(1));
+    }
+}
+
 /*!
  * @brief 判断是否包含信号槽信息，若有则提取并保存至信号槽列表
  * @param[in] node 待解析的元素节点
@@ -1882,6 +2572,36 @@ void FormatProperty::createConnections(Html::DomNode *node)
             con->setSlot(sinfo.m_slot);
 
             m_conns->addConn(con);
+        }
+    }
+}
+
+/*!
+ * @brief 判断是否由有需要提升的控件
+ * @param[in] node带解析控件
+ */
+void FormatProperty::createControlImprove(Html::DomNode *node)
+{
+    if(node->m_data && !node->m_data->m_controlImproveInfos.isEmpty())
+    {
+        if(m_controlImproves == nullptr)
+        {
+            m_controlImproves = new McontrolImproves();
+        }
+
+        for(Html::ControlImproveInfo control : node->m_data->m_controlImproveInfos){
+            McontrolImprove * customControl = new McontrolImprove();
+
+            if (!m_customClassList.contains(control.m_newClass)){
+
+                customControl->setExtends(control.m_extends);
+                customControl->setClass(control.m_newClass);
+                customControl->setHeader(control.m_headFileName);
+
+                m_customClassList.append(control.m_newClass);
+
+                m_controlImproves->addCustomControl(customControl);
+            }
         }
     }
 }

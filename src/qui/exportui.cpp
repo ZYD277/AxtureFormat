@@ -3,11 +3,12 @@
 #include "props/mdomwidget.h"
 #include "props/mdomresource.h"
 #include "props/mconnections.h"
+#include "props/mcontrolimproves.h"
 
 namespace RQt{
 
 ExportUi::ExportUi():m_bHasAttributeVersion(false),m_domWidget(nullptr),
-    m_domResource(nullptr),m_children(0),m_initDevice(false),m_conns(nullptr)
+    m_domResource(nullptr),m_children(0),m_initDevice(false),m_conns(nullptr),m_controlImproves(nullptr)
 {
 
 }
@@ -22,6 +23,9 @@ ExportUi::~ExportUi()
 
     if(m_conns)
         delete m_conns;
+
+    if(m_controlImproves)
+        delete m_controlImproves;
 }
 
 bool ExportUi::beginWrite(QIODevice *device)
@@ -62,6 +66,9 @@ void ExportUi::write(QXmlStreamWriter &writer)
     if(m_children & Resources)
         m_domResource->write(writer,"resources");
 
+    if(m_children & Designerdata)
+        m_controlImproves->write(writer,"customwidgets");
+
     if(m_children & Connections)
         m_conns->write(writer,"connections");
 
@@ -93,5 +100,10 @@ void ExportUi::setConnections(MConnections *conns)
     m_conns = conns;
 }
 
+void ExportUi::setCustomControls(McontrolImproves *controlImproves)
+{
+    m_children |= Designerdata;
+    m_controlImproves = controlImproves;
+}
 
 } //namespace RQt

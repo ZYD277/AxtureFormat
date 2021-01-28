@@ -11,6 +11,8 @@
 #ifndef FORMATPROPERTY_H
 #define FORMATPROPERTY_H
 
+#include <QSize>
+
 #include "exportui.h"
 #include "qtstruct.h"
 #include "../html/htmlstruct.h"
@@ -37,10 +39,18 @@ public:
     RDomWidget * formart();
     MConnections * connections(){return m_conns;}
 
+    McontrolImproves *customControls(){return m_controlImproves;}
+
+    QStringList getCustomClassList(){return m_customClassList;}
+
+    QSize getWindowMinimumSize(){return m_maxWindowSize;}
+
     QStringList getOriginalResources(){return m_originalResources;}
     QStringList getResources(){return m_resources;}
     SelectorTypeMap getHtmlParsedResult(){return m_selectorType;}
     QString getTypeName(Html::NodeType type);
+	QString gradientSwitchToQss(QString value);//渐变色背景转换为qss格式。
+
 
     CXX::CppCodeDatas getCodeDatas(){return m_codeDatas;}
 
@@ -58,12 +68,18 @@ private:
     void createButtonImageProp(RDomWidget *domWidget, Html::ButtonData *baseData);
     void createRadioBtnImageProp(RDomWidget *domWidget, Html::BaseData *baseData, QString widgetName);
     void createTabWidgetImageProp(RDomWidget *domWidget, Html::TabWidgetData *tabData);
+	void createTabWidgetStyleSheet(RDomWidget *domWidget, Html::TabWidgetData *tabData);
     void createComBoxImageProp(RDomWidget *domWidget, QString imageSrc, QString arrowImage, QString unArrowImage);
     void createSpinboxImageProp(RDomWidget * domWidget,Html::SpinboxData * data);
     void createProgressStyleProp(RDomWidget * domWidget,Html::SliderData * data);
     void createSrollBarStyleProp(RDomWidget * domWidget, Html::ScrollBarData * data, bool horizonal);
     void createTreeImageProp(RDomWidget * domWidget, Html::TreeData * data, QString textColorId);
-    void createTableCodeData(Html::DomNode *node, Html::TableData *data, QString hSectionSize, QString vSectionSize, int columnCount);
+    void createTableCodeData(Html::DomNode *node, Html::TableData *data, QString hSectionSize, QString vSectionSize, int columnCount, CXX::TableStyleCodeData * tableData);
+    //自定义控件创建ui属性结点
+    void createCustomButtonImageProp(RDomWidget *domWidget, Html::ButtonData *baseData);
+
+    void createLineEditImageProp(RDomWidget *domWidget, Html::TextFieldData *baseData);
+
 
     inline void createTextProp(RDomWidget * domWidget, QString text);
     inline void createReadonlyProp(RDomWidget * domWidget,bool readonly);
@@ -86,10 +102,17 @@ private:
 
     void replaceRuleByName(CSS::Rules &rules, QString ruleName, CSS::CssRule newRule);
 
+    void createCodeDatas(Html::DomNode *node);
+    void addCustomControlBgImg(QString srcImg);
+    void getDrawStyle(CXX::DropDownButtonData *twSwitchData);
+
     void createConnections(Html::DomNode *node);
+    void createControlImprove(Html::DomNode *node);
 
     QString switchCssRgbaToQt(QString cssRgba);
     QString switchCssGradientToQt(CSS::Rules linearGradients);
+
+    void getMaxWindowSize(QRect rect);
 
 private:
     DomHtmlPtr m_dataSrc;
@@ -104,6 +127,13 @@ private:
     SelectorTypeMap m_selectorType;
 
     MConnections * m_conns;
+
+    McontrolImproves *m_controlImproves;
+
+    QStringList m_customClassList;          /*!< 筛选用于提升的自定义类避免重复添加 */
+
+    QSize m_maxWindowSize;                  /*!< axure窗口最大尺寸 */
+
 };
 
 } //namespace RQt

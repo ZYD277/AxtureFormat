@@ -188,6 +188,39 @@
     <ClCompile Include="viewmodel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qui\props\mcontrolimprove.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qui\props\mcontrolimproves.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\dropdownbutton.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\custominputbox.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\customscrollbar.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\myfloatingwindow.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\customfoldingcontrol.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\customswichbtn.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\dropdownbox.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\switchpulldownbtn.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\buttongroupplate.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="template\code\abstractcodetemplate.h">
@@ -331,6 +364,33 @@
     <ClInclude Include="util\windumpfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="qui\props\mcontrolimproves.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qui\props\mcontrolimprove.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\dropdownbutton.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\customscrollbar.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\myfloatingwindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\customswichbtn.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\dropdownbox.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\switchpulldownbtn.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\buttongroupplate.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
@@ -391,5 +451,13 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include=".\AxtureFormat_resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="template\code\custominputbox.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
+    <QtMoc Include="template\code\customfoldingcontrol.h">
+      <Filter>Generated Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QDateTime>
+#include <QCoreApplication>
 #include <QDebug>
 
 #include "css/cssparser.h"
@@ -98,9 +99,13 @@ void SwitchTask::initTask(AxurePage page, QString outputDir,bool generateCode)
                         m_qtOutput.saveQrc();
 
                         //生成模板代码
+                        QString customClssPath = QCoreApplication::applicationDirPath();
+
                         GenerateProjectFile outputTemplte;
+                        outputTemplte.setWindMinimumSize(m_qtOutput.getWindowMinimumSize());
                         outputTemplte.setCodeDatas(m_qtOutput.getCppCodeDatas());
                         outputTemplte.setOutputInfo(m_outputDir,page.switchClassName,qssFileName);
+                        outputTemplte.setCustomControlPath(customClssPath,m_qtOutput.getCustomClassList());
                         outputTemplte.startOutput(generateCode);
 
                         tproj = P_Finish;

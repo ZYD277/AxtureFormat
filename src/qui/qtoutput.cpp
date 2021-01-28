@@ -9,6 +9,7 @@
 #include "props/mdomwidget.h"
 #include "props/mconnections.h"
 #include "props/mconnection.h"
+#include "props/mcontrolimproves.h"
 
 namespace RQt{
 
@@ -57,6 +58,10 @@ bool QtOutput::save(QString className,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS
         resc->addResource("res.qrc");
         ui.setDomResource(resc);
 
+        McontrolImproves * controlImproves = propFormat.customControls();
+        if(controlImproves)
+            ui.setCustomControls(controlImproves);
+
         MConnections * conns = propFormat.connections();
         if(conns){
             ui.setConnections(conns);
@@ -66,6 +71,10 @@ bool QtOutput::save(QString className,DomHtmlPtr ptr, CSS::CssMap globalCss, CSS
 
         m_originalResoucesLinks = propFormat.getOriginalResources();
         m_codeDatas = propFormat.getCodeDatas();
+
+        m_customClassList = propFormat.getCustomClassList();
+
+        m_minimumSize = propFormat.getWindowMinimumSize();
 
         return true;
     }

@@ -13,6 +13,7 @@
 #include <QString>
 #include <QMap>
 #include <QSet>
+#include <QSize>
 
 #include "cppstruct.h"
 
@@ -39,6 +40,8 @@ public:
     void setClssName(QString clazzName){m_clazzName = clazzName;}
     QString getClassName(){return m_clazzName;}
 
+    void setWindoMiniSize(QSize minimumSize){m_windowMinimumSize = minimumSize;}
+
 private:
     QStringList m_privateSlots;         /*!< 私有槽函数 */
     QStringList m_privateFuns;          /*!< 私有函数列表 */
@@ -50,8 +53,10 @@ private:
     QStringList m_funImplements;        /*!< 函数实现代码 */
 
     QString m_clazzName;                /*!< cpp中类名称 */
+
+    QSize m_windowMinimumSize;           /*!< 设置窗口最小尺寸 */
 };
 
-};
+}
 
 #endif // CPPGENERATE_H

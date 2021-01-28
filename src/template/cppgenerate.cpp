@@ -43,6 +43,7 @@ QString CppGenerate::getHeadContent()
 
     content += New_Line;
 
+
     if(m_privateSlots.size() > 0){
         content += ConcatNewLine("private slots:");
         foreach (QString tslots, m_privateSlots) {
@@ -87,6 +88,7 @@ QString CppGenerate::getCppContent()
     content += ConcatNewLine("    ui(new Ui::"+m_clazzName+")");
     content += ConcatNewLine("{");
     content += ConcatNewLine("    ui->setupUi(this);");
+    content += ConcatNewLine(QString("    setMinimumSize(%1,%2);").arg(m_windowMinimumSize.width()).arg(m_windowMinimumSize.height()));
 
     if(m_constructInitCode.size() > 0){
         foreach (QString code, m_constructInitCode) {

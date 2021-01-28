@@ -29,8 +29,6 @@ public:
 
     bool  startSave(RTextFile * file) override;
 
-    QString getQssGraduatedColour(QString value);
-
 private:
     CSS::Rules filterDuplicateData(CSS::Rules rules);
     void generateCss(RTextFile *file, CSS::CssMap& cssMap);

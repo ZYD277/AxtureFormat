@@ -60,7 +60,18 @@ SOURCES += main.cpp\
     util/threadpool.cpp \
     switchtask.cpp \
     logoutputer.cpp \
-    template/generateprojectfile.cpp
+    template/generateprojectfile.cpp \
+    qui/props/mcontrolimprove.cpp \
+    qui/props/mcontrolimproves.cpp \
+    template/code/dropdownbutton.cpp \
+    template/code/custominputbox.cpp \
+    template/code/customscrollbar.cpp \
+    template/code/myfloatingwindow.cpp \
+    template/code/customfoldingcontrol.cpp \
+    template/code/customswichbtn.cpp \
+    template/code/dropdownbox.cpp \
+    template/code/switchpulldownbtn.cpp \
+    template/code/buttongroupplate.cpp
 
 HEADERS  += \
     html/htmlparser.h \
@@ -109,7 +120,18 @@ HEADERS  += \
     switchtask.h \
     util/windumpfile.h \
     logoutputer.h \
-    template/generateprojectfile.h
+    template/generateprojectfile.h \
+    qui/props/mcontrolimprove.h \
+    qui/props/mcontrolimproves.h \
+    template/code/dropdownbutton.h \
+    template/code/custominputbox.h \
+    template/code/customscrollbar.h \
+    template/code/myfloatingwindow.h \
+    template/code/customfoldingcontrol.h \
+    template/code/customswichbtn.h \
+    template/code/dropdownbox.h \
+    template/code/switchpulldownbtn.h \
+    template/code/buttongroupplate.h
 
 FORMS    += \
     clientoperate.ui \
@@ -122,9 +144,9 @@ DEPENDLIB_PATH=$$PWD/../3rdPartyLib/
 INCLUDEPATH+="$$DEPENDLIB_PATH/include/gumbo"
 
 CONFIG(debug, debug|release) {
-    LIBS+="$$DEPENDLIB_PATH/lib/shared/2013/debug/gumbo.lib"
+    LIBS+="$$DEPENDLIB_PATH/lib/shared/msvc2013/debug/gumbo.lib"
 }else{
-    LIBS+="$$DEPENDLIB_PATH/lib/shared/2013/release/gumbo.lib"
+    LIBS+="$$DEPENDLIB_PATH/lib/shared/msvc2013/release/gumbo.lib"
 }
 
 RESOURCES += \

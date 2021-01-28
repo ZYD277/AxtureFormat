@@ -140,6 +140,8 @@ private:
     QStringList m_recentProjects;
     QList<QAction *> m_recentActions;
 
+	//QMenu * m_axureVersion;
+
     bool m_bTableMultiState;        /*!< 表格是否处于多选择状态下 */
 };
 #endif // CLIENTOPERATE_H
