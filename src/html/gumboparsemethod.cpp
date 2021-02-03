@@ -31,13 +31,20 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("窗体"),RGROUP);
     m_custControl.insert(QStringLiteral("二次确认弹窗"),RGROUP);
 
+    m_custControl.insert(QStringLiteral("图标"),RIMAGE);
+
+
     //自定义类控件
     m_custControl.insert(QStringLiteral("下拉框按钮"),R_CUSTOM_RBUTTON);
     m_custControl.insert(QStringLiteral("带有虚拟键盘的输入框"),R_CUSTOM_KEYBOARD_RFIELD);
     m_custControl.insert(QStringLiteral("双向滑块"),R_CUSTOM_BIDIRECTIONAL_SLIDER);
+    m_custControl.insert(QStringLiteral("单滑块"),R_CUSTOM_SINGLE_SLIDING_BLOCK);
     m_custControl.insert(QStringLiteral("悬浮窗"),R_CUSTOM_FLOATING_WINDOW);
     m_custControl.insert(QStringLiteral("折叠信息区"),R_CUSTOM_FOLDINGCONTROLS);
-//    m_custControl.insert(QStringLiteral("开关按钮"),R_CUSTOM_SWITCH_BUTTON);
+    m_custControl.insert(QStringLiteral("二级导航"),R_CUSTOM_LABEL);
+    m_custControl.insert(QStringLiteral("垂直导航"),R_CUSTOM_DRAWERD_CONTROL);
+//    m_custControl.insert(QStringLiteral("两层折叠内容"),R_CUSTOM_DOUBEL_FOLDINGCONTROLS);
+
 }
 
 GumboParseMethod::~GumboParseMethod()
@@ -177,7 +184,9 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper element, GumboNodeWrappe
         }
 
         QString classInfo = element.clazz();
-        if(classInfo == m_classInfo && classInfo == "ax_default"){
+        if(classInfo == m_classInfo && classInfo == "ax_default" 
+			&& !element.data_label().contains(QStringLiteral("导航标签背景"))
+			&& !element.data_label().contains(QStringLiteral("单滑块"))){
             return RGROUP;
         }
 
@@ -209,7 +218,10 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper element, GumboNodeWrappe
                 return R_CUSTOM_VIRTUAL_CONTAINER;
             else if(dataLabel.contains(QStringLiteral("二次确认弹窗"))){
                 return RGROUP;
-            }else if(dataLabel.contains(QStringLiteral("弹窗")))
+            }else if(dataLabel.contains(QStringLiteral("导航标签背景")))
+				return RDYNAMIC_PANEL;
+            else if(dataLabel.contains(QStringLiteral("弹窗"))
+                    || dataLabel.contains(QStringLiteral("导航标签")))
                 return RLABEL;
 
             if(dataLabel.contains(QStringLiteral("按钮"))||dataLabel.contains(QStringLiteral("文件夹"))
@@ -218,12 +230,13 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper element, GumboNodeWrappe
                     ||dataLabel.contains(QStringLiteral("暂停"))||dataLabel.contains(QStringLiteral("台位切换按钮"))
                     ||dataLabel.contains(QStringLiteral("显控设置按钮"))||dataLabel.contains(QStringLiteral("左"))
                     ||dataLabel.contains(QStringLiteral("右"))||dataLabel.contains(QStringLiteral("选项"))
-                    ||dataLabel.contains(QStringLiteral("训练"))
+                    ||dataLabel.contains(QStringLiteral("训练")) || dataLabel.contains(QStringLiteral("搜索"))
                     ||dataLabel.contains(QStringLiteral("下拉三角"))&& !dataLabel.contains(QStringLiteral("单选按钮"))){
 
                 if(classInfo.contains("box_1") || classInfo.contains("box_2") || classInfo.contains("box_3")
                         || classInfo.contains("label")||classInfo.contains(QStringLiteral("图片"))||classInfo.contains("ellipse")
-                        ||classInfo.contains("image")||classInfo.contains("selected")||classInfo.contains(QStringLiteral("形状"))){
+                        ||classInfo.contains("image")||classInfo.contains("selected")
+                        ||classInfo.contains(QStringLiteral("形状")) ||classInfo.contains(QStringLiteral("文本段落"))){
                     return RBUTTON;
                 }
             }
@@ -279,6 +292,7 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper element, GumboNodeWrappe
                 return RTEXT_FIELD;
             else if((classInfo.contains("label") || classInfo.contains("text")||
                      classInfo.contains("ellipse")||classInfo.contains("paragraph"))
+                    || classInfo.contains(QStringLiteral("文本段落"))
                     && (!classInfo.contains("text_area")))
             {
                 return RLABEL;
@@ -398,10 +412,14 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     case R_CUSTOM_VIRTUAL_CONTAINER:parseCustomVirtualContainer(element,node);break;
     case R_CUSTOM_RBUTTON:parseCustomButton(element,node);break;
     case R_CUSTOM_KEYBOARD_RFIELD:parseCustomKeyBoardField(element,node);break;
-    case R_CUSTOM_BIDIRECTIONAL_SLIDER:parseCustomScrollBarField(element,node);break;
-    case R_CUSTOM_FLOATING_WINDOW:parseCustomFloatingWindowField(element,node);break;
-    case R_CUSTOM_FOLDINGCONTROLS:parseCustomFoldingControlsField(element,node);break;
+    case R_CUSTOM_BIDIRECTIONAL_SLIDER:parseCustomDoubleScrollBar(element,node);break;
+    case R_CUSTOM_SINGLE_SLIDING_BLOCK:parseSignalSliderNodeData(element,node);break;
+    case R_CUSTOM_FLOATING_WINDOW:parseCustomFloatingWindowNodeData(element,node);break;
+    case R_CUSTOM_FOLDINGCONTROLS:parseCustomFoldingControlsNodeData(element,node);break;
     case R_CUSTOM_SWITCH_BUTTON:parseSwitchButtonNodeData(element,node);break;
+    case R_CUSTOM_LABEL:parseCustomLabelNodeData(element,node);break;
+    case R_CUSTOM_DRAWERD_CONTROL:parseCustomDrawerdControlNodeData(element,node);break;
+    case R_CUSTOM_DOUBEL_FOLDINGCONTROLS:parseCustomDoubelFoldingControlsNodeData(element,node);break;
 
     default:break;
     }
@@ -896,7 +914,7 @@ void GumboParseMethod::parseCustomKeyBoardField(GumboNodeWrapper &element,DomNod
  * @param element结点
  * @param node
  */
-void GumboParseMethod::parseCustomScrollBarField(GumboNodeWrapper &element,DomNode *node)
+void GumboParseMethod::parseCustomDoubleScrollBar(GumboNodeWrapper &element,DomNode *node)
 {
     GumboNodeWrapperList BidirectionalSliderNodes = element.children();
 
@@ -924,20 +942,37 @@ void GumboParseMethod::parseCustomScrollBarField(GumboNodeWrapper &element,DomNo
     t_BidirectionalSliderData->m_ID = element.id();
     t_BidirectionalSliderData->m_location = t_location;
 
+    auto setBaseInfo = [&](GumboNodeWrapper child){
+        CXX::BaseInfo t_baseInfo;
+        t_baseInfo.m_ID = child.id();
+        t_baseInfo.m_dataLabel = child.data_label();
+        t_baseInfo.m_className = child.clazz();
+        t_baseInfo.m_textInfo.m_text = child.secondChild().firstChild().firstChild().firstChild().text();
+        t_baseInfo.m_srcImg = child.firstChild().attribute(G_NodeHtml.SRC);
+
+        return t_baseInfo;
+    };
+
     std::for_each(BidirectionalSliderNodes.begin(),BidirectionalSliderNodes.end(),[&](GumboNodeWrapper sonChild){
         QString datalabel = sonChild.data_label();
 
         auto scrollBarInfo = [&](GumboNodeWrapper sonChild){
+
+            CXX::DScrollBar t_srollBar;
+            t_srollBar.m_id = sonChild.firstChild().id();
+
             GumboNodeWrapper scrollBarChild = sonChild.firstChild().firstChild().firstChild();
+
             QString dalabel = scrollBarChild.data_label();
-            if(dalabel.contains(QStringLiteral("滑块"))){
+
+
+            if(dalabel.contains(QStringLiteral("滑块")) && scrollBarChild.clazz() == "ax_default"){
                 CXX::Location t_location;
                 t_location.m_width = scrollBarChild.attribute(G_NodeHtml.DATA_WIDTH).toInt();
                 t_location.m_height = scrollBarChild.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
                 t_location.m_top = scrollBarChild.attribute(G_NodeHtml.DATA_TOP).toInt();
                 t_location.m_left = scrollBarChild.attribute(G_NodeHtml.DATA_LEFT).toInt();
 
-                CXX::DScrollBar t_srollBar;
                 t_srollBar.m_location = t_location;
 
                 GumboNodeWrapperList scrollBarChilds = scrollBarChild.children();
@@ -951,12 +986,34 @@ void GumboParseMethod::parseCustomScrollBarField(GumboNodeWrapper &element,DomNo
                     t_srollBar.m_srcImgs.append(t_srcImgInfo);
 
                 });
-                return t_srollBar;
+            }else{
+                CXX::BaseInfo t_srcImgInfo;
+                t_srcImgInfo.m_ID = scrollBarChild.id();
+                t_srcImgInfo.m_className = scrollBarChild.clazz();
+                t_srcImgInfo.m_dataLabel = scrollBarChild.data_label();
+                t_srcImgInfo.m_srcImg = scrollBarChild.firstChild().attribute(G_NodeHtml.SRC);
+
+                t_srollBar.m_srcImgs.append(t_srcImgInfo);
+
             }
+
+            return t_srollBar;
         };
-        if(datalabel.contains(QStringLiteral("左滑块"))){
+        if(datalabel == QStringLiteral("左滑块文字提示")){
+
+            t_BidirectionalSliderData->m_leftToolTip.m_ID = sonChild.id();
+            GumboNodeWrapper toolTipChild = sonChild.firstChild().firstChild().firstChild();
+
+            t_BidirectionalSliderData->m_leftToolTip.m_textBox = setBaseInfo(toolTipChild);
+        }else if(datalabel == QStringLiteral("右滑块文字提示")){
+
+            t_BidirectionalSliderData->m_rightToolTip.m_ID = sonChild.id();
+            GumboNodeWrapper toolTipChild = sonChild.firstChild().firstChild().firstChild();
+
+            t_BidirectionalSliderData->m_rightToolTip.m_textBox = setBaseInfo(toolTipChild);
+        }else if(datalabel.contains(QStringLiteral("左滑块"))){
             t_BidirectionalSliderData->m_leftScrollBar.m_id = sonChild.id();
-			t_BidirectionalSliderData->m_leftScrollBar = scrollBarInfo(sonChild);
+            t_BidirectionalSliderData->m_leftScrollBar = scrollBarInfo(sonChild);
 
         }else if(datalabel.contains(QStringLiteral("右滑块"))){
             t_BidirectionalSliderData->m_rightScrollBar.m_id = sonChild.id();
@@ -981,11 +1038,94 @@ void GumboParseMethod::parseCustomScrollBarField(GumboNodeWrapper &element,DomNo
 }
 
 /**
+ * @brief 针对特殊的单滑块获取其相关属性用于控件提升设置参数手动实现这一控件样式以及功能
+ * @param element
+ * @param node
+ */
+void GumboParseMethod::parseSignalSliderNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    GroupData * customSingleScrolldata = new GroupData();
+
+    node->m_data = customSingleScrolldata;
+
+    customSingleScrolldata->m_textId = element.id();
+    customSingleScrolldata->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    customSingleScrolldata->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    customSingleScrolldata->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    customSingleScrolldata->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+    CXX::SingleSlidingBlockData * singleSlidingBlockData = new CXX::SingleSlidingBlockData();
+    singleSlidingBlockData->m_ID = element.id();
+    singleSlidingBlockData->m_location.m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
+    singleSlidingBlockData->m_location.m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
+    singleSlidingBlockData->m_location.m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+    singleSlidingBlockData->m_location.m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+
+    Html::ControlImproveInfo t_controlImproveInfo;
+    t_controlImproveInfo.m_newClass = "MySingleScrollBar";
+    t_controlImproveInfo.m_extends = "QWidget";
+    t_controlImproveInfo.m_headFileName = "mysinglescrollbar.h";
+    customSingleScrolldata->m_controlImproveInfos.append(t_controlImproveInfo);
+
+    customSingleScrolldata->m_codeData = singleSlidingBlockData;
+
+    GumboNodeWrapperList children = element.children();
+
+    auto setBaseInfo = [&](GumboNodeWrapper child){
+        CXX::BaseInfo t_baseInfo;
+        t_baseInfo.m_ID = child.id();
+        t_baseInfo.m_dataLabel = child.data_label();
+        t_baseInfo.m_className = child.clazz();
+        t_baseInfo.m_textInfo.m_text = child.secondChild().firstChild().firstChild().firstChild().text();
+        t_baseInfo.m_srcImg = child.firstChild().attribute(G_NodeHtml.SRC);
+
+        return t_baseInfo;
+    };
+    for(GumboNodeWrapper child : children){
+        QString datalabel = child.data_label();
+        QString className = child.clazz();
+        if(datalabel == QStringLiteral("滑块")){
+
+            singleSlidingBlockData->m_leftScrollBar.m_id = child.firstChild().id();
+
+            singleSlidingBlockData->m_leftScrollBar.m_location = singleSlidingBlockData->m_location;
+
+            GumboNodeWrapper sliderChild = child.firstChild().firstChild().firstChild();
+
+            singleSlidingBlockData->m_leftScrollBar.m_srcImgs.append(setBaseInfo(sliderChild));
+
+        }else if(datalabel == QStringLiteral("文字提示")){
+
+            singleSlidingBlockData->m_letfToolTip.m_ID = child.id();
+            GumboNodeWrapper toolTipChild = child.firstChild().firstChild().firstChild();
+
+            singleSlidingBlockData->m_letfToolTip.m_textBox = setBaseInfo(toolTipChild);
+        }else if(datalabel == QStringLiteral("输入框")){
+
+            singleSlidingBlockData->m_inputBox.m_ID = child.id();
+            if(child.firstChild().data_label().contains(QStringLiteral("默认"))){
+                GumboNodeWrapperList inputChildren = child.firstChild().firstChild().firstChild().children();
+                for(GumboNodeWrapper inputChild : inputChildren){
+                    singleSlidingBlockData->m_inputBox.m_inputBoxInfos.append(setBaseInfo(inputChild));
+                }
+            }
+
+        }else{
+            if(className.contains(QStringLiteral("形状"))){
+                singleSlidingBlockData->m_rectangularsInfo.append(setBaseInfo(child));
+            }
+        }
+    }
+
+}
+
+/**
  * @brief 针对自制悬浮穿解析提升为自定义类
  * @param element
  * @param node
  */
-void GumboParseMethod::parseCustomFloatingWindowField(GumboNodeWrapper &element,DomNode *node)
+void GumboParseMethod::parseCustomFloatingWindowNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     //悬浮窗目前默认使用动态面板的第一个页面属性
     GumboNodeWrapper firstChild = element.firstChild();
@@ -1093,7 +1233,7 @@ void GumboParseMethod::parseCustomFloatingWindowField(GumboNodeWrapper &element,
 /**
  * @brief 自定义折叠控件
  */
-void GumboParseMethod::parseCustomFoldingControlsField(GumboNodeWrapper &element,DomNode *node)
+void GumboParseMethod::parseCustomFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     GroupData * customFoldingControlData = new GroupData();
 
@@ -1182,6 +1322,202 @@ void GumboParseMethod::parseCustomFoldingControlsField(GumboNodeWrapper &element
     customFoldingControlData->m_codeData = foldingControls;
     node->m_data = customFoldingControlData;
 
+}
+
+/**
+ * @brief 双层折叠信息
+ */
+void GumboParseMethod::parseCustomDoubelFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    GroupData * customFoldingControlData = new GroupData();
+
+    customFoldingControlData->m_textId = element.id();
+
+    CXX::FoldingControls *foldingControls = new CXX::FoldingControls();
+    foldingControls->m_ID = element.id();
+
+}
+
+/**
+ * @brief 针对特殊标签，鼠标进入弹出二级框，使用自定义类处理，获取必要参数，用于label属性设置
+ */
+void GumboParseMethod::parseCustomLabelNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    BaseData * data = new BaseData();
+
+    CXX::CustomLabelData *customLabelData = new CXX::CustomLabelData();
+
+    customLabelData->m_ID = element.id();
+
+    data->m_codeData = customLabelData;
+
+
+    Html::ControlImproveInfo t_controlImproveInfo;
+    t_controlImproveInfo.m_newClass = "MyLabel";
+    t_controlImproveInfo.m_extends = "QLabel";
+    t_controlImproveInfo.m_headFileName = "mylabel.h";
+
+    data->m_controlImproveInfos.append(t_controlImproveInfo);
+
+    GumboNodeWrapperList children = element.children();
+
+    auto getBaseInfo = [&](GumboNodeWrapper child){
+        CXX::BaseInfo t_baseInfo;
+        t_baseInfo.m_ID = child.id();
+        if(child.firstChild().hasAttribute(G_NodeHtml.SRC))
+            t_baseInfo.m_srcImg = child.firstChild().attribute(G_NodeHtml.SRC);
+
+        t_baseInfo.m_textInfo.m_text = child.secondChild().firstChild().firstChild().firstChild().text();
+
+        return t_baseInfo;
+
+    };
+    for(GumboNodeWrapper child : children){
+        if(child.data_label().contains(QStringLiteral("默认"))){
+            GumboNodeWrapper labelChild = child.firstChild().firstChild();
+
+            customLabelData->m_defaultInfo = getBaseInfo(labelChild);
+
+            data->m_text =  labelChild.secondChild().firstChild().firstChild().firstChild().text();
+            data->m_srcImageId = labelChild.id();
+
+        }else if(child.data_label().contains(QStringLiteral("鼠标进入"))){
+            GumboNodeWrapperList mouseEnterChildren = child.firstChild().children();
+            for(GumboNodeWrapper mouseEnterChild : mouseEnterChildren){
+                if(mouseEnterChild.data_label().contains(QStringLiteral("二级弹出"))){
+                    customLabelData->m_labelPopupWindow.m_location.m_height = mouseEnterChild.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+                    customLabelData->m_labelPopupWindow.m_location.m_width = mouseEnterChild.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+                    customLabelData->m_labelPopupWindow.m_location.m_top = mouseEnterChild.attribute(G_NodeHtml.DATA_TOP).toInt();
+                    customLabelData->m_labelPopupWindow.m_location.m_left = mouseEnterChild.attribute(G_NodeHtml.DATA_LEFT).toInt();
+
+                    customLabelData->m_labelPopupWindow.m_ID = mouseEnterChild.firstChild().id();
+
+                    GumboNodeWrapperList optionsChildren = mouseEnterChild.children();
+
+                    for(GumboNodeWrapper optionChild : optionsChildren){
+                        if(!optionChild.secondChild().firstChild().firstChild().firstChild().text().isEmpty()){
+                            customLabelData->m_labelPopupWindow.m_optionsInfo.append(getBaseInfo(optionChild));
+                        }
+                    }
+                }else{
+                    if(mouseEnterChild.clazz().contains(QStringLiteral("形状"))){
+                        customLabelData->m_mouseEnter = getBaseInfo(mouseEnterChild);
+                    }
+                }
+            }
+        }
+    }
+
+    node->m_data = data;
+}
+
+/**
+ * @brief 针对各种类似抽屉型的控件使用控件提升生成
+ */
+void GumboParseMethod::parseCustomDrawerdControlNodeData(GumboNodeWrapper &element,DomNode *node)
+{
+    GroupData * customFoldingControlData = new GroupData();
+
+    customFoldingControlData->m_textId = element.id();
+
+    node->m_data = customFoldingControlData;
+
+    customFoldingControlData->m_textId = element.id();
+
+    CXX::FoldingControls *foldingControls = new CXX::FoldingControls();
+    foldingControls->m_ID = element.id();
+    foldingControls->m_addScrollBar = false;
+
+    customFoldingControlData->m_srcImageId = element.firstChild().id();//默认第一个子节点为背景样式
+
+    Html::ControlImproveInfo t_controlImproveInfo;
+    t_controlImproveInfo.m_newClass = "MyFoldingControl";
+    t_controlImproveInfo.m_extends = "QWidget";
+    t_controlImproveInfo.m_headFileName = "myfoldingcontrol.h";
+    customFoldingControlData->m_controlImproveInfos.append(t_controlImproveInfo);
+
+    customFoldingControlData->m_codeData = foldingControls;
+
+    auto setLocationInfo = [&](GumboNodeWrapper child){
+        CXX::Location locationInfo;
+        locationInfo.m_left = child.attribute(G_NodeHtml.DATA_LEFT).toInt();
+        locationInfo.m_top = child.attribute(G_NodeHtml.DATA_TOP).toInt();
+        locationInfo.m_width = child.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+        locationInfo.m_height = child.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+        return locationInfo;
+    };
+
+    auto getBaseInfo = [&](GumboNodeWrapper curNode){
+        CXX::BaseInfo t_baseInfo;
+        t_baseInfo.m_ID = curNode.id();
+        t_baseInfo.m_srcImg = curNode.firstChild().attribute(G_NodeHtml.SRC);
+        t_baseInfo.m_dataLabel = curNode.data_label();
+        t_baseInfo.m_textInfo.m_text = curNode.secondChild().firstChild().firstChild().firstChild().text();
+
+        return t_baseInfo;
+
+    };
+
+    foldingControls->m_location = setLocationInfo(element);
+
+    customFoldingControlData->m_left = foldingControls->m_location.m_left;
+    customFoldingControlData->m_top = foldingControls->m_location.m_top;
+    customFoldingControlData->m_width = foldingControls->m_location.m_width;
+    customFoldingControlData->m_height = foldingControls->m_location.m_height;
+
+
+    GumboNodeWrapperList children = element.children();
+    for(GumboNodeWrapper child : children){
+        if(child.data_label().contains(QStringLiteral("通用"))){
+
+            CXX::Information t_infomation;
+            t_infomation.m_ID = child.id();
+
+            GumboNodeWrapperList pageChildren = child.children();
+            for(GumboNodeWrapper pageChild : pageChildren){
+                if(pageChild.data_label().contains(QStringLiteral("折叠信息"))){
+
+                    GumboNodeWrapperList foldingInfoChildren = pageChild.firstChild().children();
+                    for(GumboNodeWrapper foldingInfoChild : foldingInfoChildren){
+                        if(foldingInfoChild.clazz() == "ax_default"){
+
+                            t_infomation.m_foldingInfo.m_ID = foldingInfoChild.id();
+                            t_infomation.m_foldingInfo.m_location = setLocationInfo(foldingInfoChild);
+
+                            for(GumboNodeWrapper sonChild : foldingInfoChild.children()){
+                                if(sonChild.data_label().contains(QStringLiteral("箭头"))){
+                                    CXX::BaseInfo t_baseInfo;
+                                    t_baseInfo = getBaseInfo(sonChild.secondChild());
+                                    t_baseInfo.m_dataLabel = sonChild.data_label();
+                                    t_infomation.m_foldingInfo.m_information.append(t_baseInfo);
+                                }else{
+                                    CXX::BaseInfo t_baseInfo;
+                                    t_baseInfo = getBaseInfo(sonChild);
+                                    t_infomation.m_foldingInfo.m_information.append(t_baseInfo);
+                                }
+                            }
+
+                        }
+                    }
+                }else if(pageChild.data_label().contains(QStringLiteral("展开信息"))){
+                    GumboNodeWrapperList unfoldingInfoChildren = pageChild.firstChild().children();
+
+                    t_infomation.m_unFoldInfo.m_ID = pageChild.id();
+                    t_infomation.m_unFoldInfo.m_autoSetControl = false;
+
+                    for(GumboNodeWrapper unfoldingInfoChild : unfoldingInfoChildren){
+                       if(unfoldingInfoChild.data_label().contains(QStringLiteral("图标"))){
+
+                           t_infomation.m_unFoldInfo.m_information.append(getBaseInfo(unfoldingInfoChild));
+                       }
+                    }
+                }
+            }
+
+            foldingControls->m_informations.append(t_infomation);
+        }
+    }
 }
 
 /*!
@@ -1672,12 +2008,10 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
     if(dataLabel.contains(QStringLiteral("标签按钮"))){
         data->m_bChecked = true;
 
-//        SignalSlotInfo sinfo;
-//        sinfo.m_sender = element.id();
-//        sinfo.m_signal = "clicked(bool)";
-//        sinfo.m_receiver = element.id();
-//        sinfo.m_slot = "setDisabled(bool)";
-//        data->m_signals.append(sinfo);
+    }else if(dataLabel.contains(QStringLiteral("普通按钮"))){
+        data->m_bChecked = false;
+        data->m_needMouseChecked = false;
+
     }else if(dataLabel.contains(QStringLiteral("关闭按钮"))){
         GumboNodeWrapperList chils = element.children();
         for(int j = 0; j < chils.size(); j++){
@@ -1711,6 +2045,12 @@ void GumboParseMethod::parseButtonNodeData(GumboNodeWrapper &element, DomNode *n
     }else if(dataLabel.contains(QStringLiteral("下拉按钮"))){
         data->m_needMouseChecked = false;
         data->m_needMouseOver = false;
+    }else if(dataLabel.contains(QStringLiteral("选择操作按钮"))
+             ||dataLabel.contains(QStringLiteral("主功能按钮"))){
+        data->m_needMouseChecked = false;
+    }else if(dataLabel.contains(QStringLiteral("一级导航按钮"))){
+        data->m_needMouseOver = false;
+        data->m_needMousePressed = false;
     }
     node->m_data = data;
 }
@@ -1912,8 +2252,7 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                 }
             }
 
-        }else if(element.data_label() == QStringLiteral("开关下拉按钮")
-                 || element.data_label() == QStringLiteral("选择器")){
+        }else if(element.data_label() == QStringLiteral("开关下拉按钮")){
             GumboNodeWrapperList children = element.children();
 
             data->m_dataLabel = element.data_label();
@@ -1926,8 +2265,7 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
 
             for(GumboNodeWrapper child : children){
                 QString datalabel = child.data_label();
-                if(datalabel.contains(QStringLiteral("开"))
-                        ||datalabel.contains(QStringLiteral("默认"))){
+                if(datalabel.contains(QStringLiteral("开"))){
 
                     switchPullDownBtnData->m_openPageID = child.id();
 
@@ -1935,20 +2273,12 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
 
                     for(GumboNodeWrapper openChild : openChildren){
                         QString datalabel = openChild.data_label();
-                        if(datalabel.contains(QStringLiteral("按钮"))){
+                        if(datalabel.contains(QStringLiteral("开关按钮"))){
                             switchPullDownBtnData->m_openBtnID = openChild.id();
-                        }else if(datalabel.contains(QStringLiteral("下拉"))){
-                            GumboNodeWrapperList imgChildren = openChild.children();
-                            for(GumboNodeWrapper imgChild : imgChildren){
-                                if(imgChild.firstChild().hasAttribute(G_NodeHtml.SRC)){
-                                   switchPullDownBtnData->m_icon =  imgChild.firstChild().attribute(G_NodeHtml.SRC);
-                                }
-                            }
                         }
                     }
 
-                }else if(datalabel.contains(QStringLiteral("关"))
-                         ||datalabel.contains(QStringLiteral("按下"))){
+                }else if(datalabel.contains(QStringLiteral("关"))){
 
                     data->m_childPageID = child.id();
 
@@ -1959,15 +2289,19 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                     for(GumboNodeWrapper closeChild : closeChildren){
                         QString datalabel = closeChild.data_label();
                         if(datalabel.contains(QStringLiteral("按钮"))){
+
                             switchPullDownBtnData->m_closeBtnID = closeChild.id();
+
                         }else if(datalabel.contains(QStringLiteral("下拉"))){
+
                              GumboNodeWrapperList pullDownChildren = closeChild.children();
+
                              for(GumboNodeWrapper pullDownChild : pullDownChildren){
+
                                  QString datalabel = pullDownChild.data_label();
+
                                  if(datalabel.contains(QStringLiteral("按钮"))){
                                      switchPullDownBtnData->m_triggerPopupBtnID = pullDownChild.id();
-                                 }else if(datalabel.contains(QStringLiteral("图标"))){
-                                     switchPullDownBtnData->m_icon = pullDownChild.firstChild().attribute(G_NodeHtml.SRC);
                                  }
                              }
                         }else if(datalabel.contains(QStringLiteral("单模块弹出"))){
@@ -1995,6 +2329,81 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                     }
                 }
             }
+        }else if(element.data_label().contains(QStringLiteral("选择器"))){
+            GumboNodeWrapperList children = element.children();
+
+            data->m_dataLabel = element.data_label();
+
+            CXX::TheSelectorMenu *selectorMenu = new CXX::TheSelectorMenu();
+
+            selectorMenu->m_stackedWidgetID = element.id();
+            data->m_codeData = selectorMenu;
+
+            for(GumboNodeWrapper child : children){
+                QString datalabel = child.data_label();
+                if(datalabel.contains(QStringLiteral("默认"))){
+
+                    selectorMenu->m_defaultPageID = child.id();
+
+                    if(child.firstChild().firstChild().data_label().contains(QStringLiteral("选择器按钮默认"))){
+
+                        GumboNodeWrapperList defaultChildren = child.firstChild().firstChild().children();
+
+                        for(GumboNodeWrapper defaultChild : defaultChildren){
+
+                            if(defaultChild.data_label().contains(QStringLiteral("选择器按钮"))){
+                                selectorMenu->m_defaultBtnID = defaultChild.id();
+                            }
+
+                        }
+                    }
+                }else if(datalabel.contains(QStringLiteral("按下"))){
+
+                    data->m_childPageID = child.id();
+
+                    selectorMenu->m_pressedPageID = child.id();
+
+                    GumboNodeWrapperList pressedChildren = child.firstChild().children();
+
+                    for(GumboNodeWrapper pressedChild : pressedChildren){
+
+                        if(pressedChild.data_label().contains(QStringLiteral("下拉菜单"))){
+
+                            data->m_left = pressedChild.attribute(G_NodeHtml.DATA_LEFT).toInt();
+                            data->m_top = pressedChild.attribute(G_NodeHtml.DATA_TOP).toInt();
+                            data->m_width = pressedChild.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+                            data->m_height = pressedChild.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+                            selectorMenu->m_popupWidgetID = pressedChild.id();
+
+                            GumboNodeWrapperList popupChildren = pressedChild.children();
+
+                            for(GumboNodeWrapper popupChild : popupChildren){
+
+                                QString datalabel = popupChild.data_label();
+                                if(datalabel.contains(QStringLiteral("选项"))){
+
+                                    selectorMenu->m_optionIdList.append(popupChild.id());
+
+                                }
+
+                            }
+                        }else if(pressedChild.data_label().contains(QStringLiteral("选择器按钮按下"))){
+
+                            GumboNodeWrapperList pressedChildren = pressedChild.children();
+
+                            for(GumboNodeWrapper pressedChild : pressedChildren){
+
+                                if(pressedChild.data_label().contains(QStringLiteral("选择器按钮"))){
+                                    selectorMenu->m_pressedBtnID = pressedChild.id();
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
         }
     }
 
@@ -2103,6 +2512,16 @@ void GumboParseMethod::parseImageNodeData(GumboNodeWrapper &element, DomNode *no
         data->m_srcImageId = element.firstChild().id();
     }
 
+    if(element.data_label().contains(QStringLiteral("图标"))){
+         GumboNodeWrapperList children = element.children();
+
+         for(GumboNodeWrapper child : children){
+             if(child.firstChild().hasAttribute(G_NodeHtml.SRC)){
+                 data->m_src = child.firstChild().attribute(G_NodeHtml.SRC);
+                 data->m_srcImageId = child.id();
+             }
+         }
+    }
 
     data->m_toolTip = element.attribute(G_NodeHtml.TITLE);
     data->m_bDisabled = element.clazz().contains(G_NodeHtml.DISABLED);
@@ -2258,6 +2677,9 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
             data->m_signals.append(sinfo);
         }
     }else{
+        /*!< 部分特殊控件位置大小需要结合下拉菜单的位置信息综合计算 */
+        CXX::Location menuLocation;
+
         if(dataLabel.contains(QStringLiteral("二次确认弹窗"))){
             GumboNodeWrapperList children = element.children();
             for(int i = 0; i< children.size(); i++){
@@ -2285,7 +2707,7 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                     }
                 }
             }
-        }else if(dataLabel.contains(QStringLiteral("选项"))){     //表格2
+        }else if(dataLabel == QStringLiteral("选项")){     //表格2
             data->m_visible = false;
 
             GumboNodeWrapperList children = element.children();
@@ -2398,11 +2820,12 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                 mutexData->m_buttIds.append(child.id());
             }
         }else if(dataLabel.contains(QStringLiteral("二级弹出")) ||dataLabel.contains(QStringLiteral("下拉框"))
-                 ||dataLabel.contains(QStringLiteral("单模块弹出"))){
+                 ||dataLabel.contains(QStringLiteral("单模块弹出")) || dataLabel.contains(QStringLiteral("下拉菜单"))){
             QString m_className = element.clazz();
             if(m_className.contains("hidden"))
                 data->m_visible = false;
-        }else if(dataLabel.contains(QStringLiteral("操作栏"))){
+        }else if(dataLabel.contains(QStringLiteral("操作栏"))
+                 || dataLabel.contains(QStringLiteral("一级导航"))){
             GumboNodeWrapperList children = element.children();
 
             CXX::ButtonGroupCodeData * btnGroupData = new CXX::ButtonGroupCodeData;
@@ -2413,12 +2836,114 @@ void GumboParseMethod::parseGroupNodeData(GumboNodeWrapper &element, DomNode *no
                 if(child.data_label().contains(QStringLiteral("按钮")))
                     btnGroupData->m_buttIds.append(child.id());
             }
+        }else if(dataLabel.contains(QStringLiteral("主功能加折叠选项"))
+                 || dataLabel.contains(QStringLiteral("选择操作"))
+                 || dataLabel.contains(QStringLiteral("主操作加次操作"))){
+
+            GumboNodeWrapperList children = element.children();
+
+            CXX::DropDownBoxData *dropDownBoxData = new CXX::DropDownBoxData();
+
+            data->m_codeData = dropDownBoxData;
+
+
+            for(GumboNodeWrapper child : children){
+                if(child.data_label().contains(QStringLiteral("下拉菜单"))){
+                    dropDownBoxData->m_widgetID = child.id();
+
+                    menuLocation.m_width = child.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+                    menuLocation.m_height = child.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+                    GumboNodeWrapperList pullDownChildren = child.children();
+                    for(GumboNodeWrapper pullDownChild : pullDownChildren){
+                        if(pullDownChild.data_label().contains(QStringLiteral("选项")))
+                            dropDownBoxData->m_optionIdList.append(pullDownChild.id());
+                    }
+
+                }else if(child.data_label().contains(QStringLiteral("触发按钮"))){
+
+                    dropDownBoxData->m_buttonID = child.id();
+
+                }else {
+                    if(child.clazz() == "ax_default" && dropDownBoxData->m_buttonID.isEmpty()){
+                        GumboNodeWrapperList btnGroupChildren = child.children();
+
+                        for(GumboNodeWrapper btnGroupChild : btnGroupChildren){
+                            if(btnGroupChild.data_label().contains(QStringLiteral("按钮"))){
+                                dropDownBoxData->m_buttonID = btnGroupChild.id();
+                            }
+                        }
+                    }
+                }
+            }
+
+        }else if(dataLabel.contains(QStringLiteral("实时监测左侧导航栏"))){
+
+            CXX::ButtonGroupCodeData * btnGroupData = new CXX::ButtonGroupCodeData;
+            data->m_codeData = btnGroupData;
+
+            GumboNodeWrapperList children = element.children();
+
+
+            auto getSelectionID = [&](GumboNodeWrapper child){
+
+                GumboNodeWrapperList childNodes = child.children();
+                for(GumboNodeWrapper childNode : childNodes){
+                    if(childNode.firstChild().firstChild().data_label().contains(QStringLiteral("按钮"))){
+                        btnGroupData->m_buttIds.append(childNode.firstChild().firstChild().id());
+                    }
+                }
+            };
+            for(GumboNodeWrapper child : children){
+                if(child.hasAttribute(G_NodeHtml.SELECTIONGROUP)){
+
+                    QString selectionGroupName = child.attribute(G_NodeHtml.SELECTIONGROUP);
+
+                    if(selectionGroupName.contains(QStringLiteral("实时监测左侧导航栏"))){
+
+                        GumboNodeWrapperList selectionGroupChildren = child.children();
+                        for(GumboNodeWrapper selectionGroupChild : selectionGroupChildren){
+                            if(selectionGroupChild.data_label().contains(QStringLiteral("导航标签背景"))){
+                                getSelectionID(selectionGroupChild);
+                            }
+                        }
+                    }
+                }
+            }
+        }else if(dataLabel.contains(QStringLiteral("前置标签输入框"))){
+
+            GumboNodeWrapperList children = element.children();
+            for(GumboNodeWrapper child : children){
+                if(child.data_label().contains(QStringLiteral("选择器"))){
+
+                    GumboNodeWrapperList selectorChildren = child.children();
+
+                    for(GumboNodeWrapper electorChild : selectorChildren){
+                        if(electorChild.data_label().contains(QStringLiteral("按下"))){
+                            GumboNodeWrapperList pressedChildren = electorChild.firstChild().children();
+                            for(GumboNodeWrapper pressedChild : pressedChildren){
+                                if(pressedChild.data_label().contains(QStringLiteral("下拉菜单"))){
+
+                                    menuLocation.m_width = pressedChild.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+                                    menuLocation.m_height = pressedChild.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         data->m_left = element.attribute(G_NodeHtml.DATA_LEFT).toInt();
         data->m_top = element.attribute(G_NodeHtml.DATA_TOP).toInt();
         data->m_width = element.attribute(G_NodeHtml.DATA_WIDTH).toInt();
         data->m_height = element.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+        if(menuLocation.m_width > 0 && menuLocation.m_height > 0){
+
+            data->m_width = data->m_width < menuLocation.m_width ? menuLocation.m_width : data->m_width;
+            data->m_height = data->m_height < (menuLocation.m_height + data->m_height) ? (menuLocation.m_height + data->m_height) : data->m_height;
+        }
     }
 
     node->m_data = data;

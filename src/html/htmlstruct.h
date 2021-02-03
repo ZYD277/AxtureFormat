@@ -87,10 +87,13 @@ enum NodeType{
     R_CUSTOM_RBUTTON,                   /*!< 自定义元件-下拉框按钮 */
     R_CUSTOM_KEYBOARD_RFIELD,                 /*!< 自定义元件-带有虚拟盘的输入框 */
     R_CUSTOM_BIDIRECTIONAL_SLIDER,                /*!< 自定义元件-双向滚动条 */
+    R_CUSTOM_SINGLE_SLIDING_BLOCK,              /*!< 自定义元件-单滑块 */
     R_CUSTOM_FLOATING_WINDOW,                /*!< 自定义元件-悬浮窗 */
     R_CUSTOM_FOLDINGCONTROLS,              /*!< 自定义元件-折叠控件 */
     R_CUSTOM_SWITCH_BUTTON,					/*!< 自制开关按钮 */
-
+    R_CUSTOM_LABEL,					/*!< 自制标签 */
+	R_CUSTOM_DRAWERD_CONTROL,					/*!< 自定义抽屉类型控件 */
+    R_CUSTOM_DOUBEL_FOLDINGCONTROLS,              /*!< 自定义元件-双层折叠控件 */
 
 };
 
@@ -334,6 +337,7 @@ struct GroupData : public BaseData{
     ~GroupData(){}
 
     QString m_geometryReferenceId;      /*!< 自定义控件’触发弹窗‘中窗体的尺寸需要依赖子div中’框‘的尺寸 */
+    QStringList m_childIDList;       /*!< 9版本组合控件子控件有隐藏控件的情况下html文件提供的尺寸大小不正确需要手动计算*/
 };
 
 /*!

@@ -42,6 +42,9 @@ public:
     void setProCursor(QString value);
     QString propCursor()const {return m_propString;}
 
+    void setIconSet(QString value);
+    QString propIconSet()const {return m_propString;}
+
     void setPropEnum(QString value);
     QString propEnum()const {return m_propString;}
 

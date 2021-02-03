@@ -104,6 +104,9 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::R_CUSTOM_FLOATING_WINDOW:return QString("MyFloatingWindow");break;
         case Html::R_CUSTOM_FOLDINGCONTROLS:return QString("MyFoldingControl");break;
         case Html::R_CUSTOM_SWITCH_BUTTON:return QString("MySwitchButton");break;
+        case Html::R_CUSTOM_SINGLE_SLIDING_BLOCK:return QString("MySingleScrollBar");break;
+        case Html::R_CUSTOM_LABEL:return QString("MyLabel");break;
+        case Html::R_CUSTOM_DRAWERD_CONTROL:return QString("MyFoldingControl");break;
 
         default:return QString();break;
     }
@@ -163,6 +166,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             break;
         }
+        case Html::R_CUSTOM_SINGLE_SLIDING_BLOCK:
         case Html::R_CUSTOM_BIDIRECTIONAL_SLIDER:
         case Html::RGROUP:{
             Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
@@ -186,7 +190,6 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             }else{
                 rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
             }
-
             break;
         }
         case Html::RDYNAMIC_PANEL:{
@@ -604,6 +607,7 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             break;
         }
 
+        case Html::R_CUSTOM_LABEL:
         case Html::RLABEL:{
             createEnableProp(domWidget,node->m_data->m_bDisabled);
             createTextProp(domWidget,node->m_data->m_text);
@@ -646,6 +650,10 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
             else if(node->m_class.contains(QStringLiteral("_六级标题")))
                 m_selectorType.insert(node->m_id+"_div_10px",Html::RLABEL);
 
+            if(node->m_type == Html::R_CUSTOM_LABEL){
+
+            }
+
             break;
         }
         case Html::RUNMENUBUTTON:
@@ -683,6 +691,13 @@ void FormatProperty::createDomWidget(RDomWidget * parentWidget,Html::DomNode *no
 
             if(buttData->m_toolTip.size() > 0)
                 createToolTipProp(domWidget,buttData->m_toolTip);
+
+            if(buttData->m_dataLabel.contains(QStringLiteral("带图标按钮"))){
+                CXX::ButtonWithIcon * buttonWithIcon = dynamic_cast<CXX::ButtonWithIcon *>(node->m_data->m_codeData);
+
+                addCustomControlBgImg(buttonWithIcon->m_srcIcon);
+                buttonWithIcon->m_srcIcon = switchImageURL(buttonWithIcon->m_srcIcon);
+            }
 
             break;
         }
@@ -1169,7 +1184,7 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
 
     }
     //修改RIMAGE和RLABEL类型的位置尺寸为背景图片的
-    else if(((node->m_type == Html::RIMAGE)||(node->m_type == Html::RLABEL)))
+    else if(node->m_type == Html::RIMAGE || node->m_type == Html::RLABEL)
     {
         if(!node->m_data->m_srcImageId.isEmpty()){
             QString twidth = getCssStyle(node->m_data->m_srcImageId,"width");
@@ -1181,11 +1196,10 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             rect.setTop(rect.top() + removePxUnit(ttop));
             rect.setWidth(removePxUnit(twidth));
             rect.setHeight(removePxUnit(theight));
-        }else{
-            rect = QRect(node->m_data->m_left,node->m_data->m_top,node->m_data->m_width,node->m_data->m_height);
         }
 
     }
+
     else if(node->m_type == Html::RRADIO_BUTTON || node->m_type == Html::RCHECKBOX)
     {
         if(rect.width() == 0 || rect.height() == 0){
@@ -1257,12 +1271,13 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             rect.setWidth(removePxUnit(twidth));
             rect.setHeight(removePxUnit(theight));
         }
-    }else if(node->m_type == Html::R_CUSTOM_BIDIRECTIONAL_SLIDER){
+    }else if(node->m_type == Html::R_CUSTOM_BIDIRECTIONAL_SLIDER
+		|| node->m_type == Html::R_CUSTOM_SINGLE_SLIDING_BLOCK){
         Html::GroupData * customScrolldata = dynamic_cast<Html::GroupData *>(node->m_data);
         if(customScrolldata){
 
-            rect.setLeft(customScrolldata->m_left);
-            rect.setTop(customScrolldata->m_top);
+            rect.setLeft(customScrolldata->m_left + rect.left());
+            rect.setTop(customScrolldata->m_top + rect.top());
             rect.setWidth(customScrolldata->m_width);
             rect.setHeight(customScrolldata->m_height);
 
@@ -1280,7 +1295,23 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
                 rect.setHeight(removePxUnit(theight));
 
         }
+    }else if(node->m_type == Html::R_CUSTOM_LABEL){
+        Html::BaseData * customLabelData = dynamic_cast<Html::BaseData *>(node->m_data);
+        if(customLabelData){
+
+            QString twidth = getCssStyle(customLabelData->m_srcImageId,"width");
+            QString theight = getCssStyle(customLabelData->m_srcImageId,"height");
+
+            rect.setWidth(removePxUnit(twidth));
+            rect.setHeight(removePxUnit(theight));
+
+        }
+    }else if(node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
+        Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
+        rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
     }
+
+
 
     if(rect.left() < 0){
         rect.setWidth(rect.width() - rect.left());
@@ -2391,6 +2422,16 @@ void FormatProperty::createCodeDatas(Html::DomNode *node)
 
             setBaseInfos(customScrollBarData->m_rightScrollBar.m_srcImgs);
 
+            if(customScrollBarData->m_leftScrollBar.m_location.m_width <= 0){
+                customScrollBarData->m_leftScrollBar.m_location = setLocation(customScrollBarData->m_leftScrollBar.m_id);
+            }
+
+            customScrollBarData->m_leftToolTip.m_location = setLocation(customScrollBarData->m_leftToolTip.m_ID);
+            setBaseInfo(customScrollBarData->m_leftToolTip.m_textBox,Html::RLABEL);
+
+            customScrollBarData->m_rightToolTip.m_location = setLocation(customScrollBarData->m_rightToolTip.m_ID);
+            setBaseInfo(customScrollBarData->m_rightToolTip.m_textBox,Html::RLABEL);
+
         }else if(node->m_type == Html::R_CUSTOM_FLOATING_WINDOW){
             CXX::FloatingWindow * floatingWindowData = dynamic_cast<CXX::FloatingWindow *>(node->m_data->m_codeData);
 
@@ -2409,11 +2450,25 @@ void FormatProperty::createCodeDatas(Html::DomNode *node)
                 floatingWindowData->m_mainWidget.m_switchButtons.replace(i,t_switchButton);
             }
 
-        }else if(node->m_type == Html::R_CUSTOM_FOLDINGCONTROLS){
+        }else if(node->m_type == Html::R_CUSTOM_FOLDINGCONTROLS || node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
             CXX::FoldingControls * foldingControlData = dynamic_cast<CXX::FoldingControls *>(node->m_data->m_codeData);
 
+            if(node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
 
-            foldingControlData->m_location = setLocation(foldingControlData->m_ID);
+                QString backImgID = node->m_data->m_srcImageId + "_div";
+
+                if(m_pageCss.contains(backImgID)){
+
+                    QString newID = node->m_id;
+                    m_pageCss.operator [](backImgID).selectorName = newID;
+
+                    m_pageCss.insert(newID,m_pageCss.value(backImgID));
+
+                }
+            }
+
+            if(foldingControlData->m_location.m_width <= 0)
+                foldingControlData->m_location = setLocation(foldingControlData->m_ID);
 
             for(int i = 0; i < foldingControlData->m_informations.size();i++){
                 CXX::Information t_information = foldingControlData->m_informations.at(i);
@@ -2464,7 +2519,33 @@ void FormatProperty::createCodeDatas(Html::DomNode *node)
                 }
             }
 
+        }else if(node->m_type == Html::R_CUSTOM_SINGLE_SLIDING_BLOCK){
+
+            CXX::SingleSlidingBlockData * customSingleScrollBar = dynamic_cast<CXX::SingleSlidingBlockData *>(node->m_data->m_codeData);
+//            customSingleScrollBar->m_leftScrollBar.m_location = setLocation(customSingleScrollBar->m_leftScrollBar.m_id);
+            setBaseInfos(customSingleScrollBar->m_leftScrollBar.m_srcImgs);
+
+            customSingleScrollBar->m_letfToolTip.m_location = setLocation(customSingleScrollBar->m_letfToolTip.m_ID);
+            setBaseInfo(customSingleScrollBar->m_letfToolTip.m_textBox,Html::RLABEL);
+
+            setBaseInfos(customSingleScrollBar->m_rectangularsInfo);
+
+
+            customSingleScrollBar->m_inputBox.m_location = setLocation(customSingleScrollBar->m_inputBox.m_ID);
+            setBaseInfos(customSingleScrollBar->m_inputBox.m_inputBoxInfos);
+
+        }else if(node->m_type == Html::R_CUSTOM_LABEL){
+
+            CXX::CustomLabelData * customLabelData = dynamic_cast<CXX::CustomLabelData *>(node->m_data->m_codeData);
+            setBaseInfo(customLabelData->m_defaultInfo,Html::RLABEL);
+            setBaseInfo(customLabelData->m_mouseEnter,Html::RLABEL);
+
+            m_selectorType.insert(customLabelData->m_labelPopupWindow.m_ID,Html::RBOX);
+
+            setBaseInfos(customLabelData->m_labelPopupWindow.m_optionsInfo);
+
         }
+
         m_codeDatas.append(node->m_data->m_codeData);
 
     }

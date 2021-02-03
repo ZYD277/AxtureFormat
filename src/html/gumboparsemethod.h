@@ -72,9 +72,13 @@ private:
     void parseCustomVirtualContainer(GumboNodeWrapper &element,DomNode *node);
     void parseCustomButton(GumboNodeWrapper &element,DomNode *node);
     void parseCustomKeyBoardField(GumboNodeWrapper &element,DomNode *node);
-    void parseCustomScrollBarField(GumboNodeWrapper &element,DomNode *node);
-    void parseCustomFloatingWindowField(GumboNodeWrapper &element,DomNode *node);
-    void parseCustomFoldingControlsField(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomDoubleScrollBar(GumboNodeWrapper &element,DomNode *node);
+    void parseSignalSliderNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomFloatingWindowNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomLabelNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomDrawerdControlNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomDoubelFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node);
 
 private:
     DomHtmlPtr m_htmlResultPtr;

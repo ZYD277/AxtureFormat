@@ -47,6 +47,10 @@ void MProperty::write(QXmlStreamWriter &writer, QString tagName)
             writer.writeTextElement("cursorShape",m_propString);
             break;
         }
+        case IconSet:{
+            writer.writeTextElement("iconset",m_propString);
+            break;
+        }
         case Rect:{
             m_propRect->write(writer,"rect");
             break;
@@ -72,6 +76,12 @@ void MProperty::setPropBool(QString value)
 void MProperty::setProCursor(QString value)
 {
     m_kind = CursorShape;
+    m_propString = value;
+}
+
+void MProperty::setIconSet(QString value)
+{
+    m_kind = IconSet;
     m_propString = value;
 }
 

@@ -71,7 +71,10 @@ SOURCES += main.cpp\
     template/code/customswichbtn.cpp \
     template/code/dropdownbox.cpp \
     template/code/switchpulldownbtn.cpp \
-    template/code/buttongroupplate.cpp
+    template/code/buttongroupplate.cpp \
+    template/code/customsinglesliderplate.cpp \
+    template/code/selectorpulldownmenu.cpp \
+    template/code/customlabelplate.cpp
 
 HEADERS  += \
     html/htmlparser.h \
@@ -131,7 +134,10 @@ HEADERS  += \
     template/code/customswichbtn.h \
     template/code/dropdownbox.h \
     template/code/switchpulldownbtn.h \
-    template/code/buttongroupplate.h
+    template/code/buttongroupplate.h \
+    template/code/customsinglesliderplate.h \
+    template/code/selectorpulldownmenu.h \
+    template/code/customlabelplate.h
 
 FORMS    += \
     clientoperate.ui \

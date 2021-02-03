@@ -1,4 +1,4 @@
-#include "customscrollbar.h"
+﻿#include "customscrollbar.h"
 
 #include "../cppgenerate.h"
 
@@ -42,15 +42,27 @@ void CustomScrollBar::prepareOutput(CppGenerate *generate)
     customStyle += ConcatNewLine(t_singleScrollBar);
     customStyle += ConcatNewLine(t_scrollBarStyle);
 
+    auto setLocation = [&](Location location){
+        //获取单个控件位置信息
+        customStyle += ConcatNewLine(QString("         %1.m_width = %2;").arg(t_locationName).arg(location.m_width));
+        customStyle += ConcatNewLine(QString("         %1.m_height = %2;").arg(t_locationName).arg(location.m_height));
+        customStyle += ConcatNewLine(QString("         %1.m_top = %2;").arg(t_locationName).arg(location.m_top));
+        customStyle += ConcatNewLine(QString("         %1.m_left = %2;").arg(t_locationName).arg(location.m_left));
+    };
+
     auto setBaseInfo = [&](BaseInfo t_baseInfo){
 
+        setLocation(t_baseInfo.m_location);
         //获取单个控件位置信息
-        customStyle += ConcatNewLine(QString("         %1.m_width = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_width));
-        customStyle += ConcatNewLine(QString("         %1.m_height = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_height));
-        customStyle += ConcatNewLine(QString("         %1.m_top = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_top));
-        customStyle += ConcatNewLine(QString("         %1.m_left = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_left));
-
         customStyle += ConcatNewLine(QString("         %1.m_location = %2;").arg(t_baseInfoName).arg(t_locationName));
+
+//        //获取单个控件位置信息
+//        customStyle += ConcatNewLine(QString("         %1.m_width = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_width));
+//        customStyle += ConcatNewLine(QString("         %1.m_height = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_height));
+//        customStyle += ConcatNewLine(QString("         %1.m_top = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_top));
+//        customStyle += ConcatNewLine(QString("         %1.m_left = %2;").arg(t_locationName).arg(t_baseInfo.m_location.m_left));
+
+//        customStyle += ConcatNewLine(QString("         %1.m_location = %2;").arg(t_baseInfoName).arg(t_locationName));
 
         //获取单个控件文本信息
         customStyle += ConcatNewLine(QString("         %1.m_text = QString::fromLocal8Bit(\"%2\");").arg(t_textInfoName).arg(t_baseInfo.m_textInfo.m_text));
@@ -103,6 +115,21 @@ void CustomScrollBar::prepareOutput(CppGenerate *generate)
 
     }
 
+    //滑块文本提示
+
+    customStyle += ConcatNewLine("         %1.m_leftToolTip.m_ID = QString::fromLocal8Bit(\"%2\");").arg(t_scrollBarStyleName).arg(m_scrollBar->m_leftToolTip.m_ID);
+    setLocation(m_scrollBar->m_leftToolTip.m_location);
+    customStyle += ConcatNewLine("         %1.m_leftToolTip.m_location = %2;").arg(t_scrollBarStyleName).arg(t_locationName);
+
+    setBaseInfo(m_scrollBar->m_leftToolTip.m_textBox);
+    customStyle += ConcatNewLine("         %1.m_leftToolTip.m_textBox = %2;").arg(t_scrollBarStyleName).arg(t_baseInfoName);
+
+    customStyle += ConcatNewLine("         %1.m_rightToolTip.m_ID = QString::fromLocal8Bit(\"%2\");").arg(t_scrollBarStyleName).arg(m_scrollBar->m_rightToolTip.m_ID);
+    setLocation(m_scrollBar->m_rightToolTip.m_location);
+    customStyle += ConcatNewLine("         %1.m_rightToolTip.m_location = %2;").arg(t_scrollBarStyleName).arg(t_locationName);
+
+    setBaseInfo(m_scrollBar->m_rightToolTip.m_textBox);
+    customStyle += ConcatNewLine("         %1.m_rightToolTip.m_textBox = %2;").arg(t_scrollBarStyleName).arg(t_baseInfoName);
     //获取整个滑动条位置信息
     customStyle += ConcatNewLine(QString("         %1.m_width = %2;").arg(t_locationName).arg(m_scrollBar->m_location.m_width));
     customStyle += ConcatNewLine(QString("         %1.m_height = %2;").arg(t_locationName).arg(m_scrollBar->m_location.m_height));

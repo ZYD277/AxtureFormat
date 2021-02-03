@@ -20,6 +20,9 @@
 #include "code/dropdownbox.h"
 #include "code/switchpulldownbtn.h"
 #include "code/buttongroupplate.h"
+#include "code/customsinglesliderplate.h"
+#include "code/selectorpulldownmenu.h"
+#include "code/customlabelplate.h"
 
 QString NEW_EMPTY = "";
 QString New_Line = "\n";
@@ -85,13 +88,21 @@ void GenerateProjectFile::setCustomControlPath(QString path, QStringList customC
                     if(!m_customCppNames.contains(fileInfo.fileName()))
                         m_customCppNames.append(fileInfo.fileName());
                 }
-                QString dstImageFullPath = m_projectPath + QDir::separator() + fileInfo.fileName();
-                QFile::copy(fileInfo.filePath(),dstImageFullPath);
+                QString customClassFullPath = m_projectPath + QDir::separator() + fileInfo.fileName();
+                QFile::copy(fileInfo.filePath(),customClassFullPath);
+				qDebug() << "dsdasdad" << fileInfo.filePath();
             });
         }
     }
 
-//    QDir customControlDir(customControlPath);
+    //拷贝头文件
+    if(!customClassList.isEmpty()){
+        QString headFileName = "head.h";
+        if(!m_customHeadNames.contains(headFileName))
+            m_customHeadNames.append(headFileName);
+        QString headFileFullPath = m_projectPath + QDir::separator() + headFileName;
+        QFile::copy(customControlPath + QDir::separator() + headFileName,headFileFullPath);
+    }
 
 }
 
@@ -333,6 +344,46 @@ void GenerateProjectFile::outputCpp(bool generateCode)
                 buttonGroupPlate.setButtonGroupIds(btnGroupData->m_buttIds);
 
                 buttonGroupPlate.prepareOutput(&cpp);
+
+                break;
+            }
+            case CXX::CUSTOM_SIGNAL_SLIDING:{
+                CXX::SingleSlidingBlockData * customSingleSliderData = dynamic_cast<CXX::SingleSlidingBlockData *>(codeData);
+
+                CXX::CustomSingleSliderPlate singleSliderPlate;
+
+                singleSliderPlate.setSameTypeIndex(typeIndex);
+
+
+                singleSliderPlate.setScrollBarParameter(customSingleSliderData);
+
+                singleSliderPlate.prepareOutput(&cpp);
+
+                break;
+            }case CXX::CUSTOM_SELECTOR_MENU:{
+                CXX::TheSelectorMenu * selectorMenuData = dynamic_cast<CXX::TheSelectorMenu *>(codeData);
+
+                CXX::SelectorPullDownMenu selectorMenuPullDown;
+
+                selectorMenuPullDown.setSameTypeIndex(typeIndex);
+
+
+                selectorMenuPullDown.setIds(selectorMenuData);
+
+                selectorMenuPullDown.prepareOutput(&cpp);
+
+                break;
+            }case CXX::CUSTOM_LABEL:{
+                CXX::CustomLabelData * customLabelData = dynamic_cast<CXX::CustomLabelData *>(codeData);
+
+                CXX::CustomLabelPlate customLabelInfo;
+
+                customLabelInfo.setSameTypeIndex(typeIndex);
+
+
+                customLabelInfo.setCustomLabelInfo(customLabelData);
+
+                customLabelInfo.prepareOutput(&cpp);
 
                 break;
             }

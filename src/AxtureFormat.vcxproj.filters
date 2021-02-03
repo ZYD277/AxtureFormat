@@ -221,6 +221,15 @@
     <ClCompile Include="template\code\buttongroupplate.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="template\code\customsinglesliderplate.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\selectorpulldownmenu.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\code\customlabelplate.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="template\code\abstractcodetemplate.h">
@@ -389,6 +398,15 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="template\code\buttongroupplate.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\customsinglesliderplate.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\selectorpulldownmenu.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\customlabelplate.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

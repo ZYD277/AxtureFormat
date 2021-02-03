@@ -1,4 +1,4 @@
-#include "customfoldingcontrol.h"
+﻿#include "customfoldingcontrol.h"
 
 #include "../cppgenerate.h"
 
@@ -45,13 +45,9 @@ void CustomFoldingControl::prepareOutput(CppGenerate *generate)
     customStyle += ConcatNewLine(t_FoldingControls);
 
     auto setLocation = [&](Location t_location){
-        if(t_location.m_width != 0)
             customStyle += ConcatNewLine(QString("         %1.m_width = %2;").arg(t_locationName).arg(t_location.m_width));
-        if(t_location.m_height != 0)
             customStyle += ConcatNewLine(QString("         %1.m_height = %2;").arg(t_locationName).arg(t_location.m_height));
-        if(t_location.m_top != 0)
             customStyle += ConcatNewLine(QString("         %1.m_top = %2;").arg(t_locationName).arg(t_location.m_top));
-        if(t_location.m_left != 0)
             customStyle += ConcatNewLine(QString("         %1.m_left = %2;").arg(t_locationName).arg(t_location.m_left));
 
     };
@@ -113,6 +109,8 @@ void CustomFoldingControl::prepareOutput(CppGenerate *generate)
 
         customStyle += ConcatNewLine(QString("         %1.m_ID = QString(\"%2\");").arg(t_unFoldInfoName).arg(t_information.m_unFoldInfo.m_ID));
 
+        customStyle += ConcatNewLine(QString("         %1.m_autoSetControl = %2;").arg(t_unFoldInfoName).arg(t_information.m_unFoldInfo.m_autoSetControl));
+
         for(BaseInfo t_baseInfo : t_information.m_unFoldInfo.m_information){
             setBaseInfo(t_baseInfo);
             customStyle += ConcatNewLine(QString("         %1.m_information.append(%2);").arg(t_unFoldInfoName).arg(t_baseInfoName));
@@ -122,6 +120,8 @@ void CustomFoldingControl::prepareOutput(CppGenerate *generate)
         customStyle += ConcatNewLine(QString("         %1.m_information.clear();").arg(t_unFoldInfoName));
 
         customStyle += ConcatNewLine(QString("         %1.m_informations.append(%2);").arg(t_FoldingControlsName).arg(t_informationName));
+
+        customStyle += ConcatNewLine(QString("         %1.m_addScrollBar = %2;").arg(t_FoldingControlsName).arg(m_foldingControl->m_addScrollBar));
 
     }
 

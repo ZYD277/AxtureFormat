@@ -20,12 +20,16 @@ enum CodeType{
     CUSTOM_DROP_BUTTON,     /*!< 自定义下拉按钮 */
     CUSTOM_KEYBOARD_RFIELD,     /*!< 自定义输入框 */
     CUSTOM_BIDIRECTIONAL_SLIDER,     /*!< 自定义双向滚动条 */
+    CUSTOM_SIGNAL_SLIDING,     /*!< 自定义单滑块 */
     CUSTOM_FLOATING_WINDOW,     /*!< 自定义悬浮窗 */
     CUSTOM_FOLDING_CONTROL,    /*!< 自定义折叠控件 */
     CUSTOM_SWITCH_BUTTON,    /*!< 自定义开关按钮 */
     CUSTOM_DROPDOWN_BOX,    /*!< 自定义开关按钮 */
     CUSTOM_BUTTON_GROUP,    /*!< 自定义按钮组 */
-    CUSTOM_SWITCH_PULLDOWN_BUTTON    /*!< 自定义带有下拉框的开关按钮 */
+    CUSTOM_SWITCH_PULLDOWN_BUTTON,    /*!< 自定义带有下拉框的开关按钮 */
+    CUSTOM_SELECTOR_MENU,   /*!< 选择器菜单 */
+    CUSTOM_LABEL,   /*!< 自定义label */
+    CUSTOM_BUTTON_ICON   /*!< 带有图标的按钮 */
 
 };
 
@@ -275,6 +279,15 @@ struct DropDownButtonData : public AbstractCppCodeData{
 /// //////////////自定义双向滚动条/////////////////////////////////
 
 /**
+ * @brief 文字提示
+ */
+struct TheTooltip{
+    QString m_ID;
+    Location m_location;
+    BaseInfo m_textBox;  /*!< 文本框 */
+};
+
+/**
  * @brief 滚动条
  */
 struct DScrollBar{
@@ -290,10 +303,32 @@ struct BidirectionalSlider : public AbstractCppCodeData{
     QList<BaseInfo> m_rectangularsInfo;
     Location m_location;
     DScrollBar m_leftScrollBar;  /*!< 左滚动条 */
+    TheTooltip m_leftToolTip;        /*!< 左文字提示 */
+    TheTooltip m_rightToolTip;        /*!< 左文字提示 */
     DScrollBar m_rightScrollBar;     /*!< 右滚动条 */
     QString m_ID;
 };
+////////////////单滑块//////////////////////////
 
+struct InputBoxInfo{
+    QString m_ID;
+    Location m_location;
+    QList<BaseInfo> m_inputBoxInfos;  /*!< 输入框 */
+};
+/**
+ * @brief 自定义单滑块
+ */
+struct SingleSlidingBlockData : public AbstractCppCodeData{
+    SingleSlidingBlockData():AbstractCppCodeData(CUSTOM_SIGNAL_SLIDING){}
+    ~SingleSlidingBlockData(){}
+
+    QList<BaseInfo> m_rectangularsInfo; /*!< 内部组成部分矩形信息 */
+    DScrollBar m_leftScrollBar;  /*!< 左滑块 */
+    TheTooltip m_letfToolTip;   /*!< 左文字提示 */
+    InputBoxInfo m_inputBox;    /*!< 文字输入框 */
+    Location m_location;
+    QString m_ID;
+};
 ////////////////////自定义悬浮窗/////////////////////////////////
 /**
  * @brief 开关按钮
@@ -349,10 +384,12 @@ struct FoldingInfo{
  * @brief 展开信息
  */
 struct UnFoldInfo{
+    UnFoldInfo(): m_autoSetControl(true){}
     QString m_parentID;//当前展开信息所在的动态面板的id
     Location m_parentLocation;//当前展开信息所在动态面板的位置信息
     Location m_location;
     QString m_ID;
+    bool m_autoSetControl;   /*!< 有些需要手动设置控件类型以及布局 */
     QList<BaseInfo> m_information;
 };
 struct Information{
@@ -362,12 +399,14 @@ struct Information{
     Location m_location;
 };
 struct FoldingControls : public AbstractCppCodeData{
-    FoldingControls():AbstractCppCodeData(CUSTOM_FOLDING_CONTROL){}
+    FoldingControls():AbstractCppCodeData(CUSTOM_FOLDING_CONTROL),m_addScrollBar(true){}
     ~FoldingControls(){}
 
     QList<Information> m_informations;
     Location m_location;
     QString m_ID;
+    bool m_addScrollBar;   /*!< 有些控件不需要添加滚动条 */
+
 };
 
 //////////////////自定义开关按钮/////////////////////////////
@@ -415,6 +454,51 @@ struct SwitchPullDownButtonData : public AbstractCppCodeData{
 
 };
 
+/////////////////带有弹框的自定义标签控件//////////////////////、
+
+/**
+ * @brief 标签弹窗
+ */
+struct LabelPopupWindow
+{
+    QString m_ID;
+    Location m_location;
+    QList<BaseInfo> m_optionsInfo;   /*!< 弹窗选项 */
+};
+
+/**
+ * @brief 带有弹框的自定义标签控件
+ */
+
+struct CustomLabelData : public AbstractCppCodeData{
+    CustomLabelData():AbstractCppCodeData(CUSTOM_LABEL){}
+    ~CustomLabelData(){}
+
+    LabelPopupWindow m_labelPopupWindow;
+    BaseInfo m_defaultInfo;  /*!< 标签默认状态信息 */
+    BaseInfo m_mouseEnter;    /*!< 鼠标进入标签状态信息 */
+    QString m_ID;        /*!< Label控件ID */
+};
+
+/**
+ * @brief 自定义选择器下拉菜单
+ */
+
+struct TheSelectorMenu : public AbstractCppCodeData{
+    TheSelectorMenu():AbstractCppCodeData(CUSTOM_SELECTOR_MENU){}
+    ~TheSelectorMenu(){}
+
+    QStringList m_optionIdList; /*!< 弹框选项id */
+    QString m_popupWidgetID;    /*!< 弹框id */
+    QString m_triggerPopupBtnID;  /*!< 触发弹窗按钮id */
+    QString m_defaultBtnID;        /*!< 默认按钮ID */
+    QString m_defaultPageID;        /*!< 开状态分页面ID */
+    QString m_pressedBtnID;       /*!< 关状态按钮id */
+    QString m_pressedPageID;        /*!< 关状态分页面ID */
+    QString m_stackedWidgetID;  /*!< 动态面板id */
+    QString m_icon;             /*!< 按钮图标 */
+
+};
 /*!
  * @brief  按钮组控制代码
  */
@@ -425,6 +509,16 @@ struct ButtonGroupCodeData : public AbstractCppCodeData{
     QStringList m_buttIds;     /*!< 互斥按钮的Id信息集合 */
 };
 
+/*!
+ * @brief  带图标按钮设置数据
+ */
+struct ButtonWithIcon : public AbstractCppCodeData{
+    ButtonWithIcon():AbstractCppCodeData(CUSTOM_BUTTON_ICON){}
+    ~ButtonWithIcon(){}
+
+    QString m_srcIcon;
+    QString m_ID;
+};
 /*!
  * @brief 互斥按钮控件代码数据区
  */
