@@ -23,6 +23,8 @@
 #include "code/customsinglesliderplate.h"
 #include "code/selectorpulldownmenu.h"
 #include "code/customlabelplate.h"
+#include "code/doublefoldingbox.h"
+
 
 QString NEW_EMPTY = "";
 QString New_Line = "\n";
@@ -384,6 +386,19 @@ void GenerateProjectFile::outputCpp(bool generateCode)
                 customLabelInfo.setCustomLabelInfo(customLabelData);
 
                 customLabelInfo.prepareOutput(&cpp);
+
+                break;
+            }case CXX::CUSTOM_DOUBLEFOLDING:{
+                CXX::DoubleFoldingPanel * customDoubleFoldingData = dynamic_cast<CXX::DoubleFoldingPanel *>(codeData);
+
+                CXX::DoubleFoldingBox customDoubleFoldingInfo;
+
+                customDoubleFoldingInfo.setSameTypeIndex(typeIndex);
+
+
+                customDoubleFoldingInfo.setIds(customDoubleFoldingData);
+
+                customDoubleFoldingInfo.prepareOutput(&cpp);
 
                 break;
             }

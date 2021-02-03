@@ -43,7 +43,8 @@ GumboParseMethod::GumboParseMethod():m_gumboParser(nullptr)
     m_custControl.insert(QStringLiteral("折叠信息区"),R_CUSTOM_FOLDINGCONTROLS);
     m_custControl.insert(QStringLiteral("二级导航"),R_CUSTOM_LABEL);
     m_custControl.insert(QStringLiteral("垂直导航"),R_CUSTOM_DRAWERD_CONTROL);
-//    m_custControl.insert(QStringLiteral("两层折叠内容"),R_CUSTOM_DOUBEL_FOLDINGCONTROLS);
+    m_custControl.insert(QStringLiteral("单层折叠面板"),R_SINGLE_FOLDEDPANEL);
+//    m_custControl.insert(QStringLiteral("两层折叠面板"),R_DOUBLE_FOLDEDPANEL);
 
 }
 
@@ -288,7 +289,8 @@ NodeType GumboParseMethod::getNodeType(GumboNodeWrapper element, GumboNodeWrappe
                 return RGROUP;
             if(classInfo.contains("radio_button"))
                 return RRADIO_BUTTON;
-            else if(classInfo.contains("text_field"))
+            else if(classInfo.contains("text_field")
+                    || element.data_label().contains(QStringLiteral("设置1")))
                 return RTEXT_FIELD;
             else if((classInfo.contains("label") || classInfo.contains("text")||
                      classInfo.contains("ellipse")||classInfo.contains("paragraph"))
@@ -416,10 +418,10 @@ void GumboParseMethod::parseNodeData(GumboNodeWrapper &element, NodeType type, D
     case R_CUSTOM_SINGLE_SLIDING_BLOCK:parseSignalSliderNodeData(element,node);break;
     case R_CUSTOM_FLOATING_WINDOW:parseCustomFloatingWindowNodeData(element,node);break;
     case R_CUSTOM_FOLDINGCONTROLS:parseCustomFoldingControlsNodeData(element,node);break;
+    case R_SINGLE_FOLDEDPANEL:parseCustomSingleFoldingControlsNodeData(element,node);break;
     case R_CUSTOM_SWITCH_BUTTON:parseSwitchButtonNodeData(element,node);break;
     case R_CUSTOM_LABEL:parseCustomLabelNodeData(element,node);break;
     case R_CUSTOM_DRAWERD_CONTROL:parseCustomDrawerdControlNodeData(element,node);break;
-    case R_CUSTOM_DOUBEL_FOLDINGCONTROLS:parseCustomDoubelFoldingControlsNodeData(element,node);break;
 
     default:break;
     }
@@ -1325,9 +1327,9 @@ void GumboParseMethod::parseCustomFoldingControlsNodeData(GumboNodeWrapper &elem
 }
 
 /**
- * @brief 双层折叠信息
+ * @brief 自定义单层折叠面板
  */
-void GumboParseMethod::parseCustomDoubelFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node)
+void GumboParseMethod::parseCustomSingleFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node)
 {
     GroupData * customFoldingControlData = new GroupData();
 
@@ -1335,6 +1337,88 @@ void GumboParseMethod::parseCustomDoubelFoldingControlsNodeData(GumboNodeWrapper
 
     CXX::FoldingControls *foldingControls = new CXX::FoldingControls();
     foldingControls->m_ID = element.id();
+
+    auto setLocation = [&](GumboNodeWrapper child){
+
+        CXX::Location location;
+        location.m_left = child.attribute(G_NodeHtml.DATA_LEFT).toInt();
+        location.m_top = child.attribute(G_NodeHtml.DATA_TOP).toInt();
+        location.m_width = child.attribute(G_NodeHtml.DATA_WIDTH).toInt();
+        location.m_height = child.attribute(G_NodeHtml.DATA_HEIGHT).toInt();
+
+        return location;
+    };
+
+    auto setBaseInfo = [&](GumboNodeWrapper curNode){
+        CXX::BaseInfo t_baseInfo;
+        t_baseInfo.m_ID = curNode.id();
+        t_baseInfo.m_srcImg = curNode.firstChild().attribute(G_NodeHtml.SRC);
+        t_baseInfo.m_dataLabel = curNode.data_label();
+        t_baseInfo.m_textInfo.m_text = curNode.secondChild().firstChild().firstChild().firstChild().text();
+
+        return t_baseInfo;
+
+    };
+
+    foldingControls->m_location = setLocation(element);
+
+    customFoldingControlData->m_left = foldingControls->m_location.m_left;
+    customFoldingControlData->m_top = foldingControls->m_location.m_top;
+    customFoldingControlData->m_width = foldingControls->m_location.m_width;
+    customFoldingControlData->m_height = foldingControls->m_location.m_height;
+
+
+    GumboNodeWrapperList children = element.children();
+    for(GumboNodeWrapper child : children){
+        if(child.data_label().contains(QStringLiteral("折叠内容"))){
+
+            CXX::Information t_information;
+            t_information.m_ID = child.id();
+
+            GumboNodeWrapperList foldingInfoChildren = child.children();
+            for(GumboNodeWrapper foldingInfoChild : foldingInfoChildren){
+                if(foldingInfoChild.data_label().contains(QStringLiteral("展开"))){
+
+                    GumboNodeWrapperList sonChildren = foldingInfoChild.firstChild().children();
+                    for(GumboNodeWrapper sonChild : sonChildren){
+                        if(sonChild.clazz() == "ax_default"){
+
+                            t_information.m_foldingInfo.m_ID = sonChild.id();
+                            t_information.m_foldingInfo.m_location = setLocation(sonChild);
+
+                            GumboNodeWrapperList children = sonChild.children();
+                            for(GumboNodeWrapper child : children){
+                                if(child.data_label().contains(QStringLiteral("下拉"))){
+                                    for(int i = 0; i < child.children().size(); i ++){
+                                        t_information.m_foldingInfo.m_information.append(setBaseInfo(child.children().at(i)));
+                                    }
+                                }else{
+                                    t_information.m_foldingInfo.m_information.append(setBaseInfo(child));
+                                }
+                            }
+
+                        }
+                        if(sonChild.clazz().contains(QStringLiteral("形状"))){
+                            t_information.m_unFoldInfo.m_parentID = sonChild.id();
+                            t_information.m_unFoldInfo.m_ID = sonChild.id();
+                            t_information.m_unFoldInfo.m_information.append(setBaseInfo(sonChild));
+                        }
+                    }
+                }
+            }
+            foldingControls->m_informations.append(t_information);
+        }
+    }
+
+
+    Html::ControlImproveInfo t_controlImproveInfo;
+    t_controlImproveInfo.m_newClass = "MyFoldingControl";
+    t_controlImproveInfo.m_extends = "QWidget";
+    t_controlImproveInfo.m_headFileName = "myfoldingcontrol.h";
+    customFoldingControlData->m_controlImproveInfos.append(t_controlImproveInfo);
+
+    customFoldingControlData->m_codeData = foldingControls;
+    node->m_data = customFoldingControlData;
 
 }
 
@@ -2404,6 +2488,49 @@ void GumboParseMethod::parseDynamicPanelNodeData(GumboNodeWrapper &element, DomN
                 }
             }
 
+        }else if(element.data_label().contains(QStringLiteral("两层折叠内容"))){
+            ///目前只支持简单的双层折叠控件
+            GumboNodeWrapperList children = element.children();
+
+            CXX::DoubleFoldingPanel *doubleFoldingWidgetData = new CXX::DoubleFoldingPanel();
+            doubleFoldingWidgetData->m_stackedWidgetID = element.id();
+
+            data->m_codeData = doubleFoldingWidgetData;
+
+            for(GumboNodeWrapper child : children){
+                if(child.data_label().contains(QStringLiteral("一级折叠"))){
+
+                    GumboNodeWrapperList defaultchildren = child.firstChild().firstChild().children();
+
+                    doubleFoldingWidgetData->foldingPageID = child.id();
+
+                    for(GumboNodeWrapper defaultchild : defaultchildren){
+                        if(defaultchild.data_label().contains(QStringLiteral("下拉按钮"))){
+                            doubleFoldingWidgetData->foldingBtnID = defaultchild.id();
+                        }
+                    }
+
+                }else if(child.data_label().contains(QStringLiteral("一级展开"))){
+
+                    data->m_childPageID = child.id();
+
+                    doubleFoldingWidgetData->unFoldPageID = child.id();
+
+
+                    GumboNodeWrapperList unfoldChildren = child.firstChild().children();
+                    for(GumboNodeWrapper unfoldChild : unfoldChildren){
+                        if(unfoldChild.clazz() == "ax_default" && unfoldChild.data_label().isEmpty()){
+                            GumboNodeWrapperList sonChildren = unfoldChild.children();
+                            for(GumboNodeWrapper sonChild : sonChildren){
+                                if(sonChild.data_label().contains(QStringLiteral("下拉按钮")))
+                                {
+                                    doubleFoldingWidgetData->unFlodBtnID = sonChild.id();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

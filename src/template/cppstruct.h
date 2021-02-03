@@ -29,7 +29,8 @@ enum CodeType{
     CUSTOM_SWITCH_PULLDOWN_BUTTON,    /*!< 自定义带有下拉框的开关按钮 */
     CUSTOM_SELECTOR_MENU,   /*!< 选择器菜单 */
     CUSTOM_LABEL,   /*!< 自定义label */
-    CUSTOM_BUTTON_ICON   /*!< 带有图标的按钮 */
+    CUSTOM_BUTTON_ICON,   /*!< 带有图标的按钮 */
+    CUSTOM_DOUBLEFOLDING  /*!< 双层折叠控件 */
 
 };
 
@@ -406,7 +407,6 @@ struct FoldingControls : public AbstractCppCodeData{
     Location m_location;
     QString m_ID;
     bool m_addScrollBar;   /*!< 有些控件不需要添加滚动条 */
-
 };
 
 //////////////////自定义开关按钮/////////////////////////////
@@ -499,6 +499,23 @@ struct TheSelectorMenu : public AbstractCppCodeData{
     QString m_icon;             /*!< 按钮图标 */
 
 };
+
+/**
+ * @brief 自定义双层折叠面板代码数据区，用于切换动态面板两个状态
+ */
+
+struct DoubleFoldingPanel : public AbstractCppCodeData{
+    DoubleFoldingPanel():AbstractCppCodeData(CUSTOM_DOUBLEFOLDING){}
+    ~DoubleFoldingPanel(){}
+
+    QString foldingBtnID;        /*!< 折叠按钮id */
+    QString foldingPageID;       /*!< 折叠页面ID */
+    QString unFlodBtnID;        /*!< 展开按钮id */
+    QString unFoldPageID;          /*!< 展开页面ID */
+    QString m_stackedWidgetID;  /*!< 动态面板id */
+
+};
+
 /*!
  * @brief  按钮组控制代码
  */

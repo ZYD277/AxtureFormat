@@ -93,7 +93,8 @@ enum NodeType{
     R_CUSTOM_SWITCH_BUTTON,					/*!< 自制开关按钮 */
     R_CUSTOM_LABEL,					/*!< 自制标签 */
 	R_CUSTOM_DRAWERD_CONTROL,					/*!< 自定义抽屉类型控件 */
-    R_CUSTOM_DOUBEL_FOLDINGCONTROLS,              /*!< 自定义元件-双层折叠控件 */
+    R_SINGLE_FOLDEDPANEL,              /*!< 自定义元件-单层折叠面板 */
+    R_DOUBLE_FOLDEDPANEL              /*!< 自定义元件-两层折叠面板 */
 
 };
 

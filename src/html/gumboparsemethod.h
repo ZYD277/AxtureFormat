@@ -76,9 +76,9 @@ private:
     void parseSignalSliderNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseCustomFloatingWindowNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseCustomFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node);
+    void parseCustomSingleFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseCustomLabelNodeData(GumboNodeWrapper &element,DomNode *node);
     void parseCustomDrawerdControlNodeData(GumboNodeWrapper &element,DomNode *node);
-    void parseCustomDoubelFoldingControlsNodeData(GumboNodeWrapper &element,DomNode *node);
 
 private:
     DomHtmlPtr m_htmlResultPtr;

@@ -216,6 +216,7 @@
     <ClCompile Include="template\code\customscrollbar.cpp" />
     <ClCompile Include="template\code\customsinglesliderplate.cpp" />
     <ClCompile Include="template\code\customswichbtn.cpp" />
+    <ClCompile Include="template\code\doublefoldingbox.cpp" />
     <ClCompile Include="template\code\dropdownbox.cpp" />
     <ClCompile Include="template\code\dropdownbutton.cpp" />
     <ClCompile Include="template\code\myfloatingwindow.cpp" />
@@ -280,6 +281,7 @@
     <ClInclude Include="template\code\customscrollbar.h" />
     <ClInclude Include="template\code\customsinglesliderplate.h" />
     <ClInclude Include="template\code\customswichbtn.h" />
+    <ClInclude Include="template\code\doublefoldingbox.h" />
     <ClInclude Include="template\code\dropdownbox.h" />
     <ClInclude Include="template\code\dropdownbutton.h" />
     <ClInclude Include="template\code\myfloatingwindow.h" />

@@ -102,6 +102,7 @@ QString FormatProperty::getTypeName(Html::NodeType type)
         case Html::R_CUSTOM_KEYBOARD_RFIELD:return QString("MyLineEdit");break;
         case Html::R_CUSTOM_BIDIRECTIONAL_SLIDER:return QString("MyScrollBar");break;
         case Html::R_CUSTOM_FLOATING_WINDOW:return QString("MyFloatingWindow");break;
+        case Html::R_SINGLE_FOLDEDPANEL:
         case Html::R_CUSTOM_FOLDINGCONTROLS:return QString("MyFoldingControl");break;
         case Html::R_CUSTOM_SWITCH_BUTTON:return QString("MySwitchButton");break;
         case Html::R_CUSTOM_SINGLE_SLIDING_BLOCK:return QString("MySingleScrollBar");break;
@@ -1306,12 +1307,11 @@ QRect FormatProperty::calculateGeomerty(FormatProperty::StyleMap &cssMap, Html::
             rect.setHeight(removePxUnit(theight));
 
         }
-    }else if(node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
+    }else if(node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL
+             || node->m_type == Html::R_SINGLE_FOLDEDPANEL){
         Html::GroupData * gdata = dynamic_cast<Html::GroupData*>(node->m_data);
         rect = QRect(gdata->m_left,gdata->m_top,gdata->m_width,gdata->m_height);
     }
-
-
 
     if(rect.left() < 0){
         rect.setWidth(rect.width() - rect.left());
@@ -2450,7 +2450,9 @@ void FormatProperty::createCodeDatas(Html::DomNode *node)
                 floatingWindowData->m_mainWidget.m_switchButtons.replace(i,t_switchButton);
             }
 
-        }else if(node->m_type == Html::R_CUSTOM_FOLDINGCONTROLS || node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
+        }else if(node->m_type == Html::R_CUSTOM_FOLDINGCONTROLS
+                 || node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
+
             CXX::FoldingControls * foldingControlData = dynamic_cast<CXX::FoldingControls *>(node->m_data->m_codeData);
 
             if(node->m_type == Html::R_CUSTOM_DRAWERD_CONTROL){
@@ -2543,6 +2545,25 @@ void FormatProperty::createCodeDatas(Html::DomNode *node)
             m_selectorType.insert(customLabelData->m_labelPopupWindow.m_ID,Html::RBOX);
 
             setBaseInfos(customLabelData->m_labelPopupWindow.m_optionsInfo);
+
+        }else if(node->m_type == Html::R_SINGLE_FOLDEDPANEL){
+
+            CXX::FoldingControls * foldingControlData = dynamic_cast<CXX::FoldingControls *>(node->m_data->m_codeData);
+
+            for(int i = 0; i < foldingControlData->m_informations.size();i++){
+                CXX::Information t_information = foldingControlData->m_informations.at(i);
+                setBaseInfos(t_information.m_foldingInfo.m_information);
+                setBaseInfos(t_information.m_unFoldInfo.m_information);
+
+                t_information.m_unFoldInfo.m_parentLocation = setLocation(t_information.m_unFoldInfo.m_parentID);
+                t_information.m_unFoldInfo.m_location = setLocation(t_information.m_unFoldInfo.m_ID);
+
+                /*!< 折叠面板自定义类使用折叠信息区结构转换的，这里折叠面板的展开信息坐标位置需要手动计算 */
+                t_information.m_unFoldInfo.m_location.m_top = t_information.m_unFoldInfo.m_location.m_top - t_information.m_foldingInfo.m_location.m_height;
+
+
+                foldingControlData->m_informations.replace(i,t_information);
+            }
 
         }
 

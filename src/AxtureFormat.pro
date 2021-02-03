@@ -74,7 +74,8 @@ SOURCES += main.cpp\
     template/code/buttongroupplate.cpp \
     template/code/customsinglesliderplate.cpp \
     template/code/selectorpulldownmenu.cpp \
-    template/code/customlabelplate.cpp
+    template/code/customlabelplate.cpp \
+    template/code/doublefoldingbox.cpp
 
 HEADERS  += \
     html/htmlparser.h \
@@ -137,7 +138,8 @@ HEADERS  += \
     template/code/buttongroupplate.h \
     template/code/customsinglesliderplate.h \
     template/code/selectorpulldownmenu.h \
-    template/code/customlabelplate.h
+    template/code/customlabelplate.h \
+    template/code/doublefoldingbox.h
 
 FORMS    += \
     clientoperate.ui \

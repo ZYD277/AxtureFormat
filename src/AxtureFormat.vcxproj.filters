@@ -230,6 +230,9 @@
     <ClCompile Include="template\code\customlabelplate.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="template\code\doublefoldingbox.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="template\code\abstractcodetemplate.h">
@@ -407,6 +410,9 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="template\code\customlabelplate.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\code\doublefoldingbox.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
